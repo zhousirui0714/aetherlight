@@ -6,6 +6,10 @@
 
 ---
 
+## 溯历史长河，撷文明之光。
+
+---
+
 ## 当前版本
 
 目前已落地的模块（契约先行→代码实现）：
@@ -16,7 +20,7 @@
 - **后端：Python + FastAPI**
 - **数据库：Supabase（PostgreSQL + RLS）**
 - **本地大模型：Ollama（默认 qwen3:8b）**
-- **前端 API 封装：`frontend/src/api/knowledge.ts`**
+- **前端 API 封装：`frontend/src/api/knowledge.ts`
 
 其余模块（知识问答助手、与古人对话、艺术创作、社区、答题区）尚未接入，待下一轮契约确定后依次实现。
 
@@ -29,8 +33,8 @@
 ├── backend/                       # Python/FastAPI 后端
 │   ├── main.py                    # 入口
 │   ├── config.py                  # 配置（环境变量）
-│   ├── requirements.txt           # 依赖
-│   ├── .env.example               # 环境变量示例
+│   ├── requirements.txt         # 依赖
+│   ├── .env.example             # 环境变量示例
 │   ├── routes/
 │   │   └── knowledge_daily_card.py   # 每日文化推送路由
 │   ├── services/
