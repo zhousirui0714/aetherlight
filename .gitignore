@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+backend/.venv/
+
+# 诗词数据集（已导入到 Supabase）
+chinese-poetry-master/
+
+# IDE
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# OS
+Thumbs.db

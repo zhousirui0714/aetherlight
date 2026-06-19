@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>溯光 Aetherlight · TRAE AI 创造力大赛报名作品</title>
+  <meta name="description" content="溯历史长河，撷文明之光。一个用 AI 激活传统文化的互动平台——每日撷光、知识长廊、AI 问道、与古人对话。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ========== 设计变量 · 东方美学 ========== */
+    :root {
+      --paper: #F5F0E8;
+      --ink: #2C2C2C;
+      --cinnabar: #C43A30;
+      --bronze: #B8860B;
+      --card: #FAF7F0;
+      --card-2: #F0EBE0;
+      --border: #D9D3C8;
+      --border-soft: #E8E2D5;
+      --muted: #8C8579;
+      --muted-fg: #6B655C;
+      --primary: var(--cinnabar);
+      --primary-fg: #FFF8F0;
+      --secondary: #EBE5D8;
+      --accent: var(--bronze);
+      --shadow: 0 20px 50px -25px rgba(44,44,44,0.25);
+      --shadow-lg: 0 40px 80px -30px rgba(44,44,44,0.35);
+    }
+    .dark {
+      --paper: #1A1816;
+      --ink: #E8E0D0;
+      --cinnabar: #E06050;
+      --bronze: #D4A84A;
+      --card: #252320;
+      --card-2: #2E2B27;
+      --border: #3D3A34;
+      --border-soft: #33302B;
+      --muted: #8C8579;
+      --muted-fg: #A09888;
+      --primary: var(--cinnabar);
+      --primary-fg: #1A1816;
+      --secondary: #35322C;
+      --accent: var(--bronze);
+      --shadow: 0 20px 50px -25px rgba(0,0,0,0.6);
+      --shadow-lg: 0 40px 80px -30px rgba(0,0,0,0.7);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.8;
+      transition: background 0.4s ease, color 0.4s ease;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .serif {
+      font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+      letter-spacing: 0.04em;
+    }
+
+    /* 水墨纹理背景 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse at 15% 15%, color-mix(in srgb, var(--bronze) 7%, transparent), transparent 45%),
+        radial-gradient(ellipse at 85% 85%, color-mix(in srgb, var(--cinnabar) 5%, transparent), transparent 50%),
+        radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--bronze) 3%, transparent), transparent 60%);
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ========== 导航 ========== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: color-mix(in srgb, var(--paper) 82%, transparent);
+      border-bottom: 1px solid var(--border-soft);
+      transition: all 0.3s;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 66px;
+    }
+    .logo { display: flex; align-items: center; gap: 11px; }
+    .seal {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cinnabar);
+      color: var(--primary-fg);
+      font-family: 'Noto Serif SC', serif;
+      border-radius: 7px;
+      padding: 4px 11px;
+      font-size: 0.82rem;
+      letter-spacing: 0.2em;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cinnabar) 55%, transparent);
+    }
+    .logo-text {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.28em;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .nav-links { display: flex; gap: 2px; }
+    .nav-links a {
+      padding: 7px 15px;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.86rem;
+      letter-spacing: 0.16em;
+      color: var(--muted-fg);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .nav-links a:hover { color: var(--cinnabar); background: color-mix(in srgb, var(--cinnabar) 7%, transparent); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 38px; height: 38px;
+      cursor: pointer;
+      color: var(--muted-fg);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--cinnabar); color: var(--cinnabar); transform: rotate(15deg); }
+
+    /* ========== Hero ========== */
+    .hero {
+      padding: 90px 0 70px;
+      text-align: center;
+      position: relative;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 40%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--cinnabar) 6%, transparent), transparent 65%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--cinnabar);
+      color: var(--cinnabar);
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      margin-bottom: 28px;
+      font-weight: 500;
+    }
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--cinnabar);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
+
+    .hero h1 {
+      font-size: 3.6rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      line-height: 1.15;
+      background: linear-gradient(135deg, var(--ink) 0%, var(--cinnabar) 55%, var(--bronze) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-en {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1rem;
+      letter-spacing: 0.5em;
+      color: var(--accent);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .hero-subtitle {
+      font-size: 1.18rem;
+      color: var(--muted-fg);
+      max-width: 620px;
+      margin: 0 auto 40px;
+      line-height: 2;
+    }
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-top: 50px;
+    }
+    .meta-item { text-align: center; }
+    .meta-num {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--cinnabar);
+      line-height: 1;
+    }
+    .meta-label {
+      font-size: 0.8rem;
+      color: var(--muted-fg);
+      letter-spacing: 0.12em;
+      margin-top: 6px;
+    }
+
+    /* ========== 章节通用 ========== */
+    .section { padding: 72px 0; position: relative; }
+    .section-title { text-align: center; margin-bottom: 56px; }
+    .section-title .eyebrow {
+      font-size: 0.74rem;
+      letter-spacing: 0.42em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    .section-title h2 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .section-title p {
+      font-size: 0.96rem;
+      color: var(--muted-fg);
+      margin-top: 10px;
+    }
+    .divider-ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 14px 0 0;
+    }
+    .divider-ornament span {
+      height: 1px;
+      width: 40px;
+      background: var(--border);
+    }
+    .divider-ornament .diamond {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      transform: rotate(45deg);
+    }
+
+    /* ========== 概述卡片 ========== */
+    .overview-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .overview-card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--cinnabar) 10%, transparent), transparent 70%);
+      pointer-events: none;
+    }
+    .overview-card::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -40px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--bronze) 8%, transparent), transparent 70%);
+      pointer-events: none;
+    }
+    .overview-content { position: relative; z-index: 1; }
+    .overview-content p {
+      font-size: 1.02rem;
+      line-height: 2.1;
+      color: var(--ink);
+      margin-bottom: 18px;
+    }
+    .overview-content p:last-child { margin-bottom: 0; }
+    .highlight {
+      color: var(--cinnabar);
+      font-weight: 600;
+    }
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 28px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .tech-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--secondary);
+      border: 1px solid var(--border-soft);
+      font-size: 0.82rem;
+      color: var(--muted-fg);
+      font-family: 'Noto Sans SC', sans-serif;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tech-tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    /* ========== 功能卡片 ========== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 34px 30px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cinnabar), var(--bronze));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+      box-shadow: var(--shadow-lg);
+    }
+    .feature-card:hover::before { transform: scaleX(1); }
+    .feature-card .icon {
+      font-size: 2.4rem;
+      margin-bottom: 16px;
+      display: block;
+      line-height: 1;
+    }
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+    .feature-card p {
+      font-size: 0.92rem;
+      color: var(--muted-fg);
+      line-height: 1.85;
+      margin-bottom: 18px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-weight: 500;
+    }
+    .status-done { background: color-mix(in srgb, var(--cinnabar) 10%, transparent); color: var(--cinnabar); }
+    .status-wip { background: color-mix(in srgb, var(--bronze) 12%, transparent); color: var(--bronze); }
+
+    /* ========== 古人卡片 ========== */
+    .sages-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+    .sage-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 30px 22px;
+      text-align: center;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .sage-card:hover {
+      transform: translateY(-6px);
+      border-color: color-mix(in srgb, var(--bronze) 50%, transparent);
+      box-shadow: var(--shadow-lg);
+    }
+    .sage-avatar {
+      width: 84px; height: 84px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      position: relative;
+    }
+    .sage-avatar::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+    .sage-card h4 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .sage-card .dynasty {
+      font-size: 0.78rem;
+      color: var(--muted-fg);
+      letter-spacing: 0.12em;
+      margin: 4px 0 14px;
+    }
+    .sage-card .quote {
+      font-family: 'Noto Serif SC', serif;
+      font-style: italic;
+      font-size: 0.86rem;
+      color: var(--ink);
+      line-height: 1.9;
+      margin-bottom: 16px;
+      min-height: 50px;
+    }
+    .sage-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sage-tag {
+      padding: 3px 11px;
+      border-radius: 100px;
+      border: 1px solid var(--border-soft);
+      background: color-mix(in srgb, var(--accent) 5%, transparent);
+      font-size: 0.74rem;
+      font-family: 'Noto Serif SC', serif;
+      color: var(--accent);
+    }
+
+    /* ========== 知识长廊 ========== */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .article-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.35s;
+    }
+    .article-card:hover {
+      transform: translateY(-5px);
+      border-color: color-mix(in srgb, var(--cinnabar) 30%, transparent);
+      box-shadow: var(--shadow);
+    }
+    .article-cover {
+      height: 130px;
+      background: linear-gradient(135deg, var(--secondary), var(--card-2), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--bronze) 18%, transparent), transparent 50%),
+        radial-gradient(circle at 75% 70%, color-mix(in srgb, var(--cinnabar) 14%, transparent), transparent 45%);
+    }
+    .article-cover span { position: relative; z-index: 1; }
+    .article-cat {
+      position: absolute;
+      top: 12px; left: 12px;
+      padding: 3px 11px;
+      border-radius: 100px;
+      background: color-mix(in srgb, var(--paper) 85%, transparent);
+      backdrop-filter: blur(6px);
+      font-size: 0.72rem;
+      font-family: 'Noto Serif SC', serif;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      z-index: 2;
+    }
+    .article-body { padding: 20px 22px 22px; }
+    .article-body h4 {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .article-body p {
+      font-size: 0.86rem;
+      color: var(--muted-fg);
+      line-height: 1.8;
+    }
+    .article-fav {
+      margin-top: 12px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ========== 设计系统 ========== */
+    .design-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    .design-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 34px;
+    }
+    .design-panel h3 {
+      font-size: 1.15rem;
+      margin-bottom: 22px;
+      color: var(--ink);
+    }
+    .color-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .color-chip {
+      flex: 1;
+      min-width: 100px;
+      text-align: center;
+    }
+    .color-swatch {
+      width: 100%;
+      height: 72px;
+      border-radius: 14px;
+      border: 1px solid var(--border-soft);
+      margin-bottom: 8px;
+    }
+    .color-name {
+      font-size: 0.78rem;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .color-hex {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .type-sample { margin-bottom: 18px; }
+    .type-sample .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+    .type-serif { font-family: 'Noto Serif SC', serif; font-size: 1.6rem; font-weight: 700; color: var(--ink); }
+    .type-sans { font-family: 'Noto Sans SC', sans-serif; font-size: 1.05rem; color: var(--ink); }
+
+    /* ========== 架构 ========== */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    .arch-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 34px;
+    }
+    .arch-panel h3 {
+      font-size: 1.15rem;
+      margin-bottom: 22px;
+      color: var(--ink);
+    }
+    .arch-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .arch-layer {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: var(--card-2);
+      border: 1px solid var(--border-soft);
+      transition: all 0.2s;
+    }
+    .arch-layer:hover { border-color: var(--accent); transform: translateX(4px); }
+    .arch-layer .layer-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .arch-layer .layer-info h4 {
+      font-size: 0.98rem;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .arch-layer .layer-info p {
+      font-size: 0.82rem;
+      color: var(--muted-fg);
+    }
+    .code-tree {
+      font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+      font-size: 0.84rem;
+      line-height: 2;
+      color: var(--ink);
+    }
+    .code-tree .folder { color: var(--accent); font-weight: 600; }
+    .code-tree .file { color: var(--ink); }
+    .code-tree .comment { color: var(--muted); font-style: italic; }
+    .code-tree .indent { padding-left: 1.4em; }
+    .code-tree .indent2 { padding-left: 2.8em; }
+    .code-tree .indent3 { padding-left: 4.2em; }
+
+    /* ========== AI 实现 ========== */
+    .ai-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .ai-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle at top right, color-mix(in srgb, var(--cinnabar) 5%, transparent), transparent 50%);
+      pointer-events: none;
+    }
+    .ai-card .ai-num {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: color-mix(in srgb, var(--cinnabar) 15%, transparent);
+      line-height: 1;
+      margin-bottom: 14px;
+    }
+    .ai-card h4 {
+      font-size: 1.15rem;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .ai-card p {
+      font-size: 0.9rem;
+      color: var(--muted-fg);
+      line-height: 1.9;
+    }
+    .ai-card .ai-model {
+      margin-top: 14px;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 100px;
+      background: color-mix(in srgb, var(--bronze) 10%, transparent);
+      font-size: 0.76rem;
+      color: var(--bronze);
+      font-family: monospace;
+    }
+
+    /* ========== 创新亮点 ========== */
+    .highlights-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .highlight-item {
+      display: flex;
+      gap: 24px;
+      padding: 32px 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      transition: all 0.3s;
+      align-items: flex-start;
+    }
+    .highlight-item:hover {
+      border-color: color-mix(in srgb, var(--cinnabar) 30%, transparent);
+      box-shadow: var(--shadow);
+      transform: translateX(6px);
+    }
+    .highlight-num {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--cinnabar);
+      line-height: 1;
+      flex-shrink: 0;
+      width: 56px;
+      text-align: center;
+    }
+    .highlight-content h4 {
+      font-size: 1.2rem;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .highlight-content p {
+      font-size: 0.92rem;
+      color: var(--muted-fg);
+      line-height: 1.95;
+    }
+
+    /* ========== 页脚 ========== */
+    .footer {
+      padding: 60px 0 50px;
+      text-align: center;
+      border-top: 1px solid var(--border-soft);
+      margin-top: 40px;
+    }
+    .footer .seal-footer {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cinnabar);
+      color: var(--primary-fg);
+      font-family: 'Noto Serif SC', serif;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 0.95rem;
+      letter-spacing: 0.2em;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .footer p {
+      color: var(--muted-fg);
+      font-size: 0.9rem;
+      line-height: 1.9;
+    }
+    .footer .footer-meta {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ========== 动画 ========== */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @keyframes ink-bloom {
+      0% { transform: scale(0.6); opacity: 0; }
+      50% { opacity: 0.6; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .ink-bloom {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--cinnabar);
+      animation: ink-bloom 2s ease-out infinite;
+      pointer-events: none;
+    }
+
+    /* ========== 响应式 ========== */
+    @media (max-width: 900px) {
+      .features-grid, .gallery-grid, .ai-flow { grid-template-columns: repeat(2, 1fr); }
+      .sages-grid { grid-template-columns: repeat(2, 1fr); }
+      .design-grid, .arch-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .hero { padding: 60px 0 40px; }
+      .hero h1 { font-size: 2.3rem; }
+      .hero-subtitle { font-size: 1rem; }
+      .hero-meta { gap: 28px; }
+      .meta-num { font-size: 1.8rem; }
+      .nav-links { display: none; }
+      .features-grid, .gallery-grid, .ai-flow, .sages-grid { grid-template-columns: 1fr; }
+      .section { padding: 48px 0; }
+      .section-title h2 { font-size: 1.6rem; }
+      .overview-card, .design-panel, .arch-panel { padding: 26px; }
+      .highlight-item { flex-direction: column; gap: 12px; padding: 24px; }
+      .highlight-num { font-size: 2rem; }
+      .container { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== 导航 ===== -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo">
+        <span class="seal">溯光</span>
+        <span class="logo-text">溯 · 光</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#overview">项目概述</a>
+        <a href="#features">核心功能</a>
+        <a href="#sages">古人对话</a>
+        <a href="#gallery">知识长廊</a>
+        <a href="#design">设计美学</a>
+        <a href="#architecture">技术架构</a>
+        <a href="#highlights">创新亮点</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="切换明暗主题" aria-label="切换主题">
+          <svg id="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        TRAE AI 创造力大赛 · 报名作品
+      </div>
+      <h1>溯光 Aetherlight</h1>
+      <div class="hero-en">A E T H E R L I G H T</div>
+      <p class="hero-subtitle">
+        溯历史长河，撷文明之光。<br>
+        一个用 AI 激活传统文化的互动平台，以大语言模型为核心引擎，让千年智慧在数字时代「活起来」。
+      </p>
+      <div class="hero-meta">
+        <div class="meta-item">
+          <div class="meta-num">6</div>
+          <div class="meta-label">核心功能模块</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-num">8</div>
+          <div class="meta-label">AI 古人角色</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-num">12</div>
+          <div class="meta-label">知识文章</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-num">7</div>
+          <div class="meta-label">知识分类</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 项目概述 ===== -->
+  <section class="section" id="overview">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">PROJECT OVERVIEW</div>
+        <h2>项目概述</h2>
+        <p>用现代技术重现东方美学</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="overview-card fade-in">
+        <div class="overview-content">
+          <p>
+            <span class="highlight">溯光 Aetherlight</span> 诞生于对传统文化数字化传承的思考——如何让千年文明在数字时代焕发新生？答案是：以 AI 为核心驱动力，构建一个沉浸式的文化互动平台。
+          </p>
+          <p>
+            平台集成了 <span class="highlight">每日撷光</span>、<span class="highlight">知识百科长廊</span>、<span class="highlight">AI 雅士问答</span>、<span class="highlight">与古人对话</span>、<span class="highlight">AI 艺术创作</span> 与 <span class="highlight">聊天社区</span> 等多元功能。以大语言模型为引擎，为用户提供「每日一读、随时问道、跨越时空」的文化体验。
+          </p>
+          <p>
+            视觉设计汲取中国传统美学精髓：宣纸底色、墨色文字、朱砂红印章、古铜金点缀，搭配水墨晕染动效，营造出「数字书斋」的独特氛围。支持明暗双主题，让用户在不同光线下都能舒适阅读。
+          </p>
+          <div class="tech-stack">
+            <span class="tech-tag">React 19</span>
+            <span class="tech-tag">TanStack Router</span>
+            <span class="tech-tag">TanStack Start</span>
+            <span class="tech-tag">Tailwind CSS v4</span>
+            <span class="tech-tag">TypeScript</span>
+            <span class="tech-tag">Vercel AI SDK</span>
+            <span class="tech-tag">Supabase</span>
+            <span class="tech-tag">Radix UI</span>
+            <span class="tech-tag">Vite</span>
+            <span class="tech-tag">Gemini 2.5 Flash</span>
+            <span class="tech-tag">Noto Serif SC</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 核心功能 ===== -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">CORE FEATURES</div>
+        <h2>核心功能模块</h2>
+        <p>六大板块，全方位文化体验</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card fade-in">
+          <div class="icon">📜</div>
+          <h3>每日撷光</h3>
+          <p>每日推送精选文化内容，涵盖节气、节日、诗词、人物等主题。支持日期切换浏览历史内容，可收藏、分享，让文化学习成为日常习惯。</p>
+          <span class="status status-done">● 已完成</span>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🏛</div>
+          <h3>知识长廊</h3>
+          <p>分类展示传统文化知识文章，涵盖节气、节日、诗词、典籍、非遗、民俗、人物七大类别。支持搜索与分类筛选，卡片式浏览。</p>
+          <span class="status status-done">● 已完成</span>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">💬</div>
+          <h3>问道雅士</h3>
+          <p>AI 问答助手，用户可向 AI 雅士请教传统文化相关问题。每答皆有出处可循，引用古籍原文，支持历史问答记录与热门问题推荐。</p>
+          <span class="status status-done">● 已完成</span>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🎭</div>
+          <h3>与古人对话</h3>
+          <p>择一位古人（李白、苏轼、孔子、庄子等），展开跨越时空的 AI 对话。每位古人拥有独特性格、代表作与问候语，支持对话持久化与分享。</p>
+          <span class="status status-done">● 已完成</span>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🎨</div>
+          <h3>创作天地</h3>
+          <p>AI 协助创作诗词、楹联、书法题字。将传统文化与现代 AI 创作能力结合，激发用户创作灵感，让人人皆可成诗。</p>
+          <span class="status status-wip">● 筹备中</span>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">👥</div>
+          <h3>雅集社区</h3>
+          <p>同好相聚，分享文化感悟、收藏与创作。构建传统文化爱好者的线上交流空间，让志同道合者在此「雅集」。</p>
+          <span class="status status-wip">● 筹备中</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 与古人对话 ===== -->
+  <section class="section" id="sages">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">DIALOGUE WITH SAGES</div>
+        <h2>与古人对话</h2>
+        <p>八位历史人物，各具风采 · AI 驱动的沉浸式角色扮演</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="sages-grid">
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cinnabar) 18%, var(--card)), var(--card)); color: var(--cinnabar)">白</div>
+          <h4>李白</h4>
+          <p class="dynasty">唐 · 盛唐</p>
+          <p class="quote">「天生我材必有用，千金散尽还复来。」</p>
+          <div class="sage-tags"><span class="sage-tag">豪放</span><span class="sage-tag">浪漫</span><span class="sage-tag">诗仙</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--bronze) 18%, var(--card)), var(--card)); color: var(--bronze)">甫</div>
+          <h4>杜甫</h4>
+          <p class="dynasty">唐 · 中唐</p>
+          <p class="quote">「安得广厦千万间，大庇天下寒士俱欢颜。」</p>
+          <div class="sage-tags"><span class="sage-tag">沉郁</span><span class="sage-tag">顿挫</span><span class="sage-tag">诗圣</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cinnabar) 18%, var(--card)), var(--card)); color: var(--cinnabar)">轼</div>
+          <h4>苏轼</h4>
+          <p class="dynasty">宋 · 北宋</p>
+          <p class="quote">「但愿人长久，千里共婵娟。」</p>
+          <div class="sage-tags"><span class="sage-tag">豪放</span><span class="sage-tag">旷达</span><span class="sage-tag">全才</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--bronze) 18%, var(--card)), var(--card)); color: var(--bronze)">易</div>
+          <h4>李清照</h4>
+          <p class="dynasty">宋 · 两宋之交</p>
+          <p class="quote">「莫道不销魂，帘卷西风，人比黄花瘦。」</p>
+          <div class="sage-tags"><span class="sage-tag">婉约</span><span class="sage-tag">易安体</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--bronze) 18%, var(--card)), var(--card)); color: var(--bronze)">丘</div>
+          <h4>孔子</h4>
+          <p class="dynasty">春秋</p>
+          <p class="quote">「学而时习之，不亦说乎？」</p>
+          <div class="sage-tags"><span class="sage-tag">仁</span><span class="sage-tag">礼</span><span class="sage-tag">万世师表</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cinnabar) 18%, var(--card)), var(--card)); color: var(--cinnabar)">周</div>
+          <h4>庄子</h4>
+          <p class="dynasty">战国</p>
+          <p class="quote">「天地与我并生，而万物与我为一。」</p>
+          <div class="sage-tags"><span class="sage-tag">逍遥</span><span class="sage-tag">玄妙</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--bronze) 18%, var(--card)), var(--card)); color: var(--bronze)">羲</div>
+          <h4>王羲之</h4>
+          <p class="dynasty">东晋</p>
+          <p class="quote">「群贤毕至，少长咸集。」</p>
+          <div class="sage-tags"><span class="sage-tag">书圣</span><span class="sage-tag">飘逸</span></div>
+        </div>
+        <div class="sage-card fade-in">
+          <div class="sage-avatar" style="background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cinnabar) 18%, var(--card)), var(--card)); color: var(--cinnabar)">寅</div>
+          <h4>唐寅</h4>
+          <p class="dynasty">明 · 中期</p>
+          <p class="quote">「桃花坞里桃花庵，桃花庵下桃花仙。」</p>
+          <div class="sage-tags"><span class="sage-tag">风流</span><span class="sage-tag">才子</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 知识长廊 ===== -->
+  <section class="section" id="gallery">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">KNOWLEDGE GALLERY</div>
+        <h2>知识长廊精选</h2>
+        <p>七大分类 · 十二篇精选文章 · 撷取文明长河中的一缕光</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="gallery-grid">
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">节气</span><span>🌧</span></div>
+          <div class="article-body">
+            <h4>谷雨：雨生百谷</h4>
+            <p>春季最后一个节气，源自"雨生百谷"之说，是播种移苗的关键时令。</p>
+            <div class="article-fav">♥ 1,284 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">节日</span><span>🐉</span></div>
+          <div class="article-body">
+            <h4>端午：汨罗江畔的千年追思</h4>
+            <p>纪念屈原的传统节日，赛龙舟、食粽子、佩香囊。</p>
+            <div class="article-fav">♥ 2,391 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">诗词</span><span>🌙</span></div>
+          <div class="article-body">
+            <h4>静夜思 · 李白</h4>
+            <p>床前明月光，疑是地上霜。举头望明月，低头思故乡。</p>
+            <div class="article-fav">♥ 5,612 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">典籍</span><span>📜</span></div>
+          <div class="article-body">
+            <h4>《论语》：半部治天下</h4>
+            <p>孔门弟子记述孔子言行的语录体散文集，儒家思想的核心经典。</p>
+            <div class="article-fav">♥ 1,893 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">非遗</span><span>🎭</span></div>
+          <div class="article-body">
+            <h4>昆曲：百戏之祖</h4>
+            <p>中国汉族传统戏曲中最古老的剧种之一，2001年列入人类非物质文化遗产。</p>
+            <div class="article-fav">♥ 842 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">民俗</span><span>🍵</span></div>
+          <div class="article-body">
+            <h4>茶事：一盏清欢</h4>
+            <p>从神农尝百草到陆羽《茶经》，茶已成为东方生活美学的代名词。</p>
+            <div class="article-fav">♥ 1,567 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">人物</span><span>🖌</span></div>
+          <div class="article-body">
+            <h4>苏东坡：也无风雨也无晴</h4>
+            <p>宋代文豪，诗书画俱绝，一蓑烟雨任平生。</p>
+            <div class="article-fav">♥ 3,211 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">非遗</span><span>🏺</span></div>
+          <div class="article-body">
+            <h4>青花瓷：景德镇的蓝白韵律</h4>
+            <p>以含氧化钴矿物为色料，在白胎上绘画后烧制而成。</p>
+            <div class="article-fav">♥ 1,432 收藏</div>
+          </div>
+        </div>
+        <div class="article-card fade-in">
+          <div class="article-cover"><span class="article-cat">诗词</span><span>🌕</span></div>
+          <div class="article-body">
+            <h4>水调歌头 · 明月几时有</h4>
+            <p>明月几时有？把酒问青天。不知天上宫阙，今夕是何年。</p>
+            <div class="article-fav">♥ 4,123 收藏</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 设计美学 ===== -->
+  <section class="section" id="design">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">DESIGN AESTHETICS</div>
+        <h2>东方美学设计体系</h2>
+        <p>独创「数字书斋」视觉语言</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="design-grid">
+        <div class="design-panel fade-in">
+          <h3>色彩体系</h3>
+          <div class="color-row">
+            <div class="color-chip">
+              <div class="color-swatch" style="background: #F5F0E8"></div>
+              <div class="color-name">宣纸</div>
+              <div class="color-hex">#F5F0E8</div>
+            </div>
+            <div class="color-chip">
+              <div class="color-swatch" style="background: #2C2C2C"></div>
+              <div class="color-name">墨色</div>
+              <div class="color-hex">#2C2C2C</div>
+            </div>
+            <div class="color-chip">
+              <div class="color-swatch" style="background: #C43A30"></div>
+              <div class="color-name">朱砂</div>
+              <div class="color-hex">#C43A30</div>
+            </div>
+            <div class="color-chip">
+              <div class="color-swatch" style="background: #B8860B"></div>
+              <div class="color-name">古铜</div>
+              <div class="color-hex">#B8860B</div>
+            </div>
+          </div>
+          <p style="margin-top: 22px; font-size: 0.9rem; color: var(--muted-fg); line-height: 1.9;">
+            以宣纸底色为基调，墨色为文字主体，朱砂红用于印章与强调，古铜金用于点缀与标签。四色之间形成温润而富有层次的东方色彩关系。
+          </p>
+        </div>
+        <div class="design-panel fade-in">
+          <h3>字体与动效</h3>
+          <div class="type-sample">
+            <div class="label">标题 · Noto Serif SC</div>
+            <div class="type-serif">溯历史长河</div>
+          </div>
+          <div class="type-sample">
+            <div class="label">正文 · Noto Sans SC</div>
+            <div class="type-sans">撷文明之光，让传统文化活起来</div>
+          </div>
+          <p style="margin-top: 18px; font-size: 0.9rem; color: var(--muted-fg); line-height: 1.9;">
+            标题采用思源宋体，传递古典书卷气；正文采用思源黑体，保证现代屏幕的可读性。搭配水墨晕染加载动画、笔刷揭示动效、滚动渐入等微交互，营造「数字书斋」的沉浸氛围。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 技术架构 ===== -->
+  <section class="section" id="architecture">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">TECHNICAL ARCHITECTURE</div>
+        <h2>技术架构</h2>
+        <p>全栈现代化技术栈 · 清晰模块化代码组织</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="arch-grid">
+        <div class="arch-panel fade-in">
+          <h3>分层架构</h3>
+          <div class="arch-flow">
+            <div class="arch-layer">
+              <div class="layer-icon">🎨</div>
+              <div class="layer-info">
+                <h4>表现层 · React 19 + Radix UI</h4>
+                <p>组件化 UI，shadcn/ui 设计系统，Tailwind CSS v4 原子化样式</p>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="layer-icon">🛣️</div>
+              <div class="layer-info">
+                <h4>路由层 · TanStack Router</h4>
+                <p>类型安全文件路由，支持 SSR 流式渲染与数据预加载</p>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="layer-icon">🤖</div>
+              <div class="layer-info">
+                <h4>AI 层 · Vercel AI SDK</h4>
+                <p>流式文本生成，角色扮演系统提示词，OpenAI 兼容网关接入</p>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="layer-icon">🗄️</div>
+              <div class="layer-info">
+                <h4>数据层 · Supabase</h4>
+                <p>PostgreSQL 数据库，身份认证，每日推送缓存与用户收藏</p>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="layer-icon">⚡</div>
+              <div class="layer-info">
+                <h4>构建层 · Vite + TanStack Start</h4>
+                <p>极速热更新，Nitro 服务端引擎，TypeScript 端到端类型安全</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="arch-panel fade-in">
+          <h3>项目结构</h3>
+          <div class="code-tree">
+            <span class="folder">溯光 Aetherlight/</span><br>
+            <span class="indent folder">src/</span><br>
+            <span class="indent2 folder">components/</span> <span class="comment">// UI 组件</span><br>
+            <span class="indent3 file">app-shell.tsx</span> <span class="comment">// 应用外壳</span><br>
+            <span class="indent3 file">daily-card.tsx</span> <span class="comment">// 每日撷光</span><br>
+            <span class="indent3 file">knowledge-gallery.tsx</span> <span class="comment">// 知识长廊</span><br>
+            <span class="indent3 file">site-header.tsx</span> <span class="comment">// 顶部导航</span><br>
+            <span class="indent3 folder">ui/</span> <span class="comment">// shadcn/ui 组件库</span><br>
+            <span class="indent2 folder">routes/</span> <span class="comment">// 页面路由</span><br>
+            <span class="indent3 file">index.tsx</span> <span class="comment">// 首页</span><br>
+            <span class="indent3 file">chat.tsx</span> <span class="comment">// AI 问答助手</span><br>
+            <span class="indent3 file">dialogue.$id.tsx</span> <span class="comment">// 古人对话</span><br>
+            <span class="indent3 folder">api/</span> <span class="comment">// AI 接口路由</span><br>
+            <span class="indent2 folder">lib/</span> <span class="comment">// 核心逻辑</span><br>
+            <span class="indent3 file">sages.ts</span> <span class="comment">// 古人角色数据</span><br>
+            <span class="indent3 file">knowledge-data.ts</span> <span class="comment">// 知识文章</span><br>
+            <span class="indent3 file">ai-gateway.server.ts</span> <span class="comment">// AI 网关</span><br>
+            <span class="indent3 file">daily-push.functions.ts</span> <span class="comment">// 每日推送</span><br>
+            <span class="indent2 folder">integrations/</span> <span class="comment">// 第三方集成</span><br>
+            <span class="indent3 folder">supabase/</span> <span class="comment">// 数据库 & 认证</span><br>
+            <span class="indent file">styles.css</span> <span class="comment">// 全局样式 & 主题</span><br>
+            <span class="indent file">package.json</span> <span class="comment">// 依赖管理</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AI 实现 ===== -->
+  <section class="section" id="ai">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">AI IMPLEMENTATION</div>
+        <h2>AI 驱动核心</h2>
+        <p>大语言模型如何赋能每一个功能模块</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="ai-flow">
+        <div class="ai-card fade-in">
+          <div class="ai-num">01</div>
+          <h4>每日撷光 · 智能生成</h4>
+          <p>基于日期自动推演节气、节日、历史事件，生成 120-180 字的诗意文化推送。结果缓存至数据库，支持前后日期浏览，让每一天都有专属的文化注脚。</p>
+          <span class="ai-model">generateText · JSON 结构化输出</span>
+        </div>
+        <div class="ai-card fade-in">
+          <div class="ai-num">02</div>
+          <h4>问道雅士 · 流式问答</h4>
+          <p>AI 雅士以清雅书卷气回答传统文化提问，250 字以内精炼作答，引用古籍原文并标注出处。非文化问题会被礼貌引导回主题，确保内容聚焦。</p>
+          <span class="ai-model">streamText · 实时流式响应</span>
+        </div>
+        <div class="ai-card fade-in">
+          <div class="ai-num">03</div>
+          <h4>与古人对话 · 角色扮演</h4>
+          <p>为每位历史人物定制系统提示词，注入朝代、风格、代表作、小传与价值观。AI 始终以古人本人的口吻对话，自然引用诗文典故，不得破坏角色。</p>
+          <span class="ai-model">streamText · 角色 System Prompt</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 创新亮点 ===== -->
+  <section class="section" id="highlights">
+    <div class="container">
+      <div class="section-title fade-in">
+        <div class="eyebrow">INNOVATION HIGHLIGHTS</div>
+        <h2>创新亮点</h2>
+        <p>技术与美学的深度融合</p>
+        <div class="divider-ornament"><span></span><div class="diamond"></div><span></span></div>
+      </div>
+      <div class="highlights-list">
+        <div class="highlight-item fade-in">
+          <div class="highlight-num">1</div>
+          <div class="highlight-content">
+            <h4>东方美学视觉体系</h4>
+            <p>独创「数字书斋」设计语言：宣纸底色、墨色文字、朱砂红印章、古铜金点缀。水墨晕染背景纹理、红印章组件、笔刷揭示动画、墨色晕染加载动效，将传统美学深度融入现代 UI，每一处细节都在诉说东方意韵。</p>
+          </div>
+        </div>
+        <div class="highlight-item fade-in">
+          <div class="highlight-num">2</div>
+          <div class="highlight-content">
+            <h4>AI 驱动的沉浸式古人对话</h4>
+            <p>为 8 位历史人物精心设计性格、代表作、问候语与系统提示词。通过 AI SDK 实现流式角色扮演对话，古人以本人口吻回应，自然引用诗文典故并标注出处。支持对话历史本地持久化、长图分享生成、角色无缝切换，打造真正的「跨越时空」体验。</p>
+          </div>
+        </div>
+        <div class="highlight-item fade-in">
+          <div class="highlight-num">3</div>
+          <div class="highlight-content">
+            <h4>智能化每日文化推送</h4>
+            <p>基于日期自动推演节气、节日、历史人物诞辰，生成富有禅意的文化推送。结果缓存至 Supabase 数据库，支持前后日期自由浏览、一键收藏与分享，让文化学习融入日常，每日撷取文明长河中的一缕光。</p>
+          </div>
+        </div>
+        <div class="highlight-item fade-in">
+          <div class="highlight-num">4</div>
+          <div class="highlight-content">
+            <h4>全栈现代化技术栈</h4>
+            <p>React 19 + TanStack Router/Start 构建全栈 SSR 应用，Vercel AI SDK 接入 Gemini 2.5 Flash 大语言模型实现流式 AI 交互，Supabase 提供数据库与身份认证，Tailwind CSS v4 实现原子化样式，TypeScript 保障端到端类型安全。技术选型兼顾前沿性与工程成熟度。</p>
+          </div>
+        </div>
+        <div class="highlight-item fade-in">
+          <div class="highlight-num">5</div>
+          <div class="highlight-content">
+            <h4>完整的用户体验闭环</h4>
+            <p>从浏览（每日撷光、知识长廊）、学习（AI 问道）、对话（与古人对话）到收藏、分享、历史记录，形成完整的文化体验闭环。支持用户注册登录、个人收藏管理、对话历史查询，打造个性化的数字文化空间，让每位用户都能找到属于自己的文化共鸣。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 页脚 ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="seal-footer">溯光</div>
+      <p>溯历史长河，撷文明之光 · 致敬千年文明</p>
+      <p class="footer-meta">TRAE AI 创造力大赛报名作品 · 2026 · Aetherlight</p>
+    </div>
+  </footer>
+
+  <script>
+    // 明暗主题切换
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('moon-icon').style.display = isDark ? 'none' : 'block';
+      document.getElementById('sun-icon').style.display = isDark ? 'block' : 'none';
+      try { localStorage.setItem('suguang-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+    }
+    // 读取主题偏好
+    (function() {
+      try {
+        const saved = localStorage.getItem('suguang-theme');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.getElementById('moon-icon').style.display = 'none';
+          document.getElementById('sun-icon').style.display = 'block';
+        }
+      } catch(e) {}
+    })();
+
+    // 滚动渐入动画
+    (function() {
+      const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.fade-in').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+  </script>
+</body>
+</html>
