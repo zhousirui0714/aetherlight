@@ -6,6 +6,9 @@ interface Props {
   children: ReactNode;
   /** if true, children render full width (with own container); otherwise wrapped in 1200px container */
   fullBleed?: boolean;
+  /** legacy props (ignored) */
+  title?: string;
+  showSearch?: boolean;
 }
 
 export function AppShell({ children, fullBleed = false }: Props) {

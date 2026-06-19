@@ -3,13 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { Search, Moon, Sun } from "lucide-react";
 import { useTheme } from "./theme-provider";
 
-const NAV = [
+const NAV: { to: "/" | "/chat" | "/create" | "/community"; label: string; exact?: boolean }[] = [
   { to: "/", label: "首页", exact: true },
-  { to: "/gallery", label: "知识长廊" },
   { to: "/chat", label: "问答助手" },
   { to: "/create", label: "创作" },
   { to: "/community", label: "社区" },
-] as const;
+];
 
 export function SiteHeader() {
   const { theme, toggle } = useTheme();
