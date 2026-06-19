@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
@@ -8,7 +8,7 @@ import { SageAvatar } from "./dialogue.index";
 import { Send, Share2, Users, X, Copy, Download, RotateCw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import {
-  loadDialogue, saveDialogue, getDialogueSummary,
+  loadDialogue, saveDialogue,
 } from "@/lib/dialogue-storage";
 
 export const Route = createFileRoute("/dialogue/$id")({
@@ -49,13 +49,17 @@ function SageRoom({ sage }: { sage: Sage }) {
     body: { sageId: sage.id },
   }));
 
-  const seeded = loadDialogue(sage.id);
-
-  const { messages, sendMessage, status, error, regenerate } = useChat({
+  const { messages, sendMessage, setMessages, status, error, regenerate } = useChat({
     id: `sage-${sage.id}`,
-    messages: seeded,
     transport: transport.current,
   });
+
+  // hydrate from localStorage on client to avoid SSR mismatch
+  useEffect(() => {
+    const seeded = loadDialogue(sage.id);
+    if (seeded.length > 0) setMessages(seeded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sage.id]);
 
   // persist on each update
   useEffect(() => {
@@ -408,5 +412,3 @@ function ShareModal({
     </div>
   );
 }
-
-export { getDialogueSummary };
