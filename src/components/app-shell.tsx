@@ -1,46 +1,26 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { Search, Moon, Sun } from "lucide-react";
-import { BottomNav } from "./bottom-nav";
-import { useTheme } from "./theme-provider";
+import { SiteHeader } from "./site-header";
+import { SiteFooter } from "./site-footer";
 
 interface Props {
   children: ReactNode;
+  /** if true, children render full width (with own container); otherwise wrapped in 1200px container */
+  fullBleed?: boolean;
+  /** legacy props (ignored) */
   title?: string;
   showSearch?: boolean;
 }
 
-export function AppShell({ children, title, showSearch = true }: Props) {
-  const { theme, toggle } = useTheme();
+export function AppShell({ children, fullBleed = false }: Props) {
   return (
-    <div className="min-h-screen paper-texture pb-24">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="seal">溯光</span>
-            {title ? <span className="font-serif text-base text-foreground/80">{title}</span> : null}
-          </Link>
-          <div className="flex items-center gap-1">
-            {showSearch && (
-              <button
-                aria-label="搜索"
-                className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Search className="h-5 w-5" strokeWidth={1.6} />
-              </button>
-            )}
-            <button
-              aria-label="切换主题"
-              onClick={toggle}
-              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              {theme === "dark" ? <Sun className="h-5 w-5" strokeWidth={1.6} /> : <Moon className="h-5 w-5" strokeWidth={1.6} />}
-            </button>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-2xl px-4 pt-4">{children}</main>
-      <BottomNav />
+    <div className="flex min-h-screen flex-col paper-texture">
+      <SiteHeader />
+      <main className="flex-1">
+        {fullBleed ? children : (
+          <div className="mx-auto w-full max-w-[1200px] px-6 py-10">{children}</div>
+        )}
+      </main>
+      <SiteFooter />
     </div>
   );
 }

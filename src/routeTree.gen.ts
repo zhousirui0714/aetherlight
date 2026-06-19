@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -27,6 +28,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
+  '/gallery': typeof GalleryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/api/chat': typeof ApiChatRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
+  '/gallery': typeof GalleryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/api/chat': typeof ApiChatRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
+  '/gallery': typeof GalleryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/api/chat': typeof ApiChatRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/community'
     | '/create'
+    | '/gallery'
     | '/onboarding'
     | '/profile'
     | '/api/chat'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/community'
     | '/create'
+    | '/gallery'
     | '/onboarding'
     | '/profile'
     | '/api/chat'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/community'
     | '/create'
+    | '/gallery'
     | '/onboarding'
     | '/profile'
     | '/api/chat'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CommunityRoute: typeof CommunityRoute
   CreateRoute: typeof CreateRoute
+  GalleryRoute: typeof GalleryRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   CommunityRoute: CommunityRoute,
   CreateRoute: CreateRoute,
+  GalleryRoute: GalleryRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   ApiChatRoute: ApiChatRoute,
