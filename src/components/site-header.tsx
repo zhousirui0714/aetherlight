@@ -3,8 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { Search, Moon, Sun } from "lucide-react";
 import { useTheme } from "./theme-provider";
 
-const NAV: { to: "/" | "/chat" | "/create" | "/community"; label: string; exact?: boolean }[] = [
+const NAV: { to: "/" | "/gallery" | "/chat" | "/create" | "/community"; label: string; exact?: boolean }[] = [
   { to: "/", label: "首页", exact: true },
+  { to: "/gallery", label: "知识长廊" },
   { to: "/chat", label: "问答助手" },
   { to: "/create", label: "创作" },
   { to: "/community", label: "社区" },
