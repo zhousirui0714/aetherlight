@@ -12,12 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as DialogueRouteImport } from './routes/dialogue'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DialogueIndexRouteImport } from './routes/dialogue.index'
+import { Route as DialogueHistoryRouteImport } from './routes/dialogue.history'
+import { Route as DialogueIdRouteImport } from './routes/dialogue.$id'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
+import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const ProfileRoute = ProfileRouteImport.update({
@@ -33,6 +38,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DialogueRoute = DialogueRouteImport.update({
+  id: '/dialogue',
+  path: '/dialogue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -60,9 +70,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DialogueIndexRoute = DialogueIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DialogueRoute,
+} as any)
+const DialogueHistoryRoute = DialogueHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => DialogueRoute,
+} as any)
+const DialogueIdRoute = DialogueIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DialogueRoute,
+} as any)
 const ArticleIdRoute = ArticleIdRouteImport.update({
   id: '/article/$id',
   path: '/article/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDialogueRoute = ApiDialogueRouteImport.update({
+  id: '/api/dialogue',
+  path: '/api/dialogue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -77,11 +107,16 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
+  '/dialogue': typeof DialogueRouteWithChildren
   '/gallery': typeof GalleryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/dialogue': typeof ApiDialogueRoute
   '/article/$id': typeof ArticleIdRoute
+  '/dialogue/$id': typeof DialogueIdRoute
+  '/dialogue/history': typeof DialogueHistoryRoute
+  '/dialogue/': typeof DialogueIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,7 +128,11 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/dialogue': typeof ApiDialogueRoute
   '/article/$id': typeof ArticleIdRoute
+  '/dialogue/$id': typeof DialogueIdRoute
+  '/dialogue/history': typeof DialogueHistoryRoute
+  '/dialogue': typeof DialogueIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,11 +141,16 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
+  '/dialogue': typeof DialogueRouteWithChildren
   '/gallery': typeof GalleryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/dialogue': typeof ApiDialogueRoute
   '/article/$id': typeof ArticleIdRoute
+  '/dialogue/$id': typeof DialogueIdRoute
+  '/dialogue/history': typeof DialogueHistoryRoute
+  '/dialogue/': typeof DialogueIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,11 +160,16 @@ export interface FileRouteTypes {
     | '/chat'
     | '/community'
     | '/create'
+    | '/dialogue'
     | '/gallery'
     | '/onboarding'
     | '/profile'
     | '/api/chat'
+    | '/api/dialogue'
     | '/article/$id'
+    | '/dialogue/$id'
+    | '/dialogue/history'
+    | '/dialogue/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +181,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/api/chat'
+    | '/api/dialogue'
     | '/article/$id'
+    | '/dialogue/$id'
+    | '/dialogue/history'
+    | '/dialogue'
   id:
     | '__root__'
     | '/'
@@ -140,11 +193,16 @@ export interface FileRouteTypes {
     | '/chat'
     | '/community'
     | '/create'
+    | '/dialogue'
     | '/gallery'
     | '/onboarding'
     | '/profile'
     | '/api/chat'
+    | '/api/dialogue'
     | '/article/$id'
+    | '/dialogue/$id'
+    | '/dialogue/history'
+    | '/dialogue/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -153,10 +211,12 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CommunityRoute: typeof CommunityRoute
   CreateRoute: typeof CreateRoute
+  DialogueRoute: typeof DialogueRouteWithChildren
   GalleryRoute: typeof GalleryRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiDialogueRoute: typeof ApiDialogueRoute
   ArticleIdRoute: typeof ArticleIdRoute
 }
 
@@ -181,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/gallery'
       fullPath: '/gallery'
       preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dialogue': {
+      id: '/dialogue'
+      path: '/dialogue'
+      fullPath: '/dialogue'
+      preLoaderRoute: typeof DialogueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -218,11 +285,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dialogue/': {
+      id: '/dialogue/'
+      path: '/'
+      fullPath: '/dialogue/'
+      preLoaderRoute: typeof DialogueIndexRouteImport
+      parentRoute: typeof DialogueRoute
+    }
+    '/dialogue/history': {
+      id: '/dialogue/history'
+      path: '/history'
+      fullPath: '/dialogue/history'
+      preLoaderRoute: typeof DialogueHistoryRouteImport
+      parentRoute: typeof DialogueRoute
+    }
+    '/dialogue/$id': {
+      id: '/dialogue/$id'
+      path: '/$id'
+      fullPath: '/dialogue/$id'
+      preLoaderRoute: typeof DialogueIdRouteImport
+      parentRoute: typeof DialogueRoute
+    }
     '/article/$id': {
       id: '/article/$id'
       path: '/article/$id'
       fullPath: '/article/$id'
       preLoaderRoute: typeof ArticleIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dialogue': {
+      id: '/api/dialogue'
+      path: '/api/dialogue'
+      fullPath: '/api/dialogue'
+      preLoaderRoute: typeof ApiDialogueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -235,16 +330,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DialogueRouteChildren {
+  DialogueIdRoute: typeof DialogueIdRoute
+  DialogueHistoryRoute: typeof DialogueHistoryRoute
+  DialogueIndexRoute: typeof DialogueIndexRoute
+}
+
+const DialogueRouteChildren: DialogueRouteChildren = {
+  DialogueIdRoute: DialogueIdRoute,
+  DialogueHistoryRoute: DialogueHistoryRoute,
+  DialogueIndexRoute: DialogueIndexRoute,
+}
+
+const DialogueRouteWithChildren = DialogueRoute._addFileChildren(
+  DialogueRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   CommunityRoute: CommunityRoute,
   CreateRoute: CreateRoute,
+  DialogueRoute: DialogueRouteWithChildren,
   GalleryRoute: GalleryRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiDialogueRoute: ApiDialogueRoute,
   ArticleIdRoute: ArticleIdRoute,
 }
 export const routeTree = rootRouteImport
