@@ -18,9 +18,10 @@ class Settings:
         self.SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
         self.SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
 
-        # Ollama
-        self.OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        self.OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+        # 云端 LLM API（OpenAI 兼容）
+        self.CLOUD_API_KEY: str = os.getenv("CLOUD_API_KEY", "")
+        self.CLOUD_API_BASE_URL: str = os.getenv("CLOUD_API_BASE_URL", "https://api.siliconflow.cn/v1")
+        self.CLOUD_MODEL: str = os.getenv("CLOUD_MODEL", "Qwen/Qwen2.5-7B-Instruct")
 
         # 后端服务
         self.BACKEND_HOST: str = os.getenv("BACKEND_HOST", "0.0.0.0")
@@ -28,9 +29,6 @@ class Settings:
             self.BACKEND_PORT: int = int(os.getenv("BACKEND_PORT", "8000"))
         except Exception:
             self.BACKEND_PORT = 8000
-
-        # 可选的第三方 API
-        self.QWEATHER_API_KEY: str = os.getenv("QWEATHER_API_KEY", "")
 
 
 # 在模块加载时创建全局 settings 实例

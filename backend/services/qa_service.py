@@ -1,7 +1,7 @@
-import json, uuid, time
+import json, uuid, time, httpx
 from datetime import datetime
 from typing import List, Optional, Tuple, AsyncGenerator
-import ollama, supabase
+import supabase
 from config import settings
 
 
@@ -14,8 +14,9 @@ class QAServiceError(Exception):
 class QAService:
     def __init__(self):
         self.sb = self._init_sb()
-        self.ollama_base = settings.OLLAMA_BASE_URL
-        self.model = settings.OLLAMA_MODEL
+        self.api_base = settings.CLOUD_API_BASE_URL
+        self.api_key = settings.CLOUD_API_KEY
+        self.model = settings.CLOUD_MODEL
 
     @staticmethod
     def _init_sb():
@@ -78,14 +79,67 @@ class QAService:
         except: pass
         return {"is_correct": is_correct, "score": score, "analysis": q["analysis"], "needs_ai_grading": needs_ai, "answered_at": datetime.utcnow().isoformat()}
 
+    async def _call_api(self, messages: list, temperature: float = 0.3, max_tokens: int = 500) -> str:
+        """调用云端 OpenAI 兼容 API，返回完整响应文本。"""
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                f"{self.api_base}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "stream": False,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data["choices"][0]["message"]["content"]
+
+    async def _call_api_stream(self, messages: list, temperature: float = 0.3, max_tokens: int = 500) -> AsyncGenerator[str, None]:
+        """调用云端 OpenAI 兼容 API，流式返回 token。"""
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream(
+                "POST",
+                f"{self.api_base}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "stream": True,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                },
+            ) as resp:
+                async for line in resp.aiter_lines():
+                    if not line.startswith("data: "):
+                        continue
+                    data = line[6:]
+                    if data.strip() == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data)
+                        delta = chunk["choices"][0]["delta"].get("content", "")
+                        if delta:
+                            yield delta
+                    except (json.JSONDecodeError, KeyError, IndexError):
+                        continue
+
     async def grade_essay(self, qid, user_answer):
         q = self.sb.table("qa_questions").select("id,type,reference_answer,question").eq("id", qid).execute().data
         if not q: return None
         q = q[0]; ref = q["reference_answer"]
         prompt = f"你是一位语文历史老师。请对学生答案做语义评分（0-100分）并给出一句话反馈。\n题目：{q['question']}\n参考答案要点：{ref}\n学生答案：{user_answer}\n请只输出JSON：{{\"score\": 分数, \"feedback\": \"评语\"}}"
         try:
-            resp = await ollama.AsyncClient(host=self.ollama_base).generate(model=self.model, prompt=prompt)
-            text = str(resp["response"])
+            messages = [{"role": "user", "content": prompt}]
+            text = await self._call_api(messages, temperature=0.3, max_tokens=200)
             idx1 = text.find("{"); idx2 = text.rfind("}")
             if idx1 >= 0 and idx2 >= 0:
                 data = json.loads(text[idx1:idx2+1])
@@ -95,9 +149,7 @@ class QAService:
             return {"score": 0, "feedback": "模型不可用，已记录待批"}
 
     async def ask_stream(self, question: str, category: Optional[str] = None, history: Optional[List[dict]] = None) -> AsyncGenerator[str, None]:
-        """流式问答（SSE）：先做简单检索（按分类或最新条目降级），再调用 Ollama 流式生成。
-        输出为已格式化的 SSE 字符串（每次 yield 以"\n\n"结尾）。"""
-        # 简单检索：按 category 或最新 3 篇文章降级返回片段
+        """流式问答（SSE）：先做简单检索，再调用云端 API 流式生成。"""
         chunks = []
         try:
             q = self.sb.table("knowledge_articles").select("id,title,excerpt,body")
@@ -112,13 +164,11 @@ class QAService:
         except Exception:
             chunks = []
 
-        # 先返回检索结果事件
         try:
             yield json.dumps({"type": "retrieved", "chunks": chunks}) + "\n\n"
         except Exception:
             yield json.dumps({"type": "retrieved", "chunks": []}) + "\n\n"
 
-        # 构造系统提示，将检索到的片段加入上下文
         system_prompt = "你是一个专注于传统文化的中文问答助理，回答要准确并尽量引用来源。"
         if chunks:
             src_text = "\n\n".join([f"来源：{c['source']}\n{c['text']}" for c in chunks])
@@ -129,26 +179,19 @@ class QAService:
             {"role": "user", "content": question},
         ]
 
-        # 调用 Ollama 流式聊天接口
         tokens = 0
         collected = ""
         try:
-            async for resp in ollama.AsyncClient(host=self.ollama_base).chat(
-                model=self.model, messages=messages, stream=True, options={"temperature": 0.3, "num_predict": 500}
-            ):
-                tok = resp.get("message", {}).get("content") or str(resp.get("response", ""))
-                if not tok:
-                    continue
+            async for tok in self._call_api_stream(messages, temperature=0.3, max_tokens=500):
                 tokens += 1
                 collected += tok
                 yield json.dumps({"type": "delta", "content": tok}) + "\n\n"
-            # 生成结束
             yield json.dumps({"type": "done", "total_tokens": tokens}) + "\n\n"
         except Exception as exc:
             yield json.dumps({"type": "error", "message": str(exc)}) + "\n\n"
 
     async def ask_sync(self, question: str, category: Optional[str] = None, history: Optional[List[dict]] = None) -> dict:
-        """非流式问答：返回完整 JSON，包括 answer、sources、retrieved_count、total_tokens、model、latency_ms。"""
+        """非流式问答：返回完整 JSON。"""
         chunks = []
         try:
             q = self.sb.table("knowledge_articles").select("id,title,excerpt,body")
@@ -168,18 +211,15 @@ class QAService:
             src_text = "\n\n".join([f"来源：{c['source']}\n{c['text']}" for c in chunks])
             system_prompt += "\n下面是检索到的相关片段（可作为引用）：\n" + src_text
 
-        prompt = system_prompt + "\n\n问题：" + question + "\n\n请用中文回答，必要时引用上面的来源。"
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": question},
+        ]
+
         try:
-            client = ollama.AsyncClient(host=self.ollama_base)
             t0 = time.time()
-            resp = await client.generate(model=self.model, prompt=prompt, options={"temperature": 0.3, "num_predict": 500})
+            answer = await self._call_api(messages, temperature=0.3, max_tokens=500)
             t1 = time.time()
-            # 兼容不同返回格式
-            if isinstance(resp, dict):
-                raw = resp.get("response") or resp.get("output") or ""
-            else:
-                raw = getattr(resp, "response", "")
-            answer = str(raw)
             latency_ms = int((t1 - t0) * 1000)
             return {
                 "answer": answer,

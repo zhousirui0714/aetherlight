@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import re
+import httpx
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-import ollama
 from supabase import Client, create_client
 
 from config import settings
@@ -147,7 +147,7 @@ class DailyCardService:
                 "weather_hint": card.get("weather_hint"),
                 "theme_tags": card.get("theme_tags", []),
                 "recommended_articles": card.get("recommended_articles", []),
-                "source": card.get("source", "local_llm"),
+                "source": card.get("source", "cloud_llm"),
             }
             self.supabase.table("daily_cards").insert(row).execute()
         except Exception as exc:
@@ -157,7 +157,7 @@ class DailyCardService:
         solar_term = SOLAR_TERMS.get((d.month, d.day), "")
         festival = FESTIVALS.get((d.month, d.day), "")
         season_word = self._season_of(d.month)
-        prompt_lines = [
+        prompt = "\n".join([
             "请以中文为以下日期生成一张每日文化卡片。",
             f"日期: {self._format_date(d)}",
             f"季节: {season_word}",
@@ -169,18 +169,27 @@ class DailyCardService:
             "1) 返回严格合法的 JSON，字段为：title(主标题 8-12字), subtitle(副标题/诗句), body(正文 80-120字 可用\\n\\n换行), image_style(配图风格关键词 1-2词), weather_hint(天气语句), theme_tags(字符串数组 2-4个标签)。",
             "2) 风格清雅有诗意，融合节气和传统文化意象。",
             "3) 只返回 JSON，不要解释性文字。",
-        ]
-        prompt = "\n".join(prompt_lines)
+        ])
         try:
-            client = ollama.Client(host=settings.OLLAMA_BASE_URL)
-            resp = client.generate(
-                model=settings.OLLAMA_MODEL,
-                prompt=prompt,
-                options={"temperature": 0.7},
-            )
-            raw = getattr(resp, "response", "")
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    f"{settings.CLOUD_API_BASE_URL}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {settings.CLOUD_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": settings.CLOUD_MODEL,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "stream": False,
+                        "temperature": 0.7,
+                        "max_tokens": 500,
+                    },
+                )
+                resp.raise_for_status()
+                raw = resp.json()["choices"][0]["message"]["content"]
         except Exception as exc:
-            print("[DailyCardService] Ollama failed:", exc)
+            print("[DailyCardService] Cloud API failed:", exc)
             return None
         parsed = self._parse_json_from_text(raw)
         if parsed is None:
@@ -199,7 +208,7 @@ class DailyCardService:
             "theme_tags": list(parsed.get("theme_tags", []) or []),
             "recommended_articles": [],
             "generated_at": datetime.now().isoformat(),
-            "source": "local_llm",
+            "source": "cloud_llm",
         }
 
     @staticmethod
@@ -276,5 +285,5 @@ class DailyCardService:
             "theme_tags": row.get("theme_tags") or [],
             "recommended_articles": recommended_articles,
             "generated_at": str(row.get("generated_at", "")),
-            "source": row.get("source", "local_llm"),
+            "source": row.get("source", "cloud_llm"),
         }

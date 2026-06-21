@@ -1,6 +1,6 @@
-import json, uuid
+import json, uuid, httpx
 from typing import AsyncGenerator, List, Optional, Tuple
-import ollama, supabase
+import supabase
 from config import settings
 from services.character_service import CharacterService
 
@@ -14,8 +14,9 @@ class ChatServiceError(Exception):
 class ChatService:
     def __init__(self):
         self.sb = self._init_sb()
-        self.ollama_base = settings.OLLAMA_BASE_URL
-        self.model = settings.OLLAMA_MODEL
+        self.api_base = settings.CLOUD_API_BASE_URL
+        self.api_key = settings.CLOUD_API_KEY
+        self.model = settings.CLOUD_MODEL
 
     @staticmethod
     def _init_sb():
@@ -53,13 +54,37 @@ class ChatService:
         messages = [{"role":"system","content":sp}] + [{"role":m["role"],"content":m["content"]} for m in history]
         try:
             tokens, collected = 0, ""
-            async for resp in ollama.AsyncClient(host=self.ollama_base).chat(
-                model=self.model, messages=messages, stream=True,
-                options={"temperature":0.8,"num_predict":500}
-            ):
-                tok = resp["message"]["content"]
-                tokens, collected = tokens+1, collected+tok
-                yield json.dumps({"type":"delta","content":tok})+"\n\n"
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                async with client.stream(
+                    "POST",
+                    f"{self.api_base}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": messages,
+                        "stream": True,
+                        "temperature": 0.8,
+                        "max_tokens": 500,
+                    },
+                ) as resp:
+                    async for line in resp.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue
+                        data = line[6:]
+                        if data.strip() == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data)
+                            delta = chunk["choices"][0]["delta"].get("content", "")
+                            if delta:
+                                tokens += 1
+                                collected += delta
+                                yield json.dumps({"type":"delta","content":delta})+"\n\n"
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue
             self._save_msg(sid, "assistant", collected)
             char_svc.increment_count(cid)
             yield json.dumps({"type":"done","session_id":sid,"tokens":tokens})+"\n\n"
