@@ -2,14 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "framework": "nitro",
   "outputDirectory": ".output",
-  "regions": ["iad1"],
-  "functions": {
-    ".output/server/**/*.mjs": {
-      "runtime": "@vercel/node@3",
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  "regions": ["iad1"]
 }
