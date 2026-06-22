@@ -1,30 +1,35 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
-const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3:8b";
 
-export function createLovableAiGatewayProvider(lovableApiKey: string, initialRunId?: string) {
-  let runId = initialRunId?.trim() || undefined;
+const BAILIAN_API_KEY = process.env.BAILIAN_API_KEY;
+const BAILIAN_BASE_URL = process.env.BAILIAN_BASE_URL;
 
-  const provider = createOpenAICompatible({
-    name: "lovable",
-    baseURL: "https://ai.gateway.lovable.dev/v1",
+export function createAiProvider() {
+  if (BAILIAN_API_KEY && BAILIAN_BASE_URL) {
+    return createOpenAICompatible({
+      name: "bailian",
+      baseURL: BAILIAN_BASE_URL,
+      headers: {
+        "Authorization": `Bearer ${BAILIAN_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+  }
+  
+  return createOpenAICompatible({
+    name: "ollama",
+    baseURL: `${OLLAMA_BASE_URL}/v1`,
     headers: {
-      "Lovable-API-Key": lovableApiKey,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
-    },
-    fetch: async (input, init) => {
-      const headers = new Headers(init?.headers);
-      if (runId && !headers.has(LOVABLE_AIG_RUN_ID_HEADER)) {
-        headers.set(LOVABLE_AIG_RUN_ID_HEADER, runId);
-      }
-      const response = await fetch(input, { ...init, headers });
-      const next = response.headers.get(LOVABLE_AIG_RUN_ID_HEADER);
-      if (!runId && next) runId = next;
-      return response;
+      "Content-Type": "application/json",
     },
   });
+}
 
-  return Object.assign(provider, {
-    getRunId: () => runId,
-  });
+export function getDefaultModel() {
+  if (BAILIAN_API_KEY && BAILIAN_BASE_URL) {
+    return process.env.BAILIAN_MODEL || "qwen-plus";
+  }
+  return OLLAMA_MODEL;
 }

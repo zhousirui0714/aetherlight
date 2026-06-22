@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createAiProvider, getDefaultModel } from "@/lib/ai-gateway.server";
 import { findSage } from "@/lib/sages";
 
 export const Route = createFileRoute("/api/dialogue")({
@@ -15,10 +15,7 @@ export const Route = createFileRoute("/api/dialogue")({
         const sage = findSage(sageId);
         if (!sage) return new Response("unknown sage", { status: 404 });
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("缺少 LOVABLE_API_KEY", { status: 500 });
-
-        const gateway = createLovableAiGatewayProvider(key);
+        const provider = createAiProvider();
         const system = `你正在扮演中国历史人物【${sage.name}】，${sage.dynasty}人。
 风格关键词：${sage.styles.join("、")}
 代表作：${sage.works.join("、")}
@@ -34,7 +31,7 @@ export const Route = createFileRoute("/api/dialogue")({
 - 始终保持温润、雅致、有文化底蕴的语气。`;
 
         const result = streamText({
-          model: gateway("google/gemini-2.5-flash"),
+          model: provider(getDefaultModel()),
           system,
           messages: await convertToModelMessages(messages),
         });
