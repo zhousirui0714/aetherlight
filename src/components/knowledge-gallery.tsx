@@ -1,23 +1,78 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search } from "lucide-react";
+import { Heart, Search, Loader2 } from "lucide-react";
 import { ARTICLES, CATEGORIES, type Article } from "@/lib/knowledge-data";
+import { supabase } from "@/integrations/supabase/client";
+
+type DbArticle = {
+  id: string;
+  title: string;
+  category: string;
+  excerpt: string;
+  body: string;
+  favorites: number;
+  cover: string | null;
+  created_at: string;
+};
 
 export function KnowledgeGallery() {
-  const [cat, setCat] = useState<(typeof CATEGORIES)[number]>("全部");
+  const [cat, setCat] = useState<"全部" | string>("全部");
   const [q, setQ] = useState("");
+  const [articles, setArticles] = useState<DbArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const items = useMemo(() => {
+  // Fetch articles from Supabase
+  useEffect(() => {
+    const fetchArticles = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("knowledge_articles")
+          .select("id, title, category, excerpt, favorites, cover, created_at")
+          .order("created_at", { ascending: false });
+
+        if (fetchError) throw fetchError;
+        setArticles(data || []);
+      } catch (err) {
+        console.error("Failed to fetch articles:", err);
+        setError("加载失败，请刷新重试");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticles();
+  }, []);
+
+  // Use Supabase data if available, otherwise fallback to static data
+  const displayArticles = useMemo(() => {
+    if (articles.length > 0) {
+      let list: DbArticle[] = [...articles];
+      if (cat !== "全部") list = list.filter((a) => a.category === cat);
+      if (q.trim()) {
+        const k = q.trim().toLowerCase();
+        list = list.filter(
+          (a) => a.title.toLowerCase().includes(k) || a.excerpt.toLowerCase().includes(k)
+        );
+      }
+      return { list, fromDb: true };
+    }
+
+    // Fallback to static data
     let list: Article[] = ARTICLES;
     if (cat !== "全部") list = list.filter((a) => a.category === cat);
     if (q.trim()) {
       const k = q.trim().toLowerCase();
       list = list.filter(
-        (a) => a.title.toLowerCase().includes(k) || a.excerpt.toLowerCase().includes(k),
+        (a) => a.title.toLowerCase().includes(k) || a.excerpt.toLowerCase().includes(k)
       );
     }
-    return list;
-  }, [cat, q]);
+    return { list, fromDb: false };
+  }, [cat, q, articles]);
+
+  const isDb = displayArticles.fromDb;
+  const items = displayArticles.list;
 
   return (
     <section className="mt-24">
@@ -28,6 +83,7 @@ export function KnowledgeGallery() {
       </div>
 
       <div className="mb-6 flex flex-col items-center gap-5">
+        {/* search */}
         <div className="flex w-full max-w-xl items-center gap-2 rounded-full border border-border bg-card px-5 py-3">
           <Search className="h-4 w-4 text-muted-foreground" />
           <input
@@ -36,8 +92,14 @@ export function KnowledgeGallery() {
             placeholder="搜索你感兴趣的知识..."
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/70"
           />
+          {q && (
+            <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground">
+              ×
+            </button>
+          )}
         </div>
 
+        {/* categories */}
         <div className="flex flex-wrap items-center justify-center gap-1">
           {CATEGORIES.map((c) => {
             const active = cat === c;
@@ -59,44 +121,85 @@ export function KnowledgeGallery() {
         </div>
       </div>
 
-      {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border py-20 text-center text-muted-foreground">
-          <p className="font-serif text-lg">未撷得相关篇章</p>
-          <p className="mt-2 text-sm">换一个关键词试试</p>
+      {/* loading state */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 font-serif text-sm text-muted-foreground">撷取中...</p>
         </div>
-      ) : (
+      )}
+
+      {/* error state */}
+      {error && !loading && (
+        <div className="rounded-2xl border border-border bg-card py-12 text-center">
+          <p className="font-serif text-lg text-foreground">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90"
+          >
+            刷新页面
+          </button>
+        </div>
+      )}
+
+      {/* empty state */}
+      {!loading && !error && items.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border py-20 text-center">
+          <p className="font-serif text-lg text-foreground">未撷得相关篇章</p>
+          <p className="mt-2 text-sm text-muted-foreground">换一个关键词或分类试试</p>
+        </div>
+      )}
+
+      {/* articles grid */}
+      {!loading && !error && items.length > 0 && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((a, i) => (
+          {items.map((item, i) => (
             <Link
-              key={a.id}
+              key={item.id}
               to="/article/$id"
-              params={{ id: a.id }}
+              params={{ id: item.id }}
               style={{ animationDelay: `${i * 40}ms` }}
               className="scroll-in group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.25)]"
             >
+              {/* cover */}
               <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-secondary via-background to-secondary">
-                <div className="absolute inset-0 opacity-40" style={{
-                  background: "radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)",
-                }} />
+                <div
+                  className="absolute inset-0 opacity-40"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)",
+                  }}
+                />
                 <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
-                  {a.cover}
+                  {isDb ? (item.cover || "📜") : (item as Article).cover}
                 </div>
                 <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
-                  {a.category}
+                  {item.category}
                 </span>
               </div>
+
+              {/* content */}
               <div className="flex flex-1 flex-col gap-2 p-5">
                 <h3 className="font-serif text-lg font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-                  {a.title}
+                  {item.title}
                 </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">{a.excerpt}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+                  {item.excerpt}
+                </p>
                 <div className="mt-auto flex items-center gap-1.5 pt-2 text-xs text-muted-foreground">
-                  <Heart className="h-3.5 w-3.5" /> {a.favorites.toLocaleString()} 收藏
+                  <Heart className="h-3.5 w-3.5" /> {item.favorites.toLocaleString()} 收藏
                 </div>
               </div>
             </Link>
           ))}
         </div>
+      )}
+
+      {/* source indicator */}
+      {!loading && articles.length > 0 && (
+        <p className="mt-8 text-center text-xs text-muted-foreground/50">
+          共 {items.length} 篇篇章 {isDb ? "· 数据来源：溯光知识库" : ""}
+        </p>
       )}
     </section>
   );

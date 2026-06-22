@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { SAGES, findSage } from "@/lib/sages";
 import { SageAvatar } from "./dialogue.index";
 import { clearDialogue, listAllDialogues, type DialogueSummary } from "@/lib/dialogue-storage";
-import { Trash2, ArrowRight, MessageSquare, X } from "lucide-react";
+import { Trash2, ArrowRight, MessageSquare, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dialogue/history")({
@@ -22,10 +22,13 @@ function HistoryPage() {
   const [summaries, setSummaries] = useState<DialogueSummary[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const refresh = () => {
-    const list = listAllDialogues(SAGES.map((s) => s.id));
+  const refresh = async () => {
+    setLoading(true);
+    const list = await listAllDialogues(SAGES.map((s) => s.id));
     setSummaries(list);
+    setLoading(false);
     if (!selected && list.length > 0) setSelected(list[0].sageId);
     if (selected && !list.find((s) => s.sageId === selected)) {
       setSelected(list[0]?.sageId ?? null);
@@ -37,11 +40,11 @@ function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleDelete = (sageId: string) => {
-    clearDialogue(sageId);
+  const handleDelete = async (sageId: string) => {
+    await clearDialogue(sageId);
     setConfirmDelete(null);
     toast("已清空对话");
-    refresh();
+    await refresh();
   };
 
   return (
@@ -59,7 +62,12 @@ function HistoryPage() {
         <h1 className="mt-3 font-serif text-4xl text-foreground">历 史 对 话</h1>
       </div>
 
-      {summaries.length === 0 ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 font-serif text-sm text-muted-foreground">加载中...</p>
+        </div>
+      ) : summaries.length === 0 ? (
         <EmptyState onGo={() => navigate({ to: "/dialogue" })} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[240px_1fr]">

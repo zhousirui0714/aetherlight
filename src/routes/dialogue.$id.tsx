@@ -54,10 +54,13 @@ function SageRoom({ sage }: { sage: Sage }) {
     transport: transport.current,
   });
 
-  // hydrate from localStorage on client to avoid SSR mismatch
+  // hydrate from cloud/localStorage on client
   useEffect(() => {
-    const seeded = loadDialogue(sage.id);
-    if (seeded.length > 0) setMessages(seeded);
+    const hydrate = async () => {
+      const seeded = await loadDialogue(sage.id);
+      if (seeded.length > 0) setMessages(seeded);
+    };
+    hydrate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sage.id]);
 
