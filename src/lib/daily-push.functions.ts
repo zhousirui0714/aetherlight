@@ -12,7 +12,7 @@ export const fetchDailyPush = createServerFn({ method: "POST" })
 
     const { data: existing } = await supabaseAdmin
       .from("daily_pushes")
-      .select("date,title,body,source_note")
+      .select("date,title,body,source_note,image_prompt")
       .eq("date", data.date)
       .maybeSingle();
 
@@ -33,11 +33,12 @@ export const fetchDailyPush = createServerFn({ method: "POST" })
 {
   "title": "8-14字的诗意标题",
   "body": "120-180字的正文,讲述这个文化主题,使用富有意境的中文",
-  "source_note": "一句话来源标注,如 '根据${month}月${day}日·节气推演' 或 '出自《XX》'"
+  "source_note": "一句话来源标注,如 '根据${month}月${day}日·节气推演' 或 '出自《XX》'",
+  "image_prompt": "用于AI生成图片的英文提示词,描述与主题相关的古典中国风画面,包含场景元素和氛围描述"
 }`,
     });
 
-    let parsed: { title: string; body: string; source_note: string };
+    let parsed: { title: string; body: string; source_note: string; image_prompt?: string };
     try {
       const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
       parsed = JSON.parse(cleaned);
@@ -49,12 +50,16 @@ export const fetchDailyPush = createServerFn({ method: "POST" })
       };
     }
 
+    // 如果没有生成图片提示词，生成一个默认的
+    let imagePrompt = parsed.image_prompt || `Chinese traditional culture art, ${parsed.title}, elegant ink painting style, ${month} month ${day} day theme, serene atmosphere, classical Chinese aesthetics, soft colors`;
+
     await supabaseAdmin.from("daily_pushes").insert({
       date: data.date,
       title: parsed.title,
       body: parsed.body,
       source_note: parsed.source_note,
+      image_prompt: imagePrompt,
     });
 
-    return { date: data.date, ...parsed };
+    return { date: data.date, ...parsed, image_prompt: imagePrompt };
   });

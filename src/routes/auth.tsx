@@ -18,9 +18,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
-  const [authType, setAuthType] = useState<"email" | "phone">("email");
+  const [loginType, setLoginType] = useState<"password" | "code">("password");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [code, setCode] = useState("");
@@ -29,7 +28,6 @@ function AuthPage() {
   const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
 
-  // 倒计时逻辑
   useEffect(() => {
     if (countdown > 0) {
       const timer = setInterval(() => {
@@ -39,37 +37,24 @@ function AuthPage() {
     }
   }, [countdown]);
 
-  // 发送验证码
   const sendCode = async () => {
-    if (!phone && !email) {
-      toast.error("请先填写手机号或邮箱");
+    if (!email) {
+      toast.error("请先填写邮箱");
       return;
     }
 
     setLoading(true);
     try {
-      if (authType === "phone") {
-        // 手机验证码登录/注册
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: phone.startsWith("+86") ? phone : `+86${phone}`,
-          options: {
-            channel: "sms",
-          },
-        });
-        if (error) throw error;
-      } else {
-        // 邮箱验证码登录/注册
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) throw error;
       setCodeSent(true);
       setCountdown(60);
-      toast("验证码已发送，请查收");
+      toast("验证码已发送，请查收邮件");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "发送失败");
     } finally {
@@ -82,7 +67,6 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        // 注册流程：邮箱+密码注册
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -95,23 +79,18 @@ function AuthPage() {
         toast("注册成功，请查收验证邮件");
         navigate({ to: "/" });
       } else {
-        // 登录流程
-        if (codeSent) {
-          // 使用验证码登录
+        if (loginType === "code") {
           if (!code) {
             toast.error("请输入验证码");
             return;
           }
-
           const { error } = await supabase.auth.verifyOtp({
-            phone: authType === "phone" ? (phone.startsWith("+86") ? phone : `+86${phone}`) : undefined,
-            email: authType === "email" ? email : undefined,
+            email,
             token: code,
-            type: authType === "phone" ? "sms" : "email",
+            type: "email",
           });
           if (error) throw error;
         } else {
-          // 使用密码登录
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
         }
@@ -143,7 +122,6 @@ function AuthPage() {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="grid w-full max-w-[960px] overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] md:grid-cols-2">
-          {/* brand side */}
           <div className="relative hidden flex-col justify-between overflow-hidden p-12 md:flex" style={{
             background:
               "linear-gradient(135deg, color-mix(in oklab, var(--color-cinnabar) 12%, var(--color-card)) 0%, color-mix(in oklab, var(--color-bronze) 10%, var(--color-card)) 100%)",
@@ -169,7 +147,6 @@ function AuthPage() {
             </div>
           </div>
 
-          {/* form side */}
           <div className="p-10 md:p-12">
             <div className="mb-8 flex gap-1 rounded-full border border-border bg-background/40 p-1">
               {(["login", "signup"] as const).map((m) => (
@@ -179,6 +156,7 @@ function AuthPage() {
                     setMode(m);
                     setCodeSent(false);
                     setCode("");
+                    setLoginType("password");
                   }}
                   className={`flex-1 rounded-full py-2 font-serif text-sm tracking-widest transition ${
                     mode === m ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground"
@@ -201,18 +179,17 @@ function AuthPage() {
                 <Field label="昵称" value={nickname} onChange={setNickname} placeholder="您的雅号" />
               )}
 
-              {/* 登录方式切换 */}
               {mode === "login" && (
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthType("email");
+                      setLoginType("password");
                       setCodeSent(false);
                       setCode("");
                     }}
                     className={`flex-1 rounded-full py-2 text-xs font-serif tracking-widest transition ${
-                      authType === "email" && !codeSent
+                      loginType === "password"
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-muted-foreground"
                     }`}
@@ -221,13 +198,9 @@ function AuthPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setAuthType("phone");
-                      setCodeSent(false);
-                      setCode("");
-                    }}
+                    onClick={() => setLoginType("code")}
                     className={`flex-1 rounded-full py-2 text-xs font-serif tracking-widest transition ${
-                      authType === "phone" || codeSent
+                      loginType === "code" || codeSent
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-muted-foreground"
                     }`}
@@ -237,29 +210,16 @@ function AuthPage() {
                 </div>
               )}
 
-              {/* 账号输入 */}
-              {authType === "phone" ? (
-                <Field
-                  label="手机号"
-                  type="tel"
-                  value={phone}
-                  onChange={setPhone}
-                  placeholder="138****8888"
-                  required
-                />
-              ) : (
-                <Field
-                  label="邮箱"
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  placeholder="you@example.com"
-                  required
-                />
-              )}
+              <Field
+                label="邮箱"
+                type="email"
+                value={email}
+                onChange={setEmail}
+                placeholder="you@example.com"
+                required
+              />
 
-              {/* 验证码 */}
-              {(mode === "login" && (codeSent || authType === "phone")) && (
+              {(mode === "login" && (loginType === "code" || codeSent)) && (
                 <Field
                   label="验证码"
                   value={code}
@@ -271,9 +231,7 @@ function AuthPage() {
                       onClick={sendCode}
                       disabled={loading || countdown > 0}
                       className={`rounded-full px-3 py-1 text-xs transition ${
-                        countdown > 0
-                          ? "bg-secondary text-muted-foreground"
-                          : loading
+                        countdown > 0 || loading
                           ? "bg-secondary text-muted-foreground"
                           : "bg-secondary text-muted-foreground hover:text-foreground"
                       }`}
@@ -284,8 +242,7 @@ function AuthPage() {
                 />
               )}
 
-              {/* 密码 */}
-              {mode === "signup" || (!codeSent && authType === "email") ? (
+              {mode === "signup" || loginType === "password" ? (
                 <Field
                   label="密码"
                   type="password"
@@ -296,7 +253,7 @@ function AuthPage() {
                 />
               ) : null}
 
-              {mode === "login" && !codeSent && (
+              {mode === "login" && loginType === "password" && (
                 <div className="flex justify-end">
                   <button type="button" className="text-xs text-muted-foreground hover:text-primary">忘记密码？</button>
                 </div>

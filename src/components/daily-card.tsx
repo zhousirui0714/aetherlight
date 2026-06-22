@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchDailyPush } from "@/lib/daily-push.functions";
 import { toast } from "sonner";
 
-type DailyPush = { date: string; title: string; body: string; source_note: string | null };
+type DailyPush = { date: string; title: string; body: string; source_note: string | null; image_prompt?: string };
 
 function fmtDate(d: Date) { return d.toISOString().slice(0, 10); }
 function chineseDate(d: Date) {
@@ -17,12 +17,24 @@ export function DailyCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [favored, setFavored] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
 
   const load = async (d: Date) => {
-    setLoading(true); setError(null); setFavored(false);
+    setLoading(true); setError(null); setFavored(false); setImageUrl(null);
     try {
       const res = await fetchDailyPush({ data: { date: fmtDate(d) } });
       setData(res);
+
+      // 生成图片
+      if (res.image_prompt) {
+        setImageLoading(true);
+        const encodedPrompt = encodeURIComponent(res.image_prompt);
+        const url = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=portrait_4_3`;
+        setImageUrl(url);
+        setImageLoading(false);
+      }
+
       const { data: session } = await supabase.auth.getSession();
       if (session.session?.user) {
         const { data: fav } = await supabase
@@ -151,22 +163,34 @@ export function DailyCard() {
               </div>
             </div>
 
-            {/* decorative illustration column */}
+            {/* illustration column */}
             <div className="hidden md:flex">
-              <div className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/70 bg-gradient-to-br from-background/40 via-secondary/50 to-background/40">
-                <div className="absolute inset-0 opacity-30" style={{
-                  background:
-                    "radial-gradient(circle at 30% 30%, var(--color-bronze) 0%, transparent 40%), radial-gradient(circle at 70% 70%, var(--color-cinnabar) 0%, transparent 45%)",
-                }} />
-                <div className="relative text-center">
-                  <div className="font-serif text-[140px] leading-none text-foreground/85 select-none">
-                    {data.title.slice(0, 1)}
-                  </div>
-                  <div className="mt-2 font-serif text-xs tracking-[0.5em] text-muted-foreground">
-                    SUGUANG
+              {imageUrl && !imageLoading ? (
+                <div className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-border/70 shadow-lg">
+                  <img
+                    src={imageUrl}
+                    alt={data.title}
+                    className="h-[320px] w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
+                </div>
+              ) : (
+                <div className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/70 bg-gradient-to-br from-background/40 via-secondary/50 to-background/40">
+                  <div className="absolute inset-0 opacity-30" style={{
+                    background:
+                      "radial-gradient(circle at 30% 30%, var(--color-bronze) 0%, transparent 40%), radial-gradient(circle at 70% 70%, var(--color-cinnabar) 0%, transparent 45%)",
+                  }} />
+                  <div className="relative text-center">
+                    <div className="font-serif text-[140px] leading-none text-foreground/85 select-none">
+                      {data.title.slice(0, 1)}
+                    </div>
+                    <div className="mt-2 font-serif text-xs tracking-[0.5em] text-muted-foreground">
+                      SUGUANG
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
