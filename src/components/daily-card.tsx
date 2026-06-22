@@ -19,22 +19,23 @@ export function DailyCard() {
   const [favored, setFavored] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const load = async (d: Date) => {
-    setLoading(true); setError(null); setFavored(false); setImageUrl(null);
+    setLoading(true); setError(null); setFavored(false); setImageUrl(null); setImageError(false);
     try {
       const res = await fetchDailyPush({ data: { date: fmtDate(d) } });
       setData(res);
 
-      // 生成图片
-      if (res.image_prompt) {
-        setImageLoading(true);
-        const encodedPrompt = encodeURIComponent(res.image_prompt);
-        const url = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=portrait_4_3`;
-        setImageUrl(url);
-        setImageLoading(false);
-      }
+      // 生成图片 - 始终尝试生成，即使没有 image_prompt
+      setImageLoading(true);
+      const prompt = res.image_prompt || `Chinese traditional painting, ${res.title}, elegant, ink wash style, serene atmosphere`;
+      const encodedPrompt = encodeURIComponent(prompt);
+      const url = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=portrait_4_3`;
+      setImageUrl(url);
+      setImageLoading(false);
 
+      // 检查收藏状态
       const { data: session } = await supabase.auth.getSession();
       if (session.session?.user) {
         const { data: fav } = await supabase
@@ -46,6 +47,16 @@ export function DailyCard() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "撷取失败");
     } finally { setLoading(false); }
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    // 尝试使用备用图片服务
+    if (data) {
+      const backupPrompt = encodeURIComponent(`Chinese traditional art, ${data.title}, landscape painting`);
+      const backupUrl = `https://neeko-copilot.bytedance.net/api/text2image?prompt=${backupPrompt}&size=512x768`;
+      setImageUrl(backupUrl);
+    }
   };
 
   useEffect(() => { load(date); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [date]);
@@ -165,13 +176,21 @@ export function DailyCard() {
 
             {/* illustration column */}
             <div className="hidden md:flex">
-              {imageUrl && !imageLoading ? (
+              {imageLoading ? (
+                <div className="flex w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/70 bg-gradient-to-br from-background/40 via-secondary/50 to-background/40">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                    <span className="text-xs text-muted-foreground">生成图片中...</span>
+                  </div>
+                </div>
+              ) : imageUrl ? (
                 <div className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-border/70 shadow-lg">
                   <img
                     src={imageUrl}
                     alt={data.title}
                     className="h-[320px] w-full object-cover"
                     loading="lazy"
+                    onError={handleImageError}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
                 </div>
@@ -186,7 +205,7 @@ export function DailyCard() {
                       {data.title.slice(0, 1)}
                     </div>
                     <div className="mt-2 font-serif text-xs tracking-[0.5em] text-muted-foreground">
-                      SUGUANG
+                      AETHERLIGHT
                     </div>
                   </div>
                 </div>
