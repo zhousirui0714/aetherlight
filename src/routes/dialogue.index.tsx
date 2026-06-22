@@ -7,8 +7,8 @@ import { Clock, ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/dialogue/")({
   head: () => ({
     meta: [
-      { title: "与古人对话 · 角色市场 · 溯光" },
-      { name: "description", content: "择一位古人，共话春秋。李白、苏轼、孔子、庄子、王羲之等任你结识。" },
+      { title: "与名家对话 · 角色市场 · 溯光" },
+      { name: "description", content: "择一位名家，共话春秋。李白、苏轼、孔子、庄子、王羲之等任你结识。" },
     ],
   }),
   component: DialogueMarket,
@@ -28,13 +28,13 @@ function DialogueMarket() {
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link to="/" className="hover:text-foreground">首页</Link>
         <span className="mx-2 text-border">/</span>
-        <span className="text-foreground/80">与古人对话</span>
+        <span className="text-foreground/80">与名家对话</span>
       </nav>
 
       <div className="mb-10 flex flex-col items-center text-center">
         <div className="font-serif text-xs tracking-[0.4em] text-accent">DIALOGUE WITH THE SAGES</div>
-        <h1 className="mt-3 font-serif text-4xl text-foreground">与 古 人 对 话</h1>
-        <p className="mt-3 text-sm text-muted-foreground">择一位古人，共话春秋</p>
+        <h1 className="mt-3 font-serif text-4xl text-foreground">与 名 家 对 话</h1>
+        <p className="mt-3 text-sm text-muted-foreground">择一位名家，共话春秋</p>
 
         <Link
           to="/dialogue/history"

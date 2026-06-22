@@ -10,8 +10,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/dialogue/history")({
   head: () => ({
     meta: [
-      { title: "历史对话 · 与古人对话 · 溯光" },
-      { name: "description", content: "回看你与各位古人的过往对话，可继续对谈或清空记录。" },
+      { title: "历史对话 · 与名家对话 · 溯光" },
+      { name: "description", content: "回看你与各位名家的过往对话，可继续对谈或清空记录。" },
     ],
   }),
   component: HistoryPage,
@@ -52,7 +52,7 @@ function HistoryPage() {
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link to="/" className="hover:text-foreground">首页</Link>
         <span className="mx-2 text-border">/</span>
-        <Link to="/dialogue" className="hover:text-foreground">与古人对话</Link>
+        <Link to="/dialogue" className="hover:text-foreground">与名家对话</Link>
         <span className="mx-2 text-border">/</span>
         <span className="text-foreground/80">历史记录</span>
       </nav>
@@ -195,7 +195,7 @@ function EmptyState({ onGo }: { onGo: () => void }) {
       <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-background/40 font-serif text-3xl text-muted-foreground">
         书
       </div>
-      <p className="font-serif text-lg text-foreground">尚未与任何古人对话</p>
+      <p className="font-serif text-lg text-foreground">尚未与任何名家对话</p>
       <p className="mt-2 text-sm text-muted-foreground">去角色市场结识一位雅士罢</p>
       <button
         onClick={onGo}

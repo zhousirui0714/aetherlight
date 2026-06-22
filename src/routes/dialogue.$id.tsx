@@ -88,7 +88,7 @@ function SageRoom({ sage }: { sage: Sage }) {
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link to="/" className="hover:text-foreground">首页</Link>
         <span className="mx-2 text-border">/</span>
-        <Link to="/dialogue" className="hover:text-foreground">与古人对话</Link>
+        <Link to="/dialogue" className="hover:text-foreground">与名家对话</Link>
         <span className="mx-2 text-border">/</span>
         <span className="text-foreground/80">{sage.name}</span>
       </nav>
@@ -133,7 +133,7 @@ function SageRoom({ sage }: { sage: Sage }) {
               onClick={() => setShowSwitcher((v) => !v)}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background/40 py-2.5 font-serif text-sm tracking-widest text-foreground/80 transition hover:border-primary/40 hover:text-primary"
             >
-              <Users className="h-4 w-4" /> 切换古人
+              <Users className="h-4 w-4" /> 切换名家
               <ChevronDown className={`h-4 w-4 transition-transform ${showSwitcher ? "rotate-180" : ""}`} />
             </button>
 
