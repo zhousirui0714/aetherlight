@@ -33,7 +33,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} 溯光 SuGuang · 致敬千年文明</span>
+          <span>© {new Date().getFullYear()} 溯光 Aetherlight · 致敬千年文明</span>
           <span className="font-serif tracking-[0.3em]">墨 · 韵 · 光</span>
         </div>
       </div>
