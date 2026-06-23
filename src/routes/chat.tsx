@@ -3,7 +3,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand, Loader2, PanelRightClose, PanelRight } from "lucide-react";
+import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand, Loader2, PanelRightClose, PanelRight, AlertCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import type { KnowledgeEntry, Person, Book, KnowledgeGraphNode } from "@/lib/cultural-knowledge";
@@ -68,11 +68,13 @@ function ChatPage() {
   const [deepDetailOpen, setDeepDetailOpen] = useState(false);
   const [deepPersonName, setDeepPersonName] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error: chatError } = useChat({
     transport: transport.current,
     onFinish: async ({ message }) => {
+      setError(null);
       try {
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const q = lastUser ? extractText(lastUser) : "";
@@ -98,6 +100,10 @@ function ChatPage() {
         }
         loadHistory();
       } catch {}
+    },
+    onError: (err) => {
+      console.error("Chat error:", err);
+      setError("网络连接似乎有些问题，请稍后再试。");
     },
   });
 
@@ -269,9 +275,26 @@ function ChatPage() {
                   return <Message key={m.id} m={m} />;
                 })}
                 {status === "submitted" && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                    <span className="font-serif text-sm">研墨中…</span>
+                  <div className="flex items-center gap-3 rounded-2xl rounded-tl-md border border-border bg-background/40 p-5">
+                    <div className="seal mt-1 h-7 shrink-0 px-2.5">溯</div>
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <span className="font-serif text-sm text-muted-foreground">研墨中…</span>
+                    </div>
+                  </div>
+                )}
+                {(error || chatError) && (
+                  <div className="flex items-start gap-3 rounded-2xl rounded-tl-md border border-destructive/30 bg-destructive/5 p-5">
+                    <AlertCircle className="h-5 w-5 shrink-0 text-destructive mt-0.5" />
+                    <div>
+                      <p className="font-serif text-sm text-destructive">{error || "发生了一些问题"}</p>
+                      <button
+                        onClick={() => setError(null)}
+                        className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        忽略
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -290,14 +313,24 @@ function ChatPage() {
               }}
               placeholder="向雅士请教…"
               rows={1}
-              className="max-h-32 flex-1 resize-none bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70"
+              disabled={loading}
+              className="max-h-32 flex-1 resize-none bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
               className="flex h-10 items-center gap-2 rounded-full bg-primary px-5 font-serif text-sm tracking-widest text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
             >
-              <Send className="h-4 w-4" /> 发送
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  发送中
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" /> 发送
+                </>
+              )}
             </button>
           </form>
         </section>

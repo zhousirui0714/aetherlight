@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createAiProvider, getDefaultModel } from "@/lib/ai-gateway.server";
 import { searchKnowledge, type KnowledgeEntry } from "@/lib/cultural-knowledge";
+import { getCache, setCache, getKnowledgeCacheKey } from "@/lib/api-cache";
 
 function formatKnowledgeResponse(entry: KnowledgeEntry): string {
   let response = `## ${entry.question}\n\n`;
@@ -45,15 +46,26 @@ export const Route = createFileRoute("/api/chat")({
         const lastMessage = messages[messages.length - 1];
         const userQuestion = lastMessage?.parts?.find(p => p.type === "text")?.text || "";
         
-        // 先尝试从知识库获取答案
+        // 先尝试从缓存获取
+        const cacheKey = getKnowledgeCacheKey(userQuestion);
+        const cached = getCache<{ type: string; data: KnowledgeEntry }>(cacheKey);
+        if (cached) {
+          return new Response(JSON.stringify(cached), {
+            headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
+          });
+        }
+
+        // 尝试从知识库获取答案
         const knowledgeEntry = searchKnowledge(userQuestion);
         if (knowledgeEntry) {
-          const formattedResponse = formatKnowledgeResponse(knowledgeEntry);
-          return new Response(JSON.stringify({
+          const response = {
             type: "knowledge",
             data: knowledgeEntry
-          }), {
-            headers: { "Content-Type": "application/json" }
+          };
+          // 存入缓存
+          setCache(cacheKey, response);
+          return new Response(JSON.stringify(response), {
+            headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
           });
         }
 
