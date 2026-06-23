@@ -571,7 +571,7 @@ export const caoXueqinDeepKnowledge = {
 };
 
 // 屈原 - 楚辞之祖
-export const quYuanDeepKnowledge = {
+export const quYuanBasicKnowledge = {
   person: {
     name: "屈原",
     nameVariants: ["屈平", "正则", "灵均"],
