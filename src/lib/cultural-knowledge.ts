@@ -493,7 +493,7 @@ export const culturalKnowledge: Record<string, KnowledgeEntry> = {
 
     interpretations: "李白的诗歌代表了中国古典诗歌浪漫主义的最高成就。他以豪放的笔调、奇特的想象、清新的语言，创造了一个独特的诗歌世界。李白的诗歌不仅在当时广为传诵，而且对后世产生了深远影响，成为中国诗歌史上一座永恒的丰碑。",
 
-    scholarAnalysis: "学者周勋初在《李白评传》中指出，李白的诗歌具有"清水出芙蓉，天然去雕饰"的美学特征，想象奇特、气势豪迈、感情充沛，是中国浪漫主义诗歌的巅峰。学者袁行霈在《中国文学史》中评价李白是"中国文学史上最具天才、最富于想象力的诗人"。",
+    scholarAnalysis: "学者周勋初在《李白评传》中指出，李白的诗歌具有「清水出芙蓉，天然去雕饰」的美学特征，想象奇特、气势豪迈、感情充沛，是中国浪漫主义诗歌的巅峰。学者袁行霈在《中国文学史》中评价李白是「中国文学史上最具天才、最富于想象力的诗人」。",
 
     graphNodes: [
       { id: "li-bai", label: "李白", type: "person", description: "诗仙、浪漫主义诗人", connections: ["du-fu", "meng-haoran", "he-zhizhang"] },

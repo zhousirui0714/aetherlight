@@ -339,7 +339,7 @@ export const liBaiDeepKnowledge = {
       {
         scholar: "袁行霈",
         work: "《中国文学史》",
-        contribution: "将李白定位为"浪漫主义的最高峰""
+        contribution: "将李白定位为「浪漫主义的最高峰」"
       }
     ],
     
