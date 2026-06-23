@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { Calendar, BookOpen, User, Scroll, Award, ImageIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, useRef } from "react";
+import { Calendar, BookOpen, User, Scroll, Award } from "lucide-react";
 
 interface TodayItem {
   id: string;
@@ -8,8 +7,7 @@ interface TodayItem {
   excerpt: string;
   category: string;
   imageUrl?: string;
-  imageLoading?: boolean;
-  imageQuery?: string;
+  seed: number;
 }
 
 const categoryIcons: Record<string, typeof Calendar> = {
@@ -87,143 +85,163 @@ function getCurrentSolarTerm(): { name: string; description: string } {
   return solarTerms[0];
 }
 
-const staticItems = [
-  {
-    id: "poetry",
-    title: "今日诗词",
-    excerpt: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
-    category: "诗词",
-    imageQuery: "moon night sky",
-  },
-  {
-    id: "figure",
-    title: "今日人物",
-    excerpt: "李白，唐代伟大的浪漫主义诗人，被誉为诗仙。",
-    category: "人物",
-    imageQuery: "ancient chinese poet Li Bai",
-  },
-  {
-    id: "story",
-    title: "今日典故",
-    excerpt: "卧薪尝胆：形容人刻苦自励，立志报仇雪耻。",
-    category: "典故",
-    imageQuery: "ancient chinese warrior",
-  },
-  {
-    id: "heritage",
-    title: "今日非遗",
-    excerpt: "昆曲，中国传统戏曲中最古老的剧种之一。",
-    category: "非遗",
-    imageQuery: "kunqu opera chinese traditional",
-  },
-];
+// 预定义的文化图片 URL（更快加载）
+const culturalImages: Record<string, string> = {
+  "节气-小寒": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Winter_in_Harbin_2.jpg/400px-Winter_in_Harbin_2.jpg",
+  "节气-大寒": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Winter_in_Harbin_2.jpg/400px-Winter_in_Harbin_2.jpg",
+  "节气-立春": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Doumer_Bridge_in_Spring.jpg/400px-Doumer_Bridge_in_Spring.jpg",
+  "节气-雨水": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Tokyo_rainy_season.jpg/400px-Tokyo_rainy_season.jpg",
+  "节气-惊蛰": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Thunderstorm_in_the_Makgadikgadi_Pan.jpg/400px-Thunderstorm_in_the_Makgadikgadi_Pan.jpg",
+  "节气-春分": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Tulip_fields,_skagit_county,_washington,_usa_02.jpg/400px-Tulip_fields%2C_skagit_county%2C_washington%2C_usa_02.jpg",
+  "节气-清明": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Weeping_cherry_tree_in_Shin_Umesato_Park.jpg/400px-Weeping_cherry_tree_in_Shin_Umesato_Park.jpg",
+  "节气-谷雨": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Rice_paddy_in_Yangsan.jpg/400px-Rice_paddy_in_Yangsan.jpg",
+  "节气-立夏": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Summer_in_the_Alps.jpg/400px-Summer_in_the_Alps.jpg",
+  "节气-小满": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wheat_field_in_Gansu.jpg/400px-Wheat_field_in_Gansu.jpg",
+  "节气-芒种": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wheat_field_in_Gansu.jpg/400px-Wheat_field_in_Gansu.jpg",
+  "节气-夏至": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Summer_in_the_Alps.jpg/400px-Summer_in_the_Alps.jpg",
+  "节气-小暑": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Summer_in_the_Alps.jpg/400px-Summer_in_the_Alps.jpg",
+  "节气-大暑": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Summer_in_the_Alps.jpg/400px-Summer_in_the_Alps.jpg",
+  "节气-立秋": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
+  "节气-处暑": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
+  "节气-白露": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
+  "节气-秋分": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
+  "节气-寒露": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
+  "节气-霜降": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Frost_on_leaves.jpg/400px-Frost_on_leaves.jpg",
+  "节气-立冬": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
+  "节气-小雪": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
+  "节气-大雪": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
+  "节气-冬至": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
+  "诗词": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/In_the_Moonlit_Night_While_Traveling.jpg/400px-In_the_Moonlit_Night_While_Traveling.jpg",
+  "人物": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Li_Bai.jpg/400px-Li_Bai.jpg",
+  "典故": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Ma_Yuan_-_Water_Album_-_Walters_W11020B.jpg/400px-Ma_Yuan_-_Water_Album_-_Walters_W11020B.jpg",
+  "非遗": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Kunqu_Opera%2C_2007.jpg/400px-Kunqu_Opera%2C_2007.jpg",
+};
+
+function getImageUrl(category: string, termName?: string): string {
+  if (termName) {
+    const key = `${category}-${termName}`;
+    return culturalImages[key] || culturalImages[`${category}-${termName.slice(0, 2)}`] || culturalImages[category];
+  }
+  return culturalImages[category] || "";
+}
 
 export function TodayCards() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const imageRefs = useRef<Map<string, HTMLImageElement>>(new Map());
 
   useEffect(() => {
-    fetchTodayItems();
+    initializeTodayItems();
   }, []);
 
-  const fetchTodayItems = async () => {
-    try {
-      setLoading(true);
-      
-      const currentTerm = getCurrentSolarTerm();
-      const items: TodayItem[] = [];
-
-      items.push({
-        id: "solar-term",
-        title: "今日节气",
-        excerpt: `今日是${currentTerm.name}，${currentTerm.description}`,
-        category: "节气",
-        imageQuery: `${currentTerm.name} solar term chinese`,
-      });
-
-      for (const staticItem of staticItems) {
-        items.push({
-          ...staticItem,
-          imageLoading: true,
-        });
-      }
-
-      await Promise.all(
-        items.filter(item => item.imageQuery).map(async (item) => {
-          try {
-            const response = await fetch(`/api/search-image?q=${encodeURIComponent(item.imageQuery!)}`);
-            const data = await response.json();
-            if (data.url) {
-              setTodayItems(prev => prev.map(i => 
-                i.id === item.id ? { ...i, imageUrl: data.url, imageLoading: false } : i
-              ));
-            }
-          } catch (error) {
-            console.error(`Failed to fetch image for ${item.title}:`, error);
-            setTodayItems(prev => prev.map(i => 
-              i.id === item.id ? { ...i, imageLoading: false } : i
-            ));
-          }
-        })
-      );
-
-      setTodayItems(items);
-    } catch (error) {
-      console.error("Failed to fetch today items:", error);
-      setTodayItems(getStaticTodayItems());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStaticTodayItems = (): TodayItem[] => {
+  const initializeTodayItems = () => {
     const currentTerm = getCurrentSolarTerm();
-    return [
+    const baseItems = [
       {
         id: "solar-term",
         title: "今日节气",
         excerpt: `今日是${currentTerm.name}，${currentTerm.description}`,
         category: "节气",
+        termName: currentTerm.name,
+        seed: currentTerm.name.charCodeAt(0) + currentTerm.name.charCodeAt(1),
       },
       {
         id: "poetry",
         title: "今日诗词",
         excerpt: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
         category: "诗词",
+        seed: 1001,
       },
       {
         id: "figure",
         title: "今日人物",
         excerpt: "李白，唐代伟大的浪漫主义诗人，被誉为诗仙。",
         category: "人物",
+        seed: 1002,
       },
       {
         id: "story",
         title: "今日典故",
         excerpt: "卧薪尝胆：形容人刻苦自励，立志报仇雪耻。",
         category: "典故",
+        seed: 1003,
       },
       {
         id: "heritage",
         title: "今日非遗",
         excerpt: "昆曲，中国传统戏曲中最古老的剧种之一。",
         category: "非遗",
+        seed: 1004,
       },
     ];
+
+    setTodayItems(baseItems.map(item => ({
+      ...item,
+      termName: (item as { termName?: string }).termName,
+    })));
   };
 
-  if (loading) {
-    return (
-      <section className="mt-12">
-        <div className="flex items-center justify-center gap-2 py-8">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="font-serif text-sm text-muted-foreground">撷取中…</span>
-        </div>
-      </section>
-    );
-  }
+  const handleImageLoad = (id: string) => {
+    setLoadedImages(prev => new Set([...prev, id]));
+  };
 
-  const displayItems = todayItems.length > 0 ? todayItems : getStaticTodayItems();
+  const handleImageError = (id: string) => {
+    setFailedImages(prev => new Set([...prev, id]));
+    setLoadedImages(prev => new Set([...prev, id]));
+  };
+
+  const renderImage = (item: TodayItem) => {
+    const termName = (item as { termName?: string }).termName;
+    const imageUrl = getImageUrl(item.category, termName);
+    const isLoaded = loadedImages.has(item.id);
+    const isFailed = failedImages.has(item.id);
+    const Icon = categoryIcons[item.category] || BookOpen;
+    const bgColor = categoryColors[item.category] || "bg-gray-500";
+
+    if (isFailed || !imageUrl) {
+      return (
+        <div className="h-full w-full bg-gradient-to-br from-secondary via-background to-secondary">
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              background: `radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)`,
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgColor}/20`}>
+              <Icon className={`h-6 w-6 ${bgColor.replace("bg-", "text-")}`} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <img
+          ref={(el) => {
+            if (el) imageRefs.current.set(item.id, el);
+          }}
+          src={imageUrl}
+          alt={item.title}
+          className={`h-full w-full object-cover transition-all duration-500 ${
+            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+          } group-hover:scale-110`}
+          onLoad={() => handleImageLoad(item.id)}
+          onError={() => handleImageError(item.id)}
+          loading="eager"
+        />
+        {!isLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-secondary via-background to-secondary">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgColor}/20`}>
+              <Icon className={`h-6 w-6 ${bgColor.replace("bg-", "text-")} animate-pulse`} />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <section className="mt-12">
@@ -234,7 +252,7 @@ export function TodayCards() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {displayItems.map((item) => {
+        {todayItems.map((item) => {
           const Icon = categoryIcons[item.category] || BookOpen;
           const bgColor = categoryColors[item.category] || "bg-gray-500";
           
@@ -245,33 +263,7 @@ export function TodayCards() {
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
             >
               <div className="relative h-28 overflow-hidden">
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-secondary via-background to-secondary">
-                    <div
-                      className="absolute inset-0 opacity-40"
-                      style={{
-                        background: `radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)`,
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgColor}/20`}>
-                        <Icon className={`h-6 w-6 ${bgColor.replace("bg-", "text-")}`} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {item.imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  </div>
-                )}
+                {renderImage(item)}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card/90 to-transparent" />
               </div>
               <div className="p-4">
