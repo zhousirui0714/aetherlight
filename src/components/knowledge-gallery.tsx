@@ -16,112 +16,109 @@ type DbArticle = {
   created_at: string;
 };
 
-// 使用稳定的免费图片服务，为每个主题提供匹配的图片
-function getImageUrl(title: string, category: string): string {
-  // 使用 picsum.photos 的随机ID机制，每个主题使用唯一的数字ID
-  const imageMap: Record<string, Record<string, string>> = {
+// 根据主题生成搜索关键词
+function getSearchQuery(title: string, category: string): string {
+  const queries: Record<string, Record<string, string>> = {
     "节气": {
-      "立春": "https://picsum.photos/id/15/400/300",      // 春天风景
-      "雨水": "https://picsum.photos/id/16/400/300",      // 雨景
-      "惊蛰": "https://picsum.photos/id/17/400/300",      // 自然景观
-      "春分": "https://picsum.photos/id/18/400/300",      // 日出
-      "清明": "https://picsum.photos/id/19/400/300",      // 绿色风景
-      "谷雨": "https://picsum.photos/id/20/400/300",      // 田野
-      "立夏": "https://picsum.photos/id/21/400/300",      // 夏天风景
-      "小满": "https://picsum.photos/id/22/400/300",      // 麦田
-      "芒种": "https://picsum.photos/id/23/400/300",      // 金色田野
-      "夏至": "https://picsum.photos/id/24/400/300",      // 阳光
-      "小暑": "https://picsum.photos/id/25/400/300",      // 热天风景
-      "大暑": "https://picsum.photos/id/26/400/300",      // 热带
-      "立秋": "https://picsum.photos/id/27/400/300",      // 秋天风景
-      "处暑": "https://picsum.photos/id/28/400/300",      // 落叶
-      "白露": "https://picsum.photos/id/29/400/300",      // 晨露
-      "秋分": "https://picsum.photos/id/30/400/300",      // 秋色
-      "寒露": "https://picsum.photos/id/31/400/300",      // 冷色风景
-      "霜降": "https://picsum.photos/id/32/400/300",      // 霜景
-      "立冬": "https://picsum.photos/id/33/400/300",      // 冬天风景
-      "小雪": "https://picsum.photos/id/34/400/300",      // 初雪
-      "大雪": "https://picsum.photos/id/35/400/300",      // 大雪
-      "冬至": "https://picsum.photos/id/36/400/300",      // 冬季
-      "小寒": "https://picsum.photos/id/37/400/300",      // 寒冷
-      "大寒": "https://picsum.photos/id/38/400/300",      // 严冬
+      "立春": "spring beginning nature",
+      "雨水": "rain spring weather",
+      "惊蛰": "insects awaken spring",
+      "春分": "spring equinox sunrise",
+      "清明": "qingming festival tomb sweeping",
+      "谷雨": "grain rain agriculture",
+      "立夏": "summer beginning nature",
+      "小满": "grain buds wheat",
+      "芒种": "grain in ear harvest",
+      "夏至": "summer solstice sunlight",
+      "小暑": "minor heat summer",
+      "大暑": "major heat summer",
+      "立秋": "autumn beginning fall",
+      "处暑": "end of heat autumn",
+      "白露": "white dew autumn",
+      "秋分": "autumn equinox",
+      "寒露": "cold dew autumn",
+      "霜降": "frost descent autumn",
+      "立冬": "winter beginning snow",
+      "小雪": "light snow winter",
+      "大雪": "heavy snow winter",
+      "冬至": "winter solstice",
+      "小寒": "minor cold winter",
+      "大寒": "major cold winter",
     },
     "节日": {
-      "春节": "https://picsum.photos/id/41/400/300",      // 喜庆红色
-      "元宵": "https://picsum.photos/id/42/400/300",      // 灯笼
-      "清明": "https://picsum.photos/id/43/400/300",      // 清明节
-      "端午": "https://picsum.photos/id/44/400/300",      // 龙舟水
-      "中秋": "https://picsum.photos/id/45/400/300",      // 月亮
-      "重阳": "https://picsum.photos/id/46/400/300",      // 登高
-      "七夕": "https://picsum.photos/id/47/400/300",      // 浪漫夜空
-      "腊八": "https://picsum.photos/id/48/400/300",      // 温暖食物
+      "春节": "Chinese New Year red lanterns celebration",
+      "元宵": "Lantern Festival lanterns",
+      "清明": "Qingming Festival tomb sweeping",
+      "端午": "Dragon Boat Festival rice dumpling zongzi",
+      "中秋": "Mid-Autumn Festival moon mooncake",
+      "重阳": "Double Ninth Festival chrysanthemum",
+      "七夕": "Qixi Festival Chinese Valentine",
+      "腊八": "Laba Festival congee",
     },
     "诗词": {
-      "静夜思": "https://picsum.photos/id/51/400/300",    // 月亮夜景
-      "水调歌头": "https://picsum.photos/id/52/400/300",  // 满月
-      "将进酒": "https://picsum.photos/id/53/400/300",    // 酒文化
-      "出师表": "https://picsum.photos/id/54/400/300",    // 书卷
-      "春晓": "https://picsum.photos/id/55/400/300",      // 春天早晨
-      "登鹳雀楼": "https://picsum.photos/id/56/400/300",  // 高楼
-      "悯农": "https://picsum.photos/id/57/400/300",      // 农田
-      "咏鹅": "https://picsum.photos/id/58/400/300",      // 水禽
-      "望庐山瀑布": "https://picsum.photos/id/59/400/300",// 瀑布
-      "早发白帝城": "https://picsum.photos/id/60/400/300",// 河流
+      "静夜思": "moon night sky moonlight poetry",
+      "水调歌头": "full moon night Chinese poetry",
+      "将进酒": "Chinese wine ancient poetry",
+      "出师表": "ancient Chinese scroll calligraphy",
+      "春晓": "spring morning flowers birds",
+      "登鹳雀楼": "ancient Chinese tower landscape",
+      "悯农": "farming agriculture field rice",
+      "咏鹅": "white goose water pond",
+      "望庐山瀑布": "waterfall mountain landscape",
+      "早发白帝城": "river landscape ancient China",
     },
     "典籍": {
-      "论语": "https://picsum.photos/id/61/400/300",      // 书籍
-      "诗经": "https://picsum.photos/id/62/400/300",      // 古典书
-      "道德经": "https://picsum.photos/id/63/400/300",    // 哲学
-      "黄帝内经": "https://picsum.photos/id/64/400/300",  // 医学古籍
-      "周易": "https://picsum.photos/id/65/400/300",      // 占卜
-      "楚辞": "https://picsum.photos/id/66/400/300",      // 诗歌
+      "论语": "Confucius ancient Chinese book",
+      "诗经": "Book of Songs ancient Chinese poetry",
+      "道德经": "Tao Te Ching ancient philosophy",
+      "黄帝内经": "Chinese medicine ancient book",
+      "周易": "I Ching ancient divination",
+      "楚辞": "Chu Ci ancient poetry",
     },
     "非遗": {
-      "昆曲": "https://picsum.photos/id/71/400/300",      // 戏曲
-      "青花瓷": "https://picsum.photos/id/72/400/300",    // 瓷器
-      "景泰蓝": "https://picsum.photos/id/73/400/300",    // 工艺品
-      "剪纸": "https://picsum.photos/id/74/400/300",      // 艺术
-      "刺绣": "https://picsum.photos/id/75/400/300",      // 针线
-      "皮影戏": "https://picsum.photos/id/76/400/300",    // 影子
+      "昆曲": "Kunqu opera Chinese traditional",
+      "青花瓷": "blue and white porcelain China",
+      "景泰蓝": "cloisonne enamel art",
+      "剪纸": "Chinese paper cutting art",
+      "刺绣": "Chinese embroidery silk",
+      "皮影戏": "Chinese shadow puppetry",
     },
     "民俗": {
-      "茶事": "https://picsum.photos/id/81/400/300",      // 茶道
-      "中国礼": "https://picsum.photos/id/82/400/300",    // 礼仪
-      "对联": "https://picsum.photos/id/83/400/300",      // 书法
-      "风水": "https://picsum.photos/id/84/400/300",      // 自然
-      "书法": "https://picsum.photos/id/85/400/300",      // 笔墨
-      "国画": "https://picsum.photos/id/86/400/300",      // 绘画
-      "围棋": "https://picsum.photos/id/87/400/300",      // 棋盘
+      "茶事": "Chinese tea ceremony teapot",
+      "中国礼": "Chinese etiquette ceremony",
+      "对联": "Chinese couplets calligraphy",
+      "风水": "feng shui traditional Chinese",
+      "书法": "Chinese calligraphy brush",
+      "国画": "Chinese painting landscape",
+      "围棋": "Go game Weiqi board",
     },
     "人物": {
-      "李白": "https://picsum.photos/id/91/400/300",      // 诗人
-      "杜甫": "https://picsum.photos/id/92/400/300",      // 文人
-      "苏轼": "https://picsum.photos/id/93/400/300",      // 学者
-      "李清照": "https://picsum.photos/id/94/400/300",    // 女词人
-      "孔子": "https://picsum.photos/id/95/400/300",      // 思想家
-      "庄子": "https://picsum.photos/id/96/400/300",      // 哲学家
-      "王羲之": "https://picsum.photos/id/97/400/300",    // 书法
-      "唐寅": "https://picsum.photos/id/98/400/300",      // 画家
+      "李白": "ancient Chinese poet Li Bai",
+      "杜甫": "ancient Chinese poet Du Fu",
+      "苏轼": "ancient Chinese scholar Su Shi",
+      "李清照": "ancient Chinese poetess",
+      "孔子": "Confucius Chinese philosopher",
+      "庄子": "Zhuangzi Chinese philosophy",
+      "王羲之": "Chinese calligrapher",
+      "唐寅": "Tang Yin ancient painter",
     },
   };
 
-  // 优先使用精确映射
-  if (imageMap[category] && imageMap[category][title]) {
-    return imageMap[category][title];
+  if (queries[category] && queries[category][title]) {
+    return queries[category][title];
   }
 
-  // 回退到分类级别的通用图片
-  const categoryImages: Record<string, string> = {
-    "节气": "https://picsum.photos/id/101/400/300",
-    "节日": "https://picsum.photos/id/102/400/300",
-    "诗词": "https://picsum.photos/id/103/400/300",
-    "典籍": "https://picsum.photos/id/104/400/300",
-    "非遗": "https://picsum.photos/id/105/400/300",
-    "民俗": "https://picsum.photos/id/106/400/300",
-    "人物": "https://picsum.photos/id/107/400/300",
+  const categoryDefaults: Record<string, string> = {
+    "节气": "Chinese solar term",
+    "节日": "Chinese traditional festival",
+    "诗词": "Chinese poetry",
+    "典籍": "ancient Chinese book",
+    "非遗": "Chinese intangible cultural heritage",
+    "民俗": "Chinese folk custom",
+    "人物": "ancient Chinese scholar",
   };
 
-  return categoryImages[category] || `https://picsum.photos/id/${Math.floor(Math.random() * 100) + 1}/400/300`;
+  return categoryDefaults[category] || `Chinese culture ${title}`;
 }
 
 export function KnowledgeGallery() {
@@ -131,6 +128,8 @@ export function KnowledgeGallery() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [imageLoading, setImageLoading] = useState<Set<string>>(new Set());
 
   // Fetch articles from Supabase
   useEffect(() => {
@@ -166,6 +165,28 @@ export function KnowledgeGallery() {
 
   const handleImageError = (articleId: string) => {
     setImageErrors(prev => new Set([...prev, articleId]));
+    setImageLoading(prev => new Set([...prev].filter(id => id !== articleId)));
+  };
+
+  // 动态获取图片URL
+  const fetchImageUrl = async (articleId: string, title: string, category: string) => {
+    if (imageUrls[articleId] || imageErrors.has(articleId)) return;
+    
+    setImageLoading(prev => new Set([...prev, articleId]));
+    
+    try {
+      const query = getSearchQuery(title, category);
+      const response = await fetch(`/api/search-image?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (data.url) {
+        setImageUrls(prev => ({ ...prev, [articleId]: data.url }));
+      }
+    } catch (error) {
+      console.error(`Failed to fetch image for ${title}:`, error);
+    } finally {
+      setImageLoading(prev => new Set([...prev].filter(id => id !== articleId)));
+    }
   };
 
   // Use Supabase data if available, otherwise fallback to static data
@@ -294,24 +315,42 @@ export function KnowledgeGallery() {
                   }}
                 />
                 
-                {/* AI生成图片 */}
+                {/* 动态获取图片 */}
                 {!imageErrors.has(item.id) ? (
-                  <img
-                    src={getImageUrl(item.title, item.category)}
-                    alt={item.title}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    onError={() => handleImageError(item.id)}
-                    loading="lazy"
-                  />
+                  <>
+                    {imageUrls[item.id] ? (
+                      <img
+                        src={imageUrls[item.id]}
+                        alt={item.title}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={() => handleImageError(item.id)}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110"
+                        onLoad={() => fetchImageUrl(item.id, item.title, item.category)}
+                      >
+                        {imageLoading.has(item.id) ? (
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        ) : (
+                          <>
+                            {fetchImageUrl(item.id, item.title, item.category)}
+                            {isDb ? (item.cover || "📜") : (item as Article).cover}
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
+                    <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
+                      {item.category}
+                    </span>
+                  </>
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
+                  <div className="absolute inset-0 flex items-center justify-center text-7xl">
                     {isDb ? (item.cover || "📜") : (item as Article).cover}
                   </div>
                 )}
-                
-                <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
-                  {item.category}
-                </span>
               </div>
 
               {/* content */}
