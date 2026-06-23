@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { X, BookOpen, User, Calendar, Award, FileText } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, BookOpen, User, Calendar, Award, FileText, ExternalLink, Loader2 } from "lucide-react";
 import { Person, Book } from "@/lib/cultural-knowledge";
 
 interface ModalProps {
@@ -7,10 +7,18 @@ interface ModalProps {
   onClose: () => void;
   type: 'person' | 'book';
   data: Person | Book;
+  title?: string; // 可选的标题，用于API查询
 }
 
-export function Modal({ isOpen, onClose, type, data }: ModalProps) {
+interface ExtendedBook extends Book {
+  translation?: string;
+  fullContent?: string;
+}
+
+export function Modal({ isOpen, onClose, type, data, title }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [extendedContent, setExtendedContent] = useState<ExtendedBook | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -38,6 +46,29 @@ export function Modal({ isOpen, onClose, type, data }: ModalProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
+
+  // 获取更多内容
+  useEffect(() => {
+    if (isOpen && type === "book" && title) {
+      fetchExtendedContent(title);
+    }
+  }, [isOpen, type, title]);
+
+  const fetchExtendedContent = async (query: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/ancient-books?q=${encodeURIComponent(query)}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setExtendedContent(result.data);
+      }
+    } catch (error) {
+      console.error("获取典籍内容失败:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -81,7 +112,11 @@ export function Modal({ isOpen, onClose, type, data }: ModalProps) {
           {type === "person" ? (
             <PersonDetail person={data as Person} />
           ) : (
-            <BookDetail book={data as Book} />
+            <BookDetail 
+              book={data as Book} 
+              extendedContent={extendedContent}
+              loading={loading}
+            />
           )}
         </div>
       </div>
@@ -150,7 +185,11 @@ function PersonDetail({ person }: { person: Person }) {
   );
 }
 
-function BookDetail({ book }: { book: Book }) {
+function BookDetail({ book, extendedContent, loading }: { book: Book; extendedContent: ExtendedBook | null; loading: boolean }) {
+  // 使用扩展内容或原始内容
+  const displayContent = extendedContent?.fullContent || extendedContent?.content || book.content;
+  const displaySummary = extendedContent?.translation || book.summary;
+
   return (
     <div className="space-y-6">
       <div>
@@ -159,7 +198,7 @@ function BookDetail({ book }: { book: Book }) {
           内容简介
         </h4>
         <p className="font-serif leading-relaxed text-foreground/90">
-          {book.summary}
+          {displaySummary}
         </p>
       </div>
 
@@ -173,13 +212,27 @@ function BookDetail({ book }: { book: Book }) {
       )}
 
       <div>
-        <h4 className="mb-3 flex items-center gap-2 font-serif text-base font-semibold text-foreground">
-          <BookOpen className="h-4 w-4 text-green-500" />
-          原文节选
-        </h4>
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="flex items-center gap-2 font-serif text-base font-semibold text-foreground">
+            <BookOpen className="h-4 w-4 text-green-500" />
+            原文节选
+            {loading && (
+              <Loader2 className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </h4>
+          <a
+            href="https://ctext.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
+          >
+            中国哲学书电子化计划
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
         <div className="rounded-xl border border-border bg-secondary/30 p-4">
           <pre className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-foreground/90">
-            {book.content}
+            {displayContent}
           </pre>
         </div>
       </div>
@@ -197,6 +250,14 @@ function BookDetail({ book }: { book: Book }) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {extendedContent && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <p className="text-xs text-muted-foreground">
+            以上内容来源于：{extendedContent.source}
+          </p>
         </div>
       )}
     </div>
