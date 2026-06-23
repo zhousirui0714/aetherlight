@@ -10,7 +10,7 @@ import { getPerson, getBook } from "@/lib/cultural-knowledge";
 import { KnowledgeGraph } from "@/components/knowledge-graph";
 import { Modal } from "@/components/modal";
 import { DeepPersonDetail } from "@/components/deep-person-detail";
-import { liBaiDeepKnowledge } from "@/lib/deep-knowledge";
+import { liBaiDeepKnowledge, duFuDeepKnowledge, suShiDeepKnowledge } from "@/lib/deep-knowledge";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -24,10 +24,10 @@ export const Route = createFileRoute("/chat")({
 
 const HOT_QUESTIONS = [
   "李白",
-  "什么是二十四节气？",
-  "端午节的由来？",
-  "为什么中秋要赏月？",
+  "杜甫",
+  "苏轼",
   "《诗经》的'风雅颂'指什么？",
+  "端午节的由来？",
   "昆曲为何被称为'百戏之祖'？",
 ];
 
@@ -92,15 +92,25 @@ function ChatPage() {
   };
 
   const handleGraphNodeClick = (node: KnowledgeGraphNode) => {
-    // 如果是李白，打开深度人物详情
-    if (node.label === "李白" && node.type === "person") {
-      setDeepPersonName("李白");
-      setDeepDetailOpen(true);
-      return;
-    }
-    
-    // 根据节点类型尝试获取对应的人物或典籍
+    // 根据节点类型和名称打开对应的深度面板
     if (node.type === "person") {
+      if (node.label === "李白") {
+        setDeepPersonName("李白");
+        setDeepDetailOpen(true);
+        return;
+      }
+      if (node.label === "杜甫") {
+        setDeepPersonName("杜甫");
+        setDeepDetailOpen(true);
+        return;
+      }
+      if (node.label === "苏轼" || node.label === "苏东坡") {
+        setDeepPersonName("苏轼");
+        setDeepDetailOpen(true);
+        return;
+      }
+      
+      // 其他人物尝试获取普通详情
       const person = getPerson(node.label);
       if (person) {
         setModalType('person');
@@ -274,7 +284,7 @@ function ChatPage() {
         />
       )}
 
-      {/* 深度人物详情 */}
+      {/* 深度人物详情 - 李白 */}
       {deepDetailOpen && deepPersonName === "李白" && (
         <DeepPersonDetail
           name={liBaiDeepKnowledge.person.name}
@@ -291,6 +301,52 @@ function ChatPage() {
           historicalComments={liBaiDeepKnowledge.person.historicalComments}
           recommendedReadings={liBaiDeepKnowledge.person.recommendedReadings}
           learningPath={liBaiDeepKnowledge.person.learningPath}
+          onClose={() => setDeepDetailOpen(false)}
+          onNodeClick={(nodeId, nodeType) => {
+            console.log("Clicked node:", nodeId, nodeType);
+          }}
+        />
+      )}
+
+      {/* 深度人物详情 - 杜甫 */}
+      {deepDetailOpen && deepPersonName === "杜甫" && (
+        <DeepPersonDetail
+          name={duFuDeepKnowledge.person.name}
+          dynasty={duFuDeepKnowledge.person.dynasty}
+          birthYear={duFuDeepKnowledge.person.birthYear}
+          deathYear={duFuDeepKnowledge.person.deathYear}
+          description="杜甫（712年-770年），字子美，号少陵野老，唐代伟大的现实主义诗人，被誉为诗圣。他的诗深刻反映了唐代社会的现实，被后人称为'诗史'。"
+          timeline={duFuDeepKnowledge.person.timeline}
+          relationships={duFuDeepKnowledge.person.relationships}
+          poetryFeatures={duFuDeepKnowledge.person.poetryCharacteristics}
+          famousQuotes={duFuDeepKnowledge.person.famousQuotes}
+          relics={duFuDeepKnowledge.person.relics}
+          historicalComments={duFuDeepKnowledge.person.historicalComments}
+          recommendedReadings={duFuDeepKnowledge.person.recommendedReadings}
+          learningPath={duFuDeepKnowledge.person.learningPath}
+          onClose={() => setDeepDetailOpen(false)}
+          onNodeClick={(nodeId, nodeType) => {
+            console.log("Clicked node:", nodeId, nodeType);
+          }}
+        />
+      )}
+
+      {/* 深度人物详情 - 苏轼 */}
+      {deepDetailOpen && deepPersonName === "苏轼" && (
+        <DeepPersonDetail
+          name={suShiDeepKnowledge.person.name}
+          dynasty={suShiDeepKnowledge.person.dynasty}
+          birthYear={suShiDeepKnowledge.person.birthYear}
+          deathYear={suShiDeepKnowledge.person.deathYear}
+          description="苏轼（1037年-1101年），字子瞻，号东坡居士，北宋文学家、书画家。他开创了豪放派词风，与辛弃疾并称'苏辛'，是宋代文学的最高成就者之一。"
+          timeline={suShiDeepKnowledge.person.timeline}
+          relationships={suShiDeepKnowledge.person.relationships}
+          poetryFeatures={suShiDeepKnowledge.person.poetryCharacteristics}
+          famousQuotes={suShiDeepKnowledge.person.famousQuotes}
+          relics={suShiDeepKnowledge.person.relics}
+          historicalComments={suShiDeepKnowledge.person.historicalComments}
+          recommendedReadings={suShiDeepKnowledge.person.recommendedReadings}
+          learningPath={suShiDeepKnowledge.person.learningPath}
           onClose={() => setDeepDetailOpen(false)}
           onNodeClick={(nodeId, nodeType) => {
             console.log("Clicked node:", nodeId, nodeType);
@@ -419,15 +475,37 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
         )}
 
         {/* 深度了解按钮 */}
-        {knowledge.quotes.some(q => q.author === "李白") && onOpenDeepDetail && (
-          <div className="mt-5">
-            <button
-              onClick={() => onOpenDeepDetail("李白")}
-              className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition"
-            >
-              <Expand className="h-4 w-4" />
-              深入了解李白
-            </button>
+        {(knowledge.quotes.some(q => q.author === "李白") ||
+          knowledge.quotes.some(q => q.author === "杜甫") ||
+          knowledge.quotes.some(q => q.author === "苏轼")) && onOpenDeepDetail && (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {knowledge.quotes.some(q => q.author === "李白") && (
+              <button
+                onClick={() => onOpenDeepDetail("李白")}
+                className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition"
+              >
+                <Expand className="h-4 w-4" />
+                深入了解李白
+              </button>
+            )}
+            {knowledge.quotes.some(q => q.author === "杜甫") && (
+              <button
+                onClick={() => onOpenDeepDetail("杜甫")}
+                className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-4 py-2.5 text-sm text-accent hover:bg-accent/10 transition"
+              >
+                <Expand className="h-4 w-4" />
+                深入了解杜甫
+              </button>
+            )}
+            {knowledge.quotes.some(q => q.author === "苏轼") && (
+              <button
+                onClick={() => onOpenDeepDetail("苏轼")}
+                className="flex items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-2.5 text-sm text-secondary-foreground hover:bg-secondary/10 transition"
+              >
+                <Expand className="h-4 w-4" />
+                深入了解苏轼
+              </button>
+            )}
           </div>
         )}
 

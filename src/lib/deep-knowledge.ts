@@ -594,3 +594,261 @@ export const quYuanDeepKnowledge = {
     精神遗产: "屈原的爱国主义精神和执着追求理想的品格，成为中华民族精神的重要组成部分。"路漫漫其修远兮，吾将上下而求索"成为激励后人的名言。"
   }
 };
+
+// ============================================
+// 杜甫 - 深度知识库
+// ============================================
+export const duFuDeepKnowledge = {
+  person: {
+    name: "杜甫",
+    nameVariants: ["子美", "少陵野老", "诗圣"],
+    dynasty: "唐代",
+    birthYear: "712年",
+    deathYear: "770年",
+    birthPlace: "河南巩义",
+    
+    timeline: [
+      { year: "712年", event: "出生于河南巩义，出身京兆杜氏" },
+      { year: "731年", event: "十九岁。漫游吴越、齐赵各地" },
+      { year: "744年", event: "在洛阳与李白相遇，结下深厚友谊" },
+      { year: "746年", event: "到长安求仕，困顿十年" },
+      { year: "755年", event: "任右卫率府胄曹参军" },
+      { year: "756年", event: "安史之乱爆发，被叛军俘获，后逃出" },
+      { year: "757年", event: "任左拾遗，因上疏救房琯触怒肃宗" },
+      { year: "759年", event: "辞官，辗转到达成都，营建草堂" },
+      { year: "768年", event: "出川，病卧岳阳" },
+      { year: "770年", event: "病逝于耒阳" }
+    ],
+    
+    relationships: [
+      { 
+        name: "李白", 
+        relationship: "挚友", 
+        description: "杜甫与李白的友谊是中国文学史上最动人的佳话。二人于744年在洛阳相遇，虽相聚短暂，却结下终生不渝的友情。",
+        poems: ["《赠李白》", "《春日忆李白》", "《冬日有怀李白》"],
+        famousQuote: "何时一尊酒，重与细论文"
+      },
+      {
+        name: "王维", 
+        relationship: "挚友", 
+        description: "王维与杜甫是同时代的诗人，相互敬佩。",
+        poems: ["杜甫有多首诗提及王维"]
+      }
+    ],
+    
+    poetryCharacteristics: {
+      现实主义: {
+        description: "杜甫是中国文学史上最伟大的现实主义诗人，他的诗深刻反映了唐代社会的现实，被后人称为'诗史'。",
+        examples: [
+          "《兵车行》：'车辚辚，马萧萧，行人弓箭各在腰'",
+          "《三吏》《三别》：记录安史之乱带给人民的苦难"
+        ]
+      },
+      语言风格: {
+        description: "杜甫的诗歌语言精炼工整，格律严谨，形成了'沉郁顿挫'的风格。",
+        features: [
+          "沉郁顿挫：感情深沉，格调悲壮",
+          "精炼工整：炼字琢句，一丝不苟",
+          "律诗典范：五律、七律的巅峰"
+        ]
+      },
+      题材分类: {
+        政治诗: {
+          count: "约50首",
+          description: "表达对国家命运和人民疾苦的关切。",
+          famous: ["《兵车行》", "《丽人行》"]
+        },
+        战争诗: {
+          count: "约30首",
+          description: "记录安史之乱等战乱的苦难。",
+          famous: ["《三吏》《三别》"]
+        },
+        咏怀诗: {
+          count: "约100首",
+          description: "表达个人抱负和身世感慨。",
+          famous: ["《望岳》", "《春望》", "《茅屋为秋风所破歌》"]
+        }
+      }
+    },
+    
+    famousQuotes: {
+      忧国忧民: [
+        { quote: "朱门酒肉臭，路有冻死骨", source: "自京洛奉呈柳大尹", interpretation: "深刻揭示社会贫富悬殊的千古名句" },
+        { quote: "安得广厦千万间，大庇天下寒士俱欢颜", source: "茅屋为秋风所破歌", interpretation: "表达了诗人博大的济世情怀" }
+      ],
+      思乡怀人: [
+        { quote: "露从今夜白，月是故乡明", source: "月夜忆舍弟", interpretation: "以月寄情，表达对故乡和亲人的思念" },
+        { quote: "烽火连三月，家书抵万金", source: "春望", interpretation: "战乱中家书的珍贵" }
+      ],
+      壮志豪情: [
+        { quote: "会当凌绝顶，一览众山小", source: "望岳", interpretation: "青年时期的壮志豪情" }
+      ]
+    },
+    
+    relics: [
+      {
+        name: "杜甫草堂",
+        location: "四川省成都市",
+        description: "杜甫在成都居住时的故居，后人建草堂纪念。",
+        highlights: ["杜甫草堂博物馆", "工部祠"]
+      },
+      {
+        name: "杜甫江阁",
+        location: "湖南省长沙市",
+        description: "杜甫晚年曾寓居于此。",
+        highlights: ["杜甫江阁", "石像"]
+      }
+    ],
+    
+    historicalComments: [
+      { era: "唐代", critic: "白居易", comment: "杜诗贯穿今古，积作为主干，尽得古今之体势。" },
+      { era: "宋代", critic: "苏轼", comment: "杜甫李白，以英玮绝世之姿，凌跨百代。" }
+    ],
+    
+    recommendedReadings: [
+      { title: "《杜诗详注》", author: "仇兆鳌", note: "最详尽的杜诗注本" },
+      { title: "《杜甫传》", author: "冯至", note: "权威的杜甫传记" }
+    ],
+    
+    learningPath: [
+      { step: 1, title: "入门", resources: ["《望岳》", "《春望》", "《绝句》"] },
+      { step: 2, title: "进阶", resources: ["《兵车行》", "《茅屋为秋风所破歌》", "《春夜喜雨》"] },
+      { step: 3, title: "深入", resources: ["《三吏》《三别》", "《羌村》"] },
+      { step: 4, title: "研究", resources: ["杜甫与李白比较", "杜甫的现实主义"] }
+    ]
+  }
+};
+
+// ============================================
+// 苏轼 - 深度知识库
+// ============================================
+export const suShiDeepKnowledge = {
+  person: {
+    name: "苏轼",
+    nameVariants: ["子瞻", "东坡居士", "苏东坡"],
+    dynasty: "宋代",
+    birthYear: "1037年",
+    deathYear: "1101年",
+    birthPlace: "四川眉山",
+    
+    timeline: [
+      { year: "1037年", event: "出生于四川眉山，苏洵之子" },
+      { year: "1056年", event: "十九岁。与父苏洵、弟苏辙进京应试" },
+      { year: "1057年", event: "中进士，名动京师" },
+      { year: "1069年", event: "王安石变法，因反对新法被迫外任" },
+      { year: "1079年", event: "因'乌台诗案'被捕入狱，后被贬黄州" },
+      { year: "1089年", event: "任杭州知州，修建苏堤" },
+      { year: "1094年", event: "新党执政，再次被贬惠州、儋州" },
+      { year: "1101年", event: "病逝于常州，享年六十五岁" }
+    ],
+    
+    relationships: [
+      { 
+        name: "王安石", 
+        relationship: "政敌/文友", 
+        description: "王安石与苏轼是政治上的对手，但在文学上相互敬佩。",
+        famousQuote: "不知更几百年，方有如此人物"
+      },
+      {
+        name: "苏辙", 
+        relationship: "弟弟", 
+        description: "苏辙是苏轼的亲弟弟，兄弟二人感情深厚。",
+        famousQuote: "与君世世为兄弟，更结人间未了因"
+      },
+      {
+        name: "欧阳修", 
+        relationship: "恩师", 
+        description: "欧阳修是苏轼的主考官，对苏轼的才华极为赏识。",
+        famousQuote: "此人可谓善读书，他日文章必独步天下"
+      }
+    ],
+    
+    poetryCharacteristics: {
+      豪放派: {
+        description: "苏轼是北宋豪放派词的开创者，与辛弃疾并称'苏辛'。",
+        examples: [
+          "《念奴娇·赤壁怀古》：'大江东去，浪淘尽，千古风流人物'",
+          "《水调歌头》：'明月几时有，把酒问青天'"
+        ]
+      },
+      语言风格: {
+        description: "苏轼的诗词风格多样，既有豪放之作，也有婉约清丽之词。",
+        features: [
+          "豪放旷达：'一蓑烟雨任平生'",
+          "清丽婉约：'十年生死两茫茫'",
+          "理趣深远：'不识庐山真面目'"
+        ]
+      },
+      题材分类: {
+        词: {
+          count: "约300首",
+          description: "词作成就最高，开创豪放派。",
+          famous: ["《念奴娇·赤壁怀古》", "《水调歌头》", "《定风波》"]
+        },
+        诗: {
+          count: "约2700首",
+          description: "诗作题材广泛，风格多样。",
+          famous: ["《题西林壁》", "《惠崇春江晚景》"]
+        },
+        文: {
+          count: "众多",
+          description: "散文成就与欧阳修并称'欧苏'。",
+          famous: ["《赤壁赋》", "《后赤壁赋》"]
+        }
+      }
+    },
+    
+    famousQuotes: {
+      人生哲理: [
+        { quote: "但愿人长久，千里共婵娟", source: "水调歌头", interpretation: "对亲人朋友的美好祝愿" },
+        { quote: "不识庐山真面目，只缘身在此山中", source: "题西林壁", interpretation: "认识事物的哲理" },
+        { quote: "一蓑烟雨任平生", source: "定风波", interpretation: "面对困境的豁达态度" }
+      ],
+      悼亡之情: [
+        { quote: "十年生死两茫茫，不思量，自难忘", source: "江城子", interpretation: "对亡妻的深切思念" }
+      ],
+      壮志豪情: [
+        { quote: "大江东去，浪淘尽，千古风流人物", source: "念奴娇·赤壁怀古", interpretation: "对历史英雄的追忆" }
+      ]
+    },
+    
+    relics: [
+      {
+        name: "眉山三苏祠",
+        location: "四川省眉山市",
+        description: "纪念苏洵、苏轼、苏辙父子的祠堂。",
+        highlights: ["三苏祠"]
+      },
+      {
+        name: "黄州东坡",
+        location: "湖北省黄冈市",
+        description: "苏轼被贬黄州时居住此地。",
+        highlights: ["东坡雪堂", "东坡赤壁"]
+      },
+      {
+        name: "杭州苏堤",
+        location: "浙江省杭州市",
+        description: "苏轼任杭州知州时修建。",
+        highlights: ["苏堤", "苏东坡纪念馆"]
+      }
+    ],
+    
+    historicalComments: [
+      { era: "宋代", critic: "欧阳修", comment: "读轼书，不觉汗出，快哉！老夫当避路，放他出一头地。" },
+      { era: "现代", critic: "林语堂", comment: "苏轼是中国文学史上最具天才的文学家。" }
+    ],
+    
+    recommendedReadings: [
+      { title: "《苏轼文集》", author: "苏轼", note: "最完备的苏轼作品集" },
+      { title: "《苏轼传》", author: "王水照", note: "权威的苏轼传记" },
+      { title: "《东坡志林》", author: "苏轼", note: "苏轼的随笔集" }
+    ],
+    
+    learningPath: [
+      { step: 1, title: "入门", resources: ["《水调歌头》", "《题西林壁》", "《惠崇春江晚景》"] },
+      { step: 2, title: "进阶", resources: ["《念奴娇·赤壁怀古》", "《定风波》", "《江城子》"] },
+      { step: 3, title: "深入", resources: ["《赤壁赋》", "《后赤壁赋》"] },
+      { step: 4, title: "研究", resources: ["苏轼与王安石", "苏轼的艺术成就"] }
+    ]
+  }
+};
