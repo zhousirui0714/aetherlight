@@ -153,10 +153,19 @@ export function KnowledgeGallery() {
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
-        setArticles(data || []);
+        
+        if (data && data.length > 0) {
+          setArticles(data);
+        } else {
+          // 数据库为空时使用静态数据
+          console.log("Supabase data is empty, using static fallback");
+          setArticles([]);
+        }
       } catch (err) {
-        console.error("Failed to fetch articles:", err);
-        setError("加载失败，请刷新重试");
+        console.error("Failed to fetch articles from Supabase:", err);
+        // Supabase 失败时不报错，使用静态数据回退
+        setArticles([]);
+        setError(null); // 清除错误状态，以便使用静态数据
       } finally {
         setLoading(false);
       }
