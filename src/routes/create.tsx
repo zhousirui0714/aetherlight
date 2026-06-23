@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Palette, Music, Image, Sparkles, Wand2, Download, Share2, RefreshCw, Loader2 } from "lucide-react";
+import { Palette, Music, Image, Sparkles, Wand2, Download, Share2, RefreshCw, Loader2, Trash2, Clock, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
+import { listCreations, saveCreation, deleteCreation, type CreationItem } from "@/lib/creation-storage";
+import { generateMelody, playMelody, stopMelody } from "@/lib/music-generator";
+import { trackEvent } from "@/lib/journey-storage";
 
 export const Route = createFileRoute("/create")({
   head: () => ({
@@ -22,6 +25,12 @@ function CreatePage() {
   const [style, setStyle] = useState("古典水墨");
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<{ type: CreateMode; url: string; prompt: string } | null>(null);
+  const [history, setHistory] = useState<CreationItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyTab, setHistoryTab] = useState<"history" | "inspiration">("history");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playProgress, setPlayProgress] = useState(0);
+  const [musicInfo, setMusicInfo] = useState<{ duration: number; noteCount: number } | null>(null);
 
   const imageStyles = [
     { id: "水墨", label: "古典水墨", desc: "淡雅清逸，意境深远" },
@@ -57,6 +66,20 @@ function CreatePage() {
     "渔舟唱晚的归航",
   ];
 
+  const loadHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const items = await listCreations();
+      setHistory(items);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast("请输入创作灵感");
@@ -90,13 +113,32 @@ function CreatePage() {
         
         setResult({ type: "image", url: imageUrl, prompt });
         toast.success("画作已生成");
+        saveCreation({ type: "image", prompt, style, url: imageUrl }).then(() => {
+          loadHistory();
+          trackEvent({
+            type: "creation_make",
+            title: `画作：${prompt.slice(0, 20)}`,
+            description: `风格：${style}`,
+            category: "绘画创作",
+          });
+        });
       } else {
-        // 文生音乐：演示模式
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        const info = generateMelody(style, prompt);
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const musicUrl = `https://example.com/music/${Date.now()}.mp3`;
-        setResult({ type: "music", url: musicUrl, prompt });
-        toast.success("乐曲已生成（演示模式）");
+        const musicId = `music_${Date.now()}`;
+        setResult({ type: "music", url: musicId, prompt });
+        setMusicInfo({ duration: info.duration, noteCount: info.noteCount });
+        toast.success("乐曲已生成");
+        saveCreation({ type: "music", prompt, style, url: musicId }).then(() => {
+          loadHistory();
+          trackEvent({
+            type: "creation_make",
+            title: `乐曲：${prompt.slice(0, 20)}`,
+            description: `风格：${style}`,
+            category: "音乐创作",
+          });
+        });
       }
     } catch (error) {
       toast.error("生成失败，请重试");
@@ -130,6 +172,37 @@ function CreatePage() {
       toast("链接已复制到剪贴板");
     }
   };
+
+  const togglePlayMusic = () => {
+    if (!result || result.type !== "music") return;
+    
+    if (isPlaying) {
+      stopMelody();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      setPlayProgress(0);
+      playMelody(style, result.prompt, (progress) => {
+        setPlayProgress(progress);
+        if (progress >= 1) {
+          setIsPlaying(false);
+          setPlayProgress(0);
+        }
+      });
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    return () => {
+      stopMelody();
+    };
+  }, []);
 
   return (
     <AppShell title="艺术创作">
@@ -271,16 +344,55 @@ function CreatePage() {
                   />
                 </div>
               ) : (
-                <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary via-background to-secondary p-8 text-center">
-                  <Music className="h-12 w-12 mx-auto mb-4 text-accent" />
-                  <p className="font-serif text-lg text-foreground">{result.prompt}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{style}风格</p>
-                  <div className="mt-6 flex justify-center gap-4">
-                    <button className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground">
-                      <Music className="h-4 w-4" /> 播放乐曲
+                <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary via-background to-secondary p-6">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={togglePlayMusic}
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90"
+                    >
+                      {isPlaying ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        <Music className="h-6 w-6" />
+                      )}
                     </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-serif text-base text-foreground">{result.prompt}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{style}风格 · {musicInfo?.noteCount || 0}个音符</p>
+                    </div>
                   </div>
-                  <p className="mt-4 text-xs text-muted-foreground/70">（音乐生成功能为演示模式）</p>
+                  
+                  <div className="mt-5">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                      <div 
+                        className="h-full rounded-full bg-primary transition-all duration-100"
+                        style={{ width: `${playProgress * 100}%` }}
+                      />
+                    </div>
+                    <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+                      <span>{formatTime(playProgress * (musicInfo?.duration || 0))}</span>
+                      <span>{formatTime(musicInfo?.duration || 0)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="flex items-end gap-0.5 h-6">
+                      {[...Array(12)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`w-1 rounded-full bg-accent/60 transition-all duration-150 ${
+                            isPlaying ? "animate-pulse" : ""
+                          }`}
+                          style={{
+                            height: isPlaying 
+                              ? `${20 + Math.random() * 80}%` 
+                              : "20%",
+                            animationDelay: `${i * 0.1}s`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -357,24 +469,125 @@ function CreatePage() {
             </div>
           </div>
 
-          {/* 创作历史 */}
+          {/* 创作历史 & 灵感库 */}
           <div className="rounded-3xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-accent" />
-              <h3 className="font-serif text-lg text-foreground">创作灵感库</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-accent" />
+                <h3 className="font-serif text-lg text-foreground">创作中心</h3>
+              </div>
+              <div className="flex rounded-full border border-border bg-background p-0.5">
+                <button
+                  onClick={() => setHistoryTab("history")}
+                  className={`rounded-full px-3 py-1 text-xs transition ${
+                    historyTab === "history"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  我的创作
+                </button>
+                <button
+                  onClick={() => setHistoryTab("inspiration")}
+                  className={`rounded-full px-3 py-1 text-xs transition ${
+                    historyTab === "inspiration"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  灵感库
+                </button>
+              </div>
             </div>
             
-            <div className="space-y-3">
-              {examplePrompts.map((p, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPrompt(p)}
-                  className="block w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-left text-sm font-serif text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            {historyTab === "history" ? (
+              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                {historyLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : history.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background/40">
+                      <Sparkles className="h-5 w-5 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm font-serif text-muted-foreground">暂无创作记录</p>
+                    <p className="mt-1 text-xs text-muted-foreground/70">开始你的第一幅作品吧</p>
+                  </div>
+                ) : (
+                  history.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group rounded-xl border border-border bg-background/50 overflow-hidden transition hover:border-primary/30"
+                    >
+                      {item.type === "image" && (
+                        <div className="relative h-28 overflow-hidden">
+                          <img
+                            src={item.url}
+                            alt={item.prompt}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://picsum.photos/400/200?random=" + item.id;
+                            }}
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteCreation(item.id).then(() => loadHistory());
+                            }}
+                            className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 opacity-0 transition group-hover:opacity-100 hover:bg-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-white" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          {item.type === "image" ? (
+                            <Image className="h-3.5 w-3.5 text-accent" />
+                          ) : (
+                            <Music className="h-3.5 w-3.5 text-accent" />
+                          )}
+                          <span className="text-[10px] tracking-wider text-muted-foreground">
+                            {item.style}
+                          </span>
+                          <span className="ml-auto text-[10px] text-muted-foreground/60">
+                            {new Date(item.createdAt).toLocaleDateString("zh-CN")}
+                          </span>
+                        </div>
+                        <p
+                          className="text-xs font-serif text-foreground/80 line-clamp-2 cursor-pointer hover:text-foreground"
+                          onClick={() => {
+                            setPrompt(item.prompt);
+                            setStyle(item.style);
+                            setMode(item.type);
+                            setResult({ type: item.type, url: item.url, prompt: item.prompt });
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                        >
+                          {item.prompt}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {examplePrompts.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPrompt(p)}
+                    className="flex w-full items-start gap-2 rounded-xl border border-border bg-background/50 px-4 py-3 text-left transition hover:border-primary/30"
+                  >
+                    <Lightbulb className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+                    <span className="text-sm font-serif text-muted-foreground hover:text-foreground">
+                      {p}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

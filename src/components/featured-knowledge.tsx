@@ -1,18 +1,47 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import { LazyImage } from "./lazy-image";
+import { getUserInterests, sortByInterests } from "@/lib/interests";
 
 export function FeaturedKnowledge() {
-  const featured = ARTICLES.slice(0, 4);
+  const [featured, setFeatured] = useState<Article[]>(ARTICLES.slice(0, 4));
+  const [hasPersonalized, setHasPersonalized] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    
+    getUserInterests().then((interests) => {
+      if (cancelled) return;
+      if (interests.length > 0) {
+        const sorted = sortByInterests(ARTICLES, interests);
+        setFeatured(sorted.slice(0, 4));
+        setHasPersonalized(true);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <section className="mt-24">
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <div className="font-serif text-xs tracking-[0.4em] text-accent">FEATURED</div>
-          <h2 className="mt-2 font-serif text-3xl text-foreground">精选知识</h2>
-          <p className="mt-2 text-sm text-muted-foreground">探寻文化深处的精彩</p>
+          <div className="font-serif text-xs tracking-[0.4em] text-accent">
+            {hasPersonalized ? "FOR YOU" : "FEATURED"}
+          </div>
+          <h2 className="mt-2 flex items-center gap-2 font-serif text-3xl text-foreground">
+            {hasPersonalized ? "为你推荐" : "精选知识"}
+            {hasPersonalized && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent/20 px-2 py-0.5 text-[10px] text-accent">
+                <Wand2 className="h-3 w-3" /> 个性化
+              </span>
+            )}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {hasPersonalized ? "根据你的兴趣偏好推荐" : "探寻文化深处的精彩"}
+          </p>
         </div>
         <Link
           to="/gallery"

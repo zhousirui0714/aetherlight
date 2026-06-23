@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { saveUserInterests } from "@/lib/interests";
 
 const TAGS = ["节气", "节日", "诗词", "典籍", "非遗", "民俗", "人物", "书法", "茶道", "园林", "戏曲", "国画"];
 
@@ -22,11 +22,7 @@ function Onboarding() {
   const finish = async () => {
     setSaving(true);
     try {
-      const { data } = await supabase.auth.getSession();
-      const uid = data.session?.user?.id;
-      if (uid) {
-        await supabase.from("profiles").update({ interests: picked, onboarded: true }).eq("id", uid);
-      }
+      await saveUserInterests(picked);
       toast("已为您备好卷轴");
       navigate({ to: "/" });
     } finally {

@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageSquare, Trophy, Plus, Heart, Clock, User, Award, Send, Loader2, X, ChevronRight, BookOpen, Lightbulb, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/journey-storage";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -251,6 +252,12 @@ function CommunityPage() {
         setNewPostTitle("");
         setNewPostContent("");
         toast.success("帖子已发布");
+        trackEvent({
+          type: "post_create",
+          title: newPostTitle,
+          description: newPostContent.slice(0, 50),
+          category: newPostCategory,
+        });
       } else {
         throw error;
       }
@@ -273,6 +280,12 @@ function CommunityPage() {
       setNewPostTitle("");
       setNewPostContent("");
       toast("帖子已发布（本地模式）");
+      trackEvent({
+        type: "post_create",
+        title: newPostTitle,
+        description: newPostContent.slice(0, 50),
+        category: newPostCategory,
+      });
     } finally {
       setPosting(false);
     }
@@ -280,6 +293,18 @@ function CommunityPage() {
 
   const handleFinishQuiz = async () => {
     setQuizFinished(true);
+    
+    // 记录答题完成历程
+    trackEvent({
+      type: "quiz_complete",
+      title: "知识答题",
+      description: `答对 ${score} / ${quizQuestions.length} 题`,
+      category: "答题挑战",
+      metadata: {
+        score: score,
+        total: quizQuestions.length,
+      },
+    });
     
     if (isLoggedIn) {
       try {
@@ -491,12 +516,14 @@ function CommunityPage() {
               </div>
             ) : (
               filteredPosts.map((post, i) => (
-                <div
+                <Link
                   key={post.id}
+                  to="/community/$id"
+                  params={{ id: post.id }}
                   style={{ animationDelay: `${i * 50}ms` }}
-                  className="scroll-in rounded-3xl border border-border bg-card p-6 transition hover:border-primary/30 hover:shadow-md"
+                  className="scroll-in group flex rounded-3xl border border-border bg-card p-6 transition hover:border-primary/30 hover:shadow-md"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex-1 flex items-start gap-4">
                     <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-serif text-lg text-primary">
                       {post.user_name?.charAt(0) || "匿"}
                     </div>
@@ -507,7 +534,9 @@ function CommunityPage() {
                           {post.category}
                         </span>
                       </div>
-                      <h3 className="mt-1 font-serif text-lg text-foreground">{post.title}</h3>
+                      <h3 className="mt-1 font-serif text-lg text-foreground group-hover:text-primary transition">
+                        {post.title}
+                      </h3>
                       <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
                       <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -523,7 +552,7 @@ function CommunityPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>

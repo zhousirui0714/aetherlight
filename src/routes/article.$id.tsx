@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Heart, ArrowLeft, Calendar, BookOpen, Loader2, Share2 } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
+import { trackEvent } from "@/lib/journey-storage";
+import { AnnotationPanel } from "@/components/annotation-panel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/article/$id")({
@@ -59,6 +61,18 @@ function ArticlePage() {
     fetchArticle();
   }, [id]);
 
+  // 追踪文章阅读
+  useEffect(() => {
+    if (article) {
+      trackEvent({
+        type: "article_view",
+        title: article.title || "未知文章",
+        description: article.excerpt || article.content?.slice(0, 50),
+        category: article.category || "知识",
+      });
+    }
+  }, [article]);
+
   useEffect(() => {
     const checkFavorite = async () => {
       if (article) {
@@ -86,6 +100,12 @@ function ArticlePage() {
         });
         setIsFavorited(true);
         toast("已添加收藏");
+        trackEvent({
+          type: "favorite_add",
+          title: `收藏：${article.title}`,
+          description: article.excerpt?.slice(0, 50) || "",
+          category: article.category || "知识",
+        });
       }
     } catch (error) {
       toast("操作失败，请重试");
@@ -257,6 +277,12 @@ function ArticlePage() {
           </div>
         </div>
       </article>
+
+      <AnnotationPanel
+        articleId={article.id}
+        articleTitle={article.title}
+        category={article.category || "知识"}
+      />
     </AppShell>
   );
 }

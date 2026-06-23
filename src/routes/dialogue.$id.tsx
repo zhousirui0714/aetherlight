@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import {
   loadDialogue, saveDialogue,
 } from "@/lib/dialogue-storage";
+import { trackEvent } from "@/lib/journey-storage";
 
 export const Route = createFileRoute("/dialogue/$id")({
   loader: ({ params }) => {
@@ -80,6 +81,16 @@ function SageRoom({ sage }: { sage: Sage }) {
     if (!text.trim() || loading) return;
     sendMessage({ text });
     setInput("");
+    
+    // 首次对话时记录历程
+    if (messages.filter(m => m.role === "user").length === 0) {
+      trackEvent({
+        type: "dialogue_chat",
+        title: `与${sage.name}对话`,
+        description: sage.intro || "开启一段跨越时空的对话",
+        category: sage.dynasty || "对话",
+      });
+    }
   };
 
   return (

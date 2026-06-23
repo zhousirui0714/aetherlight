@@ -237,7 +237,7 @@ export function TodayCards() {
                       } group-hover:scale-110`}
                       onLoad={() => handleImageLoad(item.id)}
                       onError={() => handleImageError(item.id)}
-                      loading="eager"
+                      loading="lazy"
                     />
                     {!isLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-secondary via-background to-secondary">

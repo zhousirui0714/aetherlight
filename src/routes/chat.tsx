@@ -205,17 +205,6 @@ function ChatPage() {
     }
   };
 
-  const loadHistory = async () => {
-    try {
-      const { data } = await supabase
-        .from("qa_history")
-        .select("id, question, created_at")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (data) setHistory(data as HistoryItem[]);
-    } catch {}
-  };
-
   useEffect(() => { loadHistory(); }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);

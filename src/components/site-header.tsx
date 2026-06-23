@@ -4,12 +4,15 @@ import { Search, Moon, Sun } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { GlobalSearch } from "./global-search";
 
-const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/create" | "/community"; label: string; exact?: boolean }[] = [
+const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/create" | "/community" | "/heritage" | "/challenge" | "/qa-square"; label: string; exact?: boolean }[] = [
   { to: "/", label: "首页", exact: true },
   { to: "/gallery", label: "知识长廊" },
+  { to: "/heritage", label: "非遗传承" },
   { to: "/chat", label: "问答助手" },
+  { to: "/qa-square", label: "问答广场" },
   { to: "/dialogue", label: "对话" },
   { to: "/create", label: "创作" },
+  { to: "/challenge", label: "打卡" },
   { to: "/community", label: "社区" },
 ];
 
