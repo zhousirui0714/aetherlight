@@ -923,7 +923,7 @@ export const kongZiDeepKnowledge = {
     ],
     
     poetryCharacteristics: {
-      《诗》学: {
+      "《诗》学": {
         description: "孔子是《诗经》的重要整理者和传播者，他提出'《诗》三百，一言以蔽之，曰：思无邪'。",
         examples: [
           "《关雎》：'关关雎鸠，在河之洲'",
