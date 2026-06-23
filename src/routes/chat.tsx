@@ -3,9 +3,12 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink } from "lucide-react";
+import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { KnowledgeEntry } from "@/lib/cultural-knowledge";
+import type { KnowledgeEntry, Person, Book, KnowledgeGraphNode } from "@/lib/cultural-knowledge";
+import { getPerson, getBook } from "@/lib/cultural-knowledge";
+import { KnowledgeGraph } from "@/components/knowledge-graph";
+import { Modal } from "@/components/modal";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -32,6 +35,11 @@ function ChatPage() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [knowledgeResponses, setKnowledgeResponses] = useState<Record<string, KnowledgeEntry>>({});
+  const [currentGraphNodes, setCurrentGraphNodes] = useState<KnowledgeGraphNode[]>([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalType, setModalType] = useState<'person' | 'book'>('book');
+  const [modalData, setModalData] = useState<Person | Book | null>(null);
+  
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
   const { messages, sendMessage, status } = useChat({
     transport: transport.current,
@@ -61,13 +69,40 @@ function ChatPage() {
       
       const data = await response.json();
       if (data.type === "knowledge" && data.data) {
+        const knowledge = data.data as KnowledgeEntry;
         setKnowledgeResponses(prev => ({
           ...prev,
-          [question]: data.data as KnowledgeEntry
+          [question]: knowledge
         }));
+        // 更新知识图谱
+        if (knowledge.graphNodes) {
+          setCurrentGraphNodes(knowledge.graphNodes);
+        }
+      } else {
+        setCurrentGraphNodes([]);
       }
     } catch (error) {
       console.error("Failed to fetch knowledge response:", error);
+      setCurrentGraphNodes([]);
+    }
+  };
+
+  const handleGraphNodeClick = (node: KnowledgeGraphNode) => {
+    // 根据节点类型尝试获取对应的人物或典籍
+    if (node.type === "person") {
+      const person = getPerson(node.label);
+      if (person) {
+        setModalType('person');
+        setModalData(person);
+        setModalIsOpen(true);
+      }
+    } else if (node.type === "book") {
+      const book = getBook(node.label);
+      if (book) {
+        setModalType('book');
+        setModalData(book);
+        setModalIsOpen(true);
+      }
     }
   };
 
@@ -136,7 +171,7 @@ function ChatPage() {
                     const prevMessage = messages[index - 1];
                     const userQuestion = prevMessage?.role === "user" ? extractText(prevMessage) : "";
                     const knowledge = knowledgeResponses[userQuestion];
-                    return <Message key={m.id} m={m} knowledge={knowledge} />;
+                    return <Message key={m.id} m={m} knowledge={knowledge} onOpenModal={setModalIsOpen} setModalType={setModalType} setModalData={setModalData} />;
                   }
                   return <Message key={m.id} m={m} />;
                 })}
@@ -174,35 +209,59 @@ function ChatPage() {
           </form>
         </section>
 
-        {/* history sidebar */}
-        <aside className="rounded-3xl border border-border bg-card p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-accent" />
-            <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">历 史 问 答</h3>
+        {/* sidebar: knowledge graph + history */}
+        <aside className="flex flex-col gap-4">
+          {/* knowledge graph */}
+          <div className="flex-1 rounded-3xl border border-border bg-card p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-accent" />
+              <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">知 识 图 谱</h3>
+            </div>
+            <KnowledgeGraph nodes={currentGraphNodes} onNodeClick={handleGraphNodeClick} />
           </div>
-          {history.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              登录后可查看您与雅士的过往对谈
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {history.map((h) => (
-                <li key={h.id}>
-                  <button
-                    onClick={() => submit(h.question)}
-                    className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
-                  >
-                    <p className="line-clamp-2 font-serif">{h.question}</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {new Date(h.created_at).toLocaleDateString("zh-CN")}
-                    </p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+
+          {/* history */}
+          <div className="h-64 rounded-3xl border border-border bg-card p-5 overflow-hidden flex flex-col">
+            <div className="mb-4 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-accent" />
+              <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">历 史 问 答</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {history.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  登录后可查看您与雅士的过往对谈
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {history.map((h) => (
+                    <li key={h.id}>
+                      <button
+                        onClick={() => submit(h.question)}
+                        className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
+                      >
+                        <p className="line-clamp-2 font-serif">{h.question}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {new Date(h.created_at).toLocaleDateString("zh-CN")}
+                        </p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </aside>
       </div>
+
+      {/* Modal for person/book detail */}
+      {modalIsOpen && modalData && (
+        <Modal
+          isOpen={modalIsOpen}
+          onClose={() => setModalIsOpen(false)}
+          type={modalType}
+          data={modalData}
+        />
+      )}
     </AppShell>
   );
 }
@@ -214,59 +273,81 @@ function extractText(m: UIMessage) {
 interface KnowledgeMessageProps {
   knowledge: KnowledgeEntry;
   question: string;
+  onOpenModal: (open: boolean) => void;
+  setModalType: (type: 'person' | 'book') => void;
+  setModalData: (data: Person | Book | null) => void;
 }
 
-function KnowledgeMessage({ knowledge }: KnowledgeMessageProps) {
+function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData }: KnowledgeMessageProps) {
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
+
+  const handleSourceClick = (sourceTitle: string) => {
+    // 尝试匹配人物或典籍
+    const person = getPerson(sourceTitle.replace(/《|》/g, ""));
+    const book = getBook(sourceTitle.replace(/《|》/g, ""));
+    
+    if (person) {
+      setModalType('person');
+      setModalData(person);
+      onOpenModal(true);
+    } else if (book) {
+      setModalType('book');
+      setModalData(book);
+      onOpenModal(true);
+    }
+  };
 
   return (
     <div className="flex gap-3">
       <div className="seal mt-1 h-7 shrink-0 px-2.5">溯</div>
       <div className="flex-1 rounded-2xl rounded-tl-md border border-border bg-background/40 p-5">
-        {/* 答案 */}
         <p className="whitespace-pre-wrap font-serif leading-[2] text-foreground">
           {knowledge.answer}
         </p>
 
-        {/* 引用原文 */}
         {knowledge.quotes.length > 0 && (
           <div className="mt-6 border-l-2 border-primary/30 pl-4">
             <p className="text-xs text-muted-foreground mb-3">📖 引用原文</p>
             {knowledge.quotes.map((quote, index) => (
               <div key={index} className="mb-4 last:mb-0">
-                <p className="font-serif text-sm text-primary">{quote.title}</p>
+                <button
+                  onClick={() => handleSourceClick(quote.title)}
+                  className="font-serif text-sm text-primary hover:underline"
+                >
+                  《{quote.title}》
+                </button>
                 <p className="mt-2 font-serif text-sm leading-relaxed italic text-foreground/90">
                   {quote.text}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <button
+                  onClick={() => handleSourceClick(quote.author)}
+                  className="mt-1 text-xs text-muted-foreground hover:text-primary hover:underline"
+                >
                   —— {quote.dynasty} · {quote.author}
-                </p>
+                </button>
               </div>
             ))}
           </div>
         )}
 
-        {/* 出处 */}
         <div className="mt-6">
           <p className="text-xs text-muted-foreground mb-2">📚 出处</p>
           <div className="flex flex-wrap gap-2">
             {knowledge.sources.map((source, index) => (
-              <a
+              <button
                 key={index}
-                href={source.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={() => handleSourceClick(source.title)}
                 className="inline-flex items-center gap-1 rounded-full bg-secondary/50 px-3 py-1.5 text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition"
               >
+                <BookOpen className="h-3 w-3" />
                 {source.title}
                 {source.url && <ExternalLink className="h-3 w-3" />}
-              </a>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* 现代释义按钮 */}
         {knowledge.interpretations && (
           <div className="mt-4">
             <button
@@ -284,7 +365,6 @@ function KnowledgeMessage({ knowledge }: KnowledgeMessageProps) {
           </div>
         )}
 
-        {/* 学者解读按钮 */}
         {knowledge.scholarAnalysis && (
           <div className="mt-3">
             <button
@@ -302,7 +382,6 @@ function KnowledgeMessage({ knowledge }: KnowledgeMessageProps) {
           </div>
         )}
 
-        {/* 操作按钮 */}
         <div className="mt-6 flex items-center gap-1 border-t border-border/60 pt-3 text-muted-foreground">
           <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
             <ThumbsUp className="h-3.5 w-3.5" /> 赞
@@ -316,7 +395,7 @@ function KnowledgeMessage({ knowledge }: KnowledgeMessageProps) {
   );
 }
 
-function Message({ m, knowledge }: { m: UIMessage; knowledge?: KnowledgeEntry }) {
+function Message({ m, knowledge, onOpenModal, setModalType, setModalData }: { m: UIMessage; knowledge?: KnowledgeEntry; onOpenModal?: (open: boolean) => void; setModalType?: (type: 'person' | 'book') => void; setModalData?: (data: Person | Book | null) => void; }) {
   const text = extractText(m);
   if (m.role === "user") {
     return (
@@ -328,12 +407,10 @@ function Message({ m, knowledge }: { m: UIMessage; knowledge?: KnowledgeEntry })
     );
   }
 
-  // 如果有知识库数据，显示结构化回答
-  if (knowledge) {
-    return <KnowledgeMessage knowledge={knowledge} question={text} />;
+  if (knowledge && onOpenModal && setModalType && setModalData) {
+    return <KnowledgeMessage knowledge={knowledge} question={text} onOpenModal={onOpenModal} setModalType={setModalType} setModalData={setModalData} />;
   }
 
-  // AI回答
   const sourceMatch = text.match(/(——[\s\S]+)$/);
   const body = sourceMatch ? text.slice(0, sourceMatch.index).trimEnd() : text;
   const source = sourceMatch ? sourceMatch[1].trim() : null;
