@@ -3,6 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { DailyCard } from "@/components/daily-card";
 import { TodayCards } from "@/components/today-cards";
 import { QABanner } from "@/components/qa-banner";
+import { HotQuestions } from "@/components/hot-questions";
+import { FeaturedKnowledge } from "@/components/featured-knowledge";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,6 +23,8 @@ function Home() {
     <AppShell>
       <DailyCard />
       <TodayCards />
+      <HotQuestions />
+      <FeaturedKnowledge />
       <QABanner />
     </AppShell>
   );

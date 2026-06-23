@@ -1043,3 +1043,149 @@ export const kongZiDeepKnowledge = {
     ]
   }
 };
+
+// ============================================
+// 屈原 - 深度知识库
+// ============================================
+export const quYuanDeepKnowledge = {
+  person: {
+    name: "屈原",
+    nameVariants: ["屈平", "正则", "灵均", "屈原"],
+    dynasty: "战国时期",
+    birthYear: "约公元前340年",
+    deathYear: "约公元前278年",
+    birthPlace: "楚国丹阳（今湖北秭归）",
+    
+    timeline: [
+      { year: "约前340年", event: "出生于楚国丹阳，芈姓屈氏，名平字原" },
+      { year: "约前318年", event: "二十余岁，任楚怀王左徒，参与内政外交" },
+      { year: "约前313年", event: "遭谗言被罢官，贬为三闾大夫" },
+      { year: "约前304年", event: "第一次被流放汉北地区" },
+      { year: "约前296年", event: "楚怀王客死于秦，顷襄王即位" },
+      { year: "约前290年", event: "第二次被流放江南，开始创作《离骚》" },
+      { year: "约前278年", event: "秦将白起破郢都，屈原投汨罗江殉国" }
+    ],
+    
+    relationships: [
+      { 
+        name: "楚怀王", 
+        relationship: "君主", 
+        description: "楚怀王熊槐，屈原早期受到重用，后因谗言疏远屈原，最终客死于秦。",
+        famousQuote: "信而见疑，忠而被谤"
+      },
+      { 
+        name: "宋玉", 
+        relationship: "后辈", 
+        description: "宋玉是战国末期楚辞作家，相传为屈原弟子，继承并发展了楚辞创作。",
+        famousQuote: "悲哉，秋之为气也"
+      },
+      { 
+        name: "渔父", 
+        relationship: "隐士", 
+        description: "《渔父》篇中与屈原对话的隐士，代表了道家出世思想，与屈原的入世精神形成对比。",
+        famousQuote: "举世皆浊我独清，众人皆醉我独醒"
+      }
+    ],
+    
+    poetryCharacteristics: {
+      浪漫主义: {
+        description: "屈原是中国浪漫主义诗歌的奠基人，其作品想象奇伟，辞藻瑰丽，大量运用神话传说。",
+        examples: [
+          "《离骚》：路漫漫其修远兮，吾将上下而求索",
+          "《九歌》：沅有芷兮澧有兰，思公子兮未敢言"
+        ]
+      },
+      楚辞体: {
+        description: "屈原开创了楚辞这一诗歌体裁，句式灵活，多用兮字，对后世文学影响深远。",
+        features: [
+          "句式参差错落，更自由",
+          "大量使用语气词'兮'",
+          "地方色彩浓厚，楚地风情",
+          "比兴象征，香草美人"
+        ]
+      }
+    },
+    
+    famousQuotes: {
+      家国情怀: [
+        { quote: "路漫漫其修远兮，吾将上下而求索", source: "离骚", interpretation: "追求真理的道路漫长而遥远，我将不懈地探索" },
+        { quote: "亦余心之所善兮，虽九死其犹未悔", source: "离骚", interpretation: "只要是我心中所追求的美好理想，即使死多次也不后悔" },
+        { quote: "长太息以掩涕兮，哀民生之多艰", source: "离骚", interpretation: "长叹一声掩面流泪，哀叹人民生活的艰难" }
+      ],
+      人格追求: [
+        { quote: "举世皆浊我独清，众人皆醉我独醒", source: "渔父", interpretation: "整个世界都污浊只有我清白，众人都醉了只有我清醒" },
+        { quote: "宁溘死以流亡兮，余不忍为此态也", source: "离骚", interpretation: "宁愿立即死去或流亡，也不愿做出那种苟合取容的丑态" },
+        { quote: "伏清白以死直兮，固前圣之所厚", source: "离骚", interpretation: "保持清白为正道而死，本是前代圣贤所推崇的" }
+      ],
+      浪漫意象: [
+        { quote: "日月忽其不淹兮，春与秋其代序", source: "离骚", interpretation: "日月匆匆不停留，春秋四季依次更替" },
+        { quote: "惟草木之零落兮，恐美人之迟暮", source: "离骚", interpretation: "想到草木的凋零，不禁担忧美人也将衰老" }
+      ]
+    },
+    
+    relics: [
+      {
+        name: "屈原故里",
+        location: "湖北省秭归县",
+        description: "屈原的故乡，有屈原祠、读书洞、照面井等遗迹。",
+        highlights: ["屈原祠", "乐平里", "读书洞"]
+      },
+      {
+        name: "汨罗江",
+        location: "湖南省汨罗市",
+        description: "屈原投江殉国的地方，每年端午节在此举行龙舟竞渡。",
+        highlights: ["屈子祠", "屈原墓", "骚坛"]
+      },
+      {
+        name: "屈原祠",
+        location: "湖北省宜昌市秭归县",
+        description: "纪念屈原的祠堂，始建于唐代，现存建筑为清代重建。",
+        highlights: ["山门", "大殿", "屈原铜像"]
+      }
+    ],
+    
+    allusions: [
+      { 
+        title: "端午节", 
+        story: "传说屈原投江后，百姓划船打捞，投粽子喂鱼，逐渐演变为端午节赛龙舟、吃粽子的习俗。",
+        origin: "南朝梁·吴均《续齐谐记》",
+        usage: "每年农历五月初五纪念屈原"
+      },
+      { 
+        title: "香草美人", 
+        story: "屈原在《离骚》中以香草美人比喻君子和理想，开创了中国文学中比兴象征的传统。",
+        origin: "《离骚》",
+        usage: "指楚辞中以香草美人喻君子的手法"
+      },
+      { 
+        title: "汨罗投江", 
+        story: "郢都被攻破后，屈原不愿做亡国奴，怀石投汨罗江而死，以死明志。",
+        origin: "《史记·屈原贾生列传》",
+        usage: "形容忠烈之士以死殉国"
+      }
+    ],
+    
+    historicalComments: [
+      { era: "西汉", critic: "司马迁", comment: "其文约，其辞微，其志洁，其行廉。", source: "《史记·屈原贾生列传》" },
+      { era: "东汉", critic: "王逸", comment: "屈原之词，诚博远矣。", source: "《楚辞章句序》" },
+      { era: "南朝", critic: "刘勰", comment: "气往轹古，辞来切今，惊采绝艳，难与并能矣。", source: "《文心雕龙·辨骚》" },
+      { era: "现代", critic: "鲁迅", comment: "逸响伟辞，卓绝一世。", source: "《汉文学史纲要》" },
+      { era: "现代", critic: "郭沫若", comment: "屈原是两千多年前的一位伟大的爱国诗人。", source: "《屈原研究》" }
+    ],
+    
+    recommendedReadings: [
+      { title: "《离骚》", author: "屈原", note: "屈原最著名的代表作，中国最长的抒情诗" },
+      { title: "《楚辞》", author: "屈原、宋玉等", note: "西汉刘向辑录的楚辞总集" },
+      { title: "《史记·屈原贾生列传》", author: "司马迁", note: "最权威的屈原传记" },
+      { title: "《楚辞章句》", author: "王逸", note: "最早的楚辞注本" },
+      { title: "《屈原研究》", author: "郭沫若", note: "现代重要的屈原研究著作" }
+    ],
+    
+    learningPath: [
+      { step: 1, title: "入门", resources: ["《离骚》节选", "屈原生平故事", "端午节的由来"] },
+      { step: 2, title: "进阶", resources: ["《离骚》全读", "《九歌》选读", "楚辞的艺术特色"] },
+      { step: 3, title: "深入", resources: ["《九章》选读", "《渔父》《卜居》", "屈原与楚国历史"] },
+      { step: 4, title: "研究", resources: ["楚辞学历史", "屈原与浪漫主义传统", "屈原的当代意义"] }
+    ]
+  }
+};

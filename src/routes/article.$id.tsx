@@ -1,213 +1,166 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Heart, Share2, ArrowLeft, Calendar, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ARTICLES, type Article } from "@/lib/knowledge-data";
-import { useState, useEffect } from "react";
+import { Heart, ArrowLeft, Calendar, BookOpen, Loader2, Share2 } from "lucide-react";
+import { ARTICLES } from "@/lib/knowledge-data";
+import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/article/$id")({
-  loader: async ({ params }) => {
-    // Try to fetch from Supabase first
-    const { data: dbArticle } = await supabase
-      .from("knowledge_articles")
-      .select("*")
-      .eq("id", params.id)
-      .single();
-
-    if (dbArticle) {
-      return {
-        article: {
-          id: dbArticle.id,
-          title: dbArticle.title,
-          category: dbArticle.category,
-          excerpt: dbArticle.excerpt,
-          content: dbArticle.body,
-          favorites: dbArticle.favorites,
-          cover: dbArticle.cover || "📜",
-          author: dbArticle.author,
-          source: dbArticle.source,
-          tags: dbArticle.tags || [],
-          created_at: dbArticle.created_at,
-        },
-        source: "db" as const,
-      };
-    }
-
-    // Fallback to static data
-    const article = ARTICLES.find((a) => a.id === params.id);
-    if (!article) throw notFound();
-
-    return {
-      article: { ...article, author: "溯光编辑", source: "溯光知识库" },
-      source: "static" as const,
-    };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.article.title} · 溯光` },
-          { name: "description", content: loaderData.article.excerpt },
-        ]
-      : [],
+  head: () => ({
+    meta: [
+      { title: "知识详情 · 溯光" },
+      { name: "description", content: "深入了解中华传统文化知识" },
+    ],
   }),
-  notFoundComponent: () => (
-    <AppShell>
-      <div className="py-20 text-center">
-        <span className="text-6xl">📜</span>
-        <h2 className="mt-4 font-serif text-2xl text-foreground">篇章不存在</h2>
-        <p className="mt-2 text-sm text-muted-foreground">您寻的篇章或已散佚</p>
-        <Link
-          to="/gallery"
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90"
-        >
-          <ArrowLeft className="h-4 w-4" /> 返回知识长廊
-        </Link>
-      </div>
-    </AppShell>
-  ),
-  errorComponent: () => (
-    <AppShell>
-      <div className="py-20 text-center">
-        <h2 className="font-serif text-2xl text-foreground">加载出错</h2>
-        <p className="mt-2 text-sm text-muted-foreground">稍候片刻,重新撷取</p>
-        <Link
-          to="/gallery"
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90"
-        >
-          <ArrowLeft className="h-4 w-4" /> 返回知识长廊
-        </Link>
-      </div>
-    </AppShell>
-  ),
   component: ArticlePage,
 });
 
 function ArticlePage() {
-  const { article, source } = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const [article, setArticle] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [favoriteCount, setFavoriteCount] = useState(article.favorites);
-  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user has favorited this article
+    const fetchArticle = async () => {
+      setLoading(true);
+      try {
+        // 先尝试从 Supabase 获取
+        const { data, error } = await supabase
+          .from("knowledge_articles")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (data && !error) {
+          setArticle(data);
+        } else {
+          // 回退到静态数据
+          const staticArticle = ARTICLES.find(a => a.id === id);
+          if (staticArticle) {
+            setArticle(staticArticle);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch article:", err);
+        const staticArticle = ARTICLES.find(a => a.id === id);
+        if (staticArticle) {
+          setArticle(staticArticle);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticle();
+  }, [id]);
+
+  useEffect(() => {
     const checkFavorite = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const { data } = await supabase
-        .from("article_favorites")
-        .select("id")
-        .eq("article_id", article.id)
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (data) setIsFavorited(true);
+      if (article) {
+        const favorited = await checkIsFavorited(article.id);
+        setIsFavorited(favorited);
+      }
     };
     checkFavorite();
-  }, [article.id]);
+  }, [article]);
 
   const handleFavorite = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      toast.error("请先登录后再收藏");
-      return;
-    }
-
-    setIsLoadingFavorite(true);
+    if (!article || favoriteLoading) return;
+    setFavoriteLoading(true);
     try {
       if (isFavorited) {
-        // Remove favorite
-        await supabase
-          .from("article_favorites")
-          .delete()
-          .eq("article_id", article.id)
-          .eq("user_id", session.user.id);
+        await removeFavorite(article.id);
         setIsFavorited(false);
-        setFavoriteCount((c) => c - 1);
-        toast.success("已取消收藏");
+        toast("已取消收藏");
       } else {
-        // Add favorite
-        await supabase
-          .from("article_favorites")
-          .insert({ article_id: article.id, user_id: session.user.id });
+        await addFavorite({
+          item_id: article.id,
+          item_type: "knowledge",
+          title: article.title,
+          snippet: article.excerpt?.slice(0, 100) || "",
+        });
         setIsFavorited(true);
-        setFavoriteCount((c) => c + 1);
-        toast.success("收藏成功");
-
-        // Update article favorites count in DB
-        if (source === "db") {
-          await supabase
-            .from("knowledge_articles")
-            .update({ favorites: favoriteCount + 1 })
-            .eq("id", article.id);
-        }
+        toast("已添加收藏");
       }
-    } catch {
-      toast.error("操作失败，请重试");
+    } catch (error) {
+      toast("操作失败，请重试");
     } finally {
-      setIsLoadingFavorite(false);
+      setFavoriteLoading(false);
     }
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    const title = article.title;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 font-serif text-sm text-muted-foreground">加载中…</p>
+        </div>
+      </AppShell>
+    );
+  }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text: article.excerpt, url });
-      } catch {
-        // User cancelled or error
-      }
-    } else {
-      // Fallback to clipboard
-      await navigator.clipboard.writeText(url);
-      toast.success("链接已复制到剪贴板");
-    }
-  };
-
-  const related = ARTICLES.filter(
-    (a) => a.category === article.category && a.id !== article.id
-  ).slice(0, 5);
+  if (!article) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="seal text-2xl mb-4">溯</div>
+          <h2 className="font-serif text-xl text-foreground">未找到这篇文章</h2>
+          <p className="mt-2 text-sm text-muted-foreground">它可能已经被移动或删除</p>
+          <button
+            onClick={() => navigate({ to: "/gallery" })}
+            className="mt-6 rounded-full bg-primary px-6 py-2 text-sm text-primary-foreground hover:opacity-90"
+          >
+            返回知识长廊
+          </button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
-      {/* breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-foreground transition-colors">首页</Link>
-        <span className="text-border">/</span>
-        <Link to="/gallery" className="hover:text-foreground transition-colors">知识长廊</Link>
-        <span className="text-border">/</span>
-        <span className="text-foreground/80 line-clamp-1">{article.title}</span>
-      </nav>
+      {/* 返回按钮 */}
+      <button
+        onClick={() => navigate({ to: "/gallery" })}
+        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
+      >
+        <ArrowLeft className="h-4 w-4" /> 返回知识长廊
+      </button>
 
-      <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
-        <article className="min-w-0 rounded-3xl border border-border bg-card p-8 md:p-12 scroll-in">
-          {/* meta */}
-          <div className="mb-4 flex flex-wrap items-center gap-3 text-xs">
-            <span className="rounded-full bg-primary/10 px-3 py-1 font-serif tracking-wider text-primary">
-              {article.category}
-            </span>
-            {article.source && (
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <User className="h-3 w-3" /> {article.author || "溯光编辑"}
+      <article className="scroll-in">
+        {/* 文章头部 */}
+        <div className="mb-10 text-center">
+          <span className="inline-block rounded-full border border-accent/30 bg-accent/5 px-4 py-1 font-serif text-xs tracking-widest text-accent">
+            {article.category}
+          </span>
+          <h1 className="mt-5 font-serif text-4xl leading-relaxed text-foreground md:text-5xl">
+            {article.title}
+          </h1>
+          <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+            {article.created_at && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                {new Date(article.created_at).toLocaleDateString("zh-CN")}
               </span>
             )}
-            {article.created_at && (
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <Calendar className="h-3 w-3" /> {new Date(article.created_at).toLocaleDateString("zh-CN")}
+            {article.favorites !== undefined && (
+              <span className="flex items-center gap-1">
+                <Heart className="h-3.5 w-3.5" />
+                {article.favorites} 收藏
               </span>
             )}
           </div>
+        </div>
 
-          {/* title */}
-          <h1 className="font-serif text-3xl font-semibold leading-snug text-foreground brush-in md:text-4xl">
-            {article.title}
-          </h1>
-
-          {/* cover image placeholder */}
-          <div className="relative my-8 flex h-[280px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/70 bg-gradient-to-br from-secondary via-background to-secondary">
+        {/* 文章封面 */}
+        <div className="mb-10 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-secondary via-background to-secondary">
+          <div className="relative h-[300px] w-full md:h-[400px]">
             <div
               className="absolute inset-0 opacity-30"
               style={{
@@ -215,105 +168,95 @@ function ArticlePage() {
                   "radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)",
               }}
             />
-            <span className="relative text-[100px]">{article.cover}</span>
-          </div>
-
-          {/* excerpt */}
-          <p className="mb-6 font-serif text-lg leading-relaxed text-muted-foreground italic">
-            {article.excerpt}
-          </p>
-
-          {/* content */}
-          <div className="prose-suguang space-y-5">
-            <p className="text-[15px] leading-[2] text-foreground/85 whitespace-pre-line">
-              {article.content}
-            </p>
-          </div>
-
-          {/* tags */}
-          {"tags" in article && Array.isArray(article.tags) && article.tags.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-2">
-              {article.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground"
-                >
-                  #{tag}
-                </span>
-              ))}
+            <div className="absolute inset-0 flex items-center justify-center text-8xl md:text-9xl">
+              {article.cover || "📜"}
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* actions */}
-          <div className="mt-10 flex items-center gap-3 border-t border-border/60 pt-6">
-            <button
-              onClick={handleFavorite}
-              disabled={isLoadingFavorite}
-              className={`flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm transition-all ${
-                isFavorited
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              }`}
-            >
-              <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
-              {isFavorited ? "已收藏" : "收藏"} · {favoriteCount.toLocaleString()}
-            </button>
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
-            >
-              <Share2 className="h-4 w-4" /> 分享
-            </button>
+        {/* 文章内容 */}
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-8 rounded-2xl border-l-4 border-accent/30 bg-accent/5 px-6 py-4">
+            <p className="font-serif text-lg leading-loose text-foreground/90 italic">
+              {article.excerpt}
+            </p>
           </div>
 
-          {/* source */}
-          {article.source && (
-            <p className="mt-6 border-t border-border/40 pt-4 text-xs text-muted-foreground/70">
-              出处: {article.source}
-            </p>
-          )}
-        </article>
-
-        {/* sidebar */}
-        <aside className="space-y-6">
-          {/* back button */}
-          <Link
-            to="/gallery"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 font-serif text-sm text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> 返回知识长廊
-          </Link>
-
-          {/* related */}
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <h3 className="mb-4 font-serif text-sm tracking-[0.3em] text-foreground/80">相 关 推 荐</h3>
-            {related.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">暂无相关篇章</p>
+          <div className="prose prose-lg max-w-none font-serif leading-loose text-foreground/85">
+            {article.body ? (
+              <div className="whitespace-pre-wrap">{article.body}</div>
             ) : (
-              <div className="space-y-3">
-                {related.map((r) => (
-                  <Link
-                    key={r.id}
-                    to="/article/$id"
-                    params={{ id: r.id }}
-                    className="group flex items-start gap-3 rounded-xl border border-transparent p-2 transition-colors hover:border-border hover:bg-secondary/50"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary text-2xl">
-                      {r.cover}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-serif text-[10px] tracking-widest text-accent">{r.category}</div>
-                      <h4 className="mt-0.5 font-serif text-sm leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-                        {r.title}
-                      </h4>
-                    </div>
-                  </Link>
-                ))}
+              <div className="space-y-6">
+                <p>
+                  <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
+                    {article.excerpt?.charAt(0) || "溯"}
+                  </span>
+                  {article.excerpt}
+                </p>
+                <p>
+                  中华文化源远流长，博大精深。在五千年的历史长河中，先人为我们留下了无数珍贵的文化遗产。从诗词歌赋到琴棋书画，从节气节日到民俗传统，每一项都是中华民族智慧的结晶。
+                </p>
+                <p>
+                  {article.category}作为中华文化的重要组成部分，承载着先人的思想与情感，记录着历史的变迁与发展。通过了解这些文化知识，我们可以更好地理解中华文明的精神内核，感受传统文化的独特魅力。
+                </p>
+                <h2 className="font-serif text-2xl text-foreground">文化意义</h2>
+                <p>
+                  每一种文化形式都有其独特的存在价值和历史意义。它们不仅是过去的见证，更是连接过去与未来的桥梁。在当今快速发展的时代，传承和弘扬中华优秀传统文化，具有重要的现实意义。
+                </p>
+                <h2 className="font-serif text-2xl text-foreground">传承与发展</h2>
+                <p>
+                  传统文化的传承需要代代相传，也需要与时俱进。在保留核心精神的同时，结合现代元素进行创新发展，才能让传统文化焕发新的生机与活力。
+                </p>
               </div>
             )}
           </div>
-        </aside>
-      </div>
+
+          {/* 底部操作 */}
+          <div className="mt-12 flex items-center justify-between border-t border-border pt-8">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleFavorite}
+                disabled={favoriteLoading}
+                className={`flex items-center gap-2 rounded-full border px-5 py-2 text-sm transition ${
+                  isFavorited
+                    ? "border-red-300 bg-red-50 text-red-500 dark:bg-red-950/20"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30"
+                }`}
+              >
+                {favoriteLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
+                )}
+                {isFavorited ? "已收藏" : "收藏"}
+              </button>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: article.title,
+                      text: article.excerpt,
+                      url: window.location.href,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast("链接已复制到剪贴板");
+                  }
+                }}
+                className="flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
+              >
+                <Share2 className="h-4 w-4" /> 分享
+              </button>
+            </div>
+            <button
+              onClick={() => navigate({ to: "/chat", search: { q: article.title } })}
+              className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90 transition"
+            >
+              <BookOpen className="h-4 w-4" /> 深入了解
+            </button>
+          </div>
+        </div>
+      </article>
     </AppShell>
   );
 }

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageSquare, LogOut, ChevronRight } from "lucide-react";
+import { Heart, MessageSquare, LogOut, ChevronRight, BookOpen, Clock } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 export const Route = createFileRoute("/profile")({
@@ -68,12 +68,20 @@ function ProfilePage() {
           </div>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 text-center">
-          <Stat icon={<Heart className="h-4 w-4" />} label="收藏" value={favCount} />
-          <Stat icon={<MessageSquare className="h-4 w-4" />} label="问答" value={qaCount} />
+          <button onClick={() => navigate({ to: "/favorites" })} className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50">
+            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground"><Heart className="h-4 w-4" /><span className="text-xs">收藏</span></div>
+            <div className="font-serif text-2xl">{favCount}</div>
+          </button>
+          <button onClick={() => navigate({ to: "/chat" })} className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50">
+            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground"><MessageSquare className="h-4 w-4" /><span className="text-xs">问答</span></div>
+            <div className="font-serif text-2xl">{qaCount}</div>
+          </button>
         </div>
       </div>
 
       <ul className="mt-6 divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">
+        <Row label="我的收藏" value={`${favCount} 项`} onClick={() => navigate({ to: "/favorites" })} icon={<Heart className="h-4 w-4" />} />
+        <Row label="历史问答" value="查看" onClick={() => navigate({ to: "/chat" })} icon={<Clock className="h-4 w-4" />} />
         <Row label="主题" value={theme === "dark" ? "暗" : "明"} onClick={toggle} />
         <Row label="兴趣偏好" value="查看" onClick={() => navigate({ to: "/onboarding" })} />
         <Row label="关于溯光" value="v0.1" />
@@ -98,11 +106,14 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
   );
 }
 
-function Row({ label, value, onClick }: { label: string; value: string; onClick?: () => void }) {
+function Row({ label, value, onClick, icon }: { label: string; value: string; onClick?: () => void; icon?: React.ReactNode }) {
   return (
     <li>
       <button onClick={onClick} className="flex w-full items-center justify-between px-5 py-3.5 text-left transition hover:bg-secondary">
-        <span className="text-sm">{label}</span>
+        <span className="flex items-center gap-2 text-sm">
+          {icon && <span className="text-muted-foreground">{icon}</span>}
+          {label}
+        </span>
         <span className="flex items-center gap-1 text-sm text-muted-foreground">
           {value} <ChevronRight className="h-4 w-4" />
         </span>
