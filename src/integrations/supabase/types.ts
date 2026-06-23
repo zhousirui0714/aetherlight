@@ -179,6 +179,99 @@ export type Database = {
         }
         Relationships: []
       }
+      community_posts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          likes: number
+          replies: number
+          title: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          likes?: number
+          replies?: number
+          title: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes?: number
+          replies?: number
+          title?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      quiz_scores: {
+        Row: {
+          created_at: string
+          id: string
+          score: number
+          total: number
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          score?: number
+          total?: number
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          score?: number
+          total?: number
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      creations: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          prompt: string
+          style: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          prompt: string
+          style?: string | null
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          prompt?: string
+          style?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

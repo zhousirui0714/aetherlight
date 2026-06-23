@@ -68,26 +68,39 @@ function CreatePage() {
 
     try {
       if (mode === "image") {
-        // 文生图：调用 TRAE API
-        const encodedPrompt = encodeURIComponent(`${prompt}，${style}风格，中国传统文化艺术`);
-        const imageUrl = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=landscape_16_9`;
+        // 文生图：调用服务端 API
+        const params = new URLSearchParams({
+          prompt,
+          style,
+          size: "landscape_16_9",
+        });
         
-        // 模拟加载延迟
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        const imageUrl = `/api/text-to-image?${params.toString()}`;
+        
+        // 预加载图片确保生成成功
+        await new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("图片加载失败"));
+          img.src = imageUrl;
+          
+          // 超时保护
+          setTimeout(() => reject(new Error("生成超时")), 20000);
+        });
         
         setResult({ type: "image", url: imageUrl, prompt });
         toast.success("画作已生成");
       } else {
-        // 文生音乐：目前使用模拟功能
+        // 文生音乐：演示模式
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // 模拟音乐 URL（实际需要接入音乐生成 API）
         const musicUrl = `https://example.com/music/${Date.now()}.mp3`;
         setResult({ type: "music", url: musicUrl, prompt });
         toast.success("乐曲已生成（演示模式）");
       }
     } catch (error) {
       toast.error("生成失败，请重试");
+      console.error("Generate error:", error);
     } finally {
       setIsGenerating(false);
     }

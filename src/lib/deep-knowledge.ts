@@ -1189,3 +1189,144 @@ export const quYuanDeepKnowledge = {
     ]
   }
 };
+
+// ============================================
+// 陶渊明 - 深度知识库
+// ============================================
+export const taoYuanMingDeepKnowledge = {
+  person: {
+    name: "陶渊明",
+    nameVariants: ["陶潜", "元亮", "五柳先生", "靖节先生"],
+    dynasty: "东晋",
+    birthYear: "约公元365年",
+    deathYear: "约公元427年",
+    birthPlace: "浔阳柴桑（今江西九江）",
+    
+    timeline: [
+      { year: "约365年", event: "出生于浔阳柴桑，出身没落官宦家庭" },
+      { year: "约393年", event: "29岁，首次出仕，任江州祭酒，不久辞官" },
+      { year: "约400年", event: "入桓玄幕府，后因母丧辞官" },
+      { year: "约404年", event: "入刘裕幕府，任镇军参军" },
+      { year: "约405年", event: "任彭泽县令，八十余日即辞官归隐" },
+      { year: "约406年", event: "创作《归去来兮辞》，正式开始隐居生活" },
+      { year: "约408年", event: "家中失火，生活更加困顿" },
+      { year: "约427年", event: "病逝于浔阳，自撰《自祭文》" }
+    ],
+    
+    relationships: [
+      { 
+        name: "颜延之", 
+        relationship: "挚友", 
+        description: "南朝宋文学家，与陶渊明交谊深厚，常一起饮酒谈论。",
+        famousQuote: "有疑陶渊明诗篇篇有酒"
+      },
+      { 
+        name: "王弘", 
+        relationship: "友人", 
+        description: "江州刺史，仰慕陶渊明，常送酒接济，留下'白衣送酒'的典故。",
+        famousQuote: "渊明嗜酒"
+      },
+      { 
+        name: "苏轼", 
+        relationship: "后世知音", 
+        description: "苏轼极推崇陶渊明，晚年遍和陶诗百余首，称'吾与诗人无所甚好，独好渊明之诗'。",
+        famousQuote: "其诗质而实绮，癯而实腴"
+      }
+    ],
+    
+    poetryCharacteristics: {
+      田园诗派: {
+        description: "陶渊明是田园诗派的开创者，以描写田园风光和隐居生活著称。",
+        examples: [
+          "《归园田居》：采菊东篱下，悠然见南山",
+          "《饮酒》：山气日夕佳，飞鸟相与还"
+        ]
+      },
+      平淡自然: {
+        description: "诗风平淡自然，语言质朴，意境深远，看似平淡而内涵丰富。",
+        features: [
+          "语言朴素，不事雕琢",
+          "意境悠远，韵味深长",
+          "真情实感，自然流露",
+          "物我两忘，天人合一"
+        ]
+      }
+    },
+    
+    famousQuotes: {
+      田园隐逸: [
+        { quote: "采菊东篱下，悠然见南山", source: "饮酒·其五", interpretation: "在东篱下采菊，悠闲自在地望见南山，体现了超然物外的心境" },
+        { quote: "归去来兮，田园将芜胡不归", source: "归去来兮辞", interpretation: "回去吧，田园快要荒芜了，为什么还不回去呢？" },
+        { quote: "久在樊笼里，复得返自然", source: "归园田居·其一", interpretation: "长久困在官场牢笼里，如今终于能回归自然了" }
+      ],
+      人生感悟: [
+        { quote: "悟已往之不谏，知来者之可追", source: "归去来兮辞", interpretation: "觉悟到过去的错误已经不可挽回，知道未来的事还来得及补救" },
+        { quote: "人生无根蒂，飘如陌上尘", source: "杂诗·其一", interpretation: "人生没有根柢，就像路边的尘土一样飘泊无定" },
+        { quote: "及时当勉励，岁月不待人", source: "杂诗·其一", interpretation: "应当趁年富力强之时勉励自己，光阴流逝是不等人的" }
+      ],
+      哲理思考: [
+        { quote: "此中有真意，欲辨已忘言", source: "饮酒·其五", interpretation: "这里面蕴含着人生的真义，想要辨析却忘了怎样用语言表达" },
+        { quote: "聊乘化以归尽，乐夫天命复奚疑", source: "归去来兮辞", interpretation: "姑且顺着自然的变化，走向生命的尽头，乐天知命还有什么可怀疑的呢" }
+      ]
+    },
+    
+    relics: [
+      {
+        name: "陶渊明纪念馆",
+        location: "江西省九江市",
+        description: "纪念陶渊明的专题博物馆，展示其生平与文学成就。",
+        highlights: ["陶靖节祠", "陶渊明墓", "醉石"]
+      },
+      {
+        name: "桃花源景区",
+        location: "湖南省常德市",
+        description: "因《桃花源记》而得名的景区，传说是陶渊明笔下的桃花源原型。",
+        highlights: ["桃花山", "秦人村", "桃川书院"]
+      }
+    ],
+    
+    allusions: [
+      { 
+        title: "不为五斗米折腰", 
+        story: "陶渊明任彭泽县令时，郡督邮来巡查，县吏让他束带迎接。陶渊明叹道：'吾不能为五斗米折腰，拳拳事乡里小人邪！'于是辞官归隐。",
+        origin: "《晋书·陶潜传》",
+        usage: "形容人有骨气，不为利禄所动"
+      },
+      { 
+        title: "白衣送酒", 
+        story: "陶渊明重阳节无酒，独坐菊花丛中。忽见一白衣人来，原来是江州刺史王弘派来送酒的。",
+        origin: "《续晋阳秋》",
+        usage: "形容朋友送酒，雪中送炭"
+      },
+      { 
+        title: "世外桃源", 
+        story: "陶渊明在《桃花源记》中描绘了一个与世隔绝、没有战乱的理想社会。",
+        origin: "《桃花源记》",
+        usage: "形容理想中的美好世界，或比喻不受外界影响的地方"
+      }
+    ],
+    
+    historicalComments: [
+      { era: "南朝", critic: "钟嵘", comment: "文体省净，殆无长语。", source: "《诗品》" },
+      { era: "北宋", critic: "苏轼", comment: "其诗质而实绮，癯而实腴。", source: "《与苏辙书》" },
+      { era: "南宋", critic: "朱熹", comment: "陶诗所以为高，正在不待安排，胸中自然流出。", source: "《朱子语类》" },
+      { era: "现代", critic: "鲁迅", comment: "陶潜总不能超于尘世，而且，于朝政还是留心。", source: "《魏晋风度及文章与药及酒之关系》" },
+      { era: "现代", critic: "梁启超", comment: "自然界是他爱恋的伴侣，常常对着他笑。", source: "《陶渊明之文艺及其品格》" }
+    ],
+    
+    recommendedReadings: [
+      { title: "《陶渊明集》", author: "陶渊明", note: "陶渊明诗文全集，含诗、文、辞赋" },
+      { title: "《桃花源记》", author: "陶渊明", note: "最著名的散文，千古名篇" },
+      { title: "《归去来兮辞》", author: "陶渊明", note: "归隐宣言，六朝辞赋名篇" },
+      { title: "《饮酒二十首》", author: "陶渊明", note: "组诗代表作，含'采菊东篱下'" },
+      { title: "《归园田居五首》", author: "陶渊明", note: "田园诗代表作" }
+    ],
+    
+    learningPath: [
+      { step: 1, title: "入门", resources: ["《桃花源记》", "陶渊明生平故事", "不为五斗米折腰典故"] },
+      { step: 2, title: "进阶", resources: ["《饮酒·其五》", "《归园田居·其一》", "《归去来兮辞》"] },
+      { step: 3, title: "深入", resources: ["《饮酒二十首》全读", "《读山海经》", "田园诗的艺术特色"] },
+      { step: 4, title: "研究", resources: ["陶渊明的哲学思想", "陶渊明对后世的影响", "陶诗的自然美学"] }
+    ]
+  }
+};

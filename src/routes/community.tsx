@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageSquare, Trophy, Plus, Heart, Clock, User, Award, Send, Loader2, X, ChevronRight, BookOpen, Lightbulb } from "lucide-react";
+import { MessageSquare, Trophy, Plus, Heart, Clock, User, Award, Send, Loader2, X, ChevronRight, BookOpen, Lightbulb, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/community")({
@@ -120,11 +120,14 @@ const quizQuestions: QuizQuestion[] = [
 function CommunityPage() {
   const [tab, setTab] = useState<TabType>("posts");
   const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [postsLoading, setPostsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showNewPost, setShowNewPost] = useState(false);
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostCategory, setNewPostCategory] = useState("诗词讨论");
+  const [posting, setPosting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("全部");
   
   // 答题状态
   const [currentQuiz, setCurrentQuiz] = useState<QuizQuestion | null>(null);
@@ -133,6 +136,57 @@ function CommunityPage() {
   const [score, setScore] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [quizIndex, setQuizIndex] = useState(0);
+  const [quizFinished, setQuizFinished] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<{ name: string; score: number }[]>([
+    { rank: 1, name: "诗词达人", score: 95 } as any,
+    { rank: 2, name: "文化爱好者", score: 88 } as any,
+    { rank: 3, name: "古籍学者", score: 82 } as any,
+  ]);
+
+  const categories = ["全部", "诗词讨论", "节日民俗", "典籍研读", "人物传记", "非遗传承", "其他话题"];
+
+  // 加载帖子列表
+  const loadPosts = async () => {
+    setPostsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("community_posts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (data && !error) {
+        setPosts(data as Post[]);
+      }
+    } catch (err) {
+      console.error("Failed to load posts:", err);
+      // 失败时使用 mock 数据
+      setPosts(mockPosts);
+    } finally {
+      setPostsLoading(false);
+    }
+  };
+
+  // 加载排行榜
+  const loadLeaderboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("quiz_scores")
+        .select("user_name, score")
+        .order("score", { ascending: false })
+        .limit(10);
+
+      if (data && !error && data.length > 0) {
+        setLeaderboard(data.map((item, i) => ({
+          rank: i + 1,
+          name: item.user_name || "匿名用户",
+          score: item.score,
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to load leaderboard:", err);
+    }
+  };
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -140,9 +194,13 @@ function CommunityPage() {
       setIsLoggedIn(!!data.session?.user);
     };
     checkLogin();
+    loadPosts();
+    loadLeaderboard();
   }, []);
 
-  const categories = ["诗词讨论", "节日民俗", "典籍研读", "人物传记", "非遗传承", "其他话题"];
+  const filteredPosts = selectedCategory === "全部"
+    ? posts
+    : posts.filter(p => p.category === selectedCategory);
 
   const handleNewPost = async () => {
     if (!isLoggedIn) {
@@ -154,24 +212,105 @@ function CommunityPage() {
       return;
     }
 
-    // 模拟发帖
-    const newPost: Post = {
-      id: `new-${Date.now()}`,
-      user_id: "current-user",
-      title: newPostTitle,
-      content: newPostContent,
-      category: newPostCategory,
-      likes: 0,
-      replies: 0,
-      created_at: new Date().toISOString(),
-      user_name: "我",
-    };
+    setPosting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      
+      if (!user) throw new Error("Not logged in");
 
-    setPosts([newPost, ...posts]);
-    setShowNewPost(false);
-    setNewPostTitle("");
-    setNewPostContent("");
-    toast.success("帖子已发布");
+      // 先获取用户昵称
+      let userName = user.email?.split("@")[0] || "匿名用户";
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nickname")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (profile?.nickname) {
+        userName = profile.nickname;
+      }
+
+      const { data, error } = await supabase
+        .from("community_posts")
+        .insert({
+          user_id: user.id,
+          user_name: userName,
+          title: newPostTitle,
+          content: newPostContent,
+          category: newPostCategory,
+          likes: 0,
+          replies: 0,
+        })
+        .select()
+        .single();
+
+      if (data && !error) {
+        setPosts([data as Post, ...posts]);
+        setShowNewPost(false);
+        setNewPostTitle("");
+        setNewPostContent("");
+        toast.success("帖子已发布");
+      } else {
+        throw error;
+      }
+    } catch (err) {
+      console.error("Failed to create post:", err);
+      // 降级：本地添加
+      const newPost: Post = {
+        id: `local-${Date.now()}`,
+        user_id: "local-user",
+        title: newPostTitle,
+        content: newPostContent,
+        category: newPostCategory,
+        likes: 0,
+        replies: 0,
+        created_at: new Date().toISOString(),
+        user_name: "我",
+      };
+      setPosts([newPost, ...posts]);
+      setShowNewPost(false);
+      setNewPostTitle("");
+      setNewPostContent("");
+      toast("帖子已发布（本地模式）");
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleFinishQuiz = async () => {
+    setQuizFinished(true);
+    
+    if (isLoggedIn) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData.session?.user;
+        
+        if (user) {
+          let userName = user.email?.split("@")[0] || "匿名用户";
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("id", user.id)
+            .maybeSingle();
+          
+          if (profile?.nickname) {
+            userName = profile.nickname;
+          }
+
+          await supabase.from("quiz_scores").insert({
+            user_id: user.id,
+            user_name: userName,
+            score,
+            total: quizQuestions.length,
+          });
+          
+          loadLeaderboard();
+        }
+      } catch (err) {
+        console.error("Failed to save score:", err);
+      }
+    }
   };
 
   const handleNextQuiz = () => {
@@ -182,14 +321,18 @@ function CommunityPage() {
       setShowResult(false);
     } else {
       // 完成所有题目
-      toast.success(`答题完成！得分：${score}/${quizQuestions.length}`);
-      setQuizIndex(0);
-      setCurrentQuiz(quizQuestions[0]);
-      setSelectedAnswer(null);
-      setShowResult(false);
-      setScore(0);
-      setAnsweredCount(0);
+      handleFinishQuiz();
     }
+  };
+
+  const handleRestartQuiz = () => {
+    setQuizIndex(0);
+    setCurrentQuiz(quizQuestions[0]);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setScore(0);
+    setAnsweredCount(0);
+    setQuizFinished(false);
   };
 
   const handleAnswer = (index: number) => {
@@ -248,15 +391,31 @@ function CommunityPage() {
       {tab === "posts" && (
         <div className="space-y-6">
           {/* 发帖按钮 */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">共 {posts.length} 个话题</p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setSelectedCategory(c)}
+                  className={`rounded-full px-4 py-1.5 text-xs font-serif transition ${
+                    selectedCategory === c
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setShowNewPost(true)}
-              className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90 transition"
+              className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90 transition"
             >
               <Plus className="h-4 w-4" /> 发起话题
             </button>
           </div>
+
+          <p className="text-sm text-muted-foreground">共 {filteredPosts.length} 个话题</p>
 
           {/* 新帖弹窗 */}
           {showNewPost && (
@@ -279,7 +438,7 @@ function CommunityPage() {
                 />
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {categories.map((c) => (
+                  {categories.filter(c => c !== "全部").map((c) => (
                     <button
                       key={c}
                       onClick={() => setNewPostCategory(c)}
@@ -314,41 +473,59 @@ function CommunityPage() {
 
           {/* 帖子列表 */}
           <div className="space-y-4">
-            {posts.map((post, i) => (
-              <div
-                key={post.id}
-                style={{ animationDelay: `${i * 50}ms` }}
-                className="scroll-in rounded-3xl border border-border bg-card p-6 transition hover:border-primary/30 hover:shadow-md"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-serif text-lg text-primary">
-                    {post.user_name?.charAt(0) || "匿"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">{post.user_name}</span>
-                      <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-serif text-accent">
-                        {post.category}
-                      </span>
+            {postsLoading ? (
+              <div className="py-12 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                <p className="mt-3 text-sm text-muted-foreground">加载中...</p>
+              </div>
+            ) : filteredPosts.length === 0 ? (
+              <div className="py-12 text-center">
+                <MessageSquare className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+                <p className="mt-3 text-sm text-muted-foreground">暂无话题</p>
+                <button
+                  onClick={() => setShowNewPost(true)}
+                  className="mt-4 rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground hover:opacity-90"
+                >
+                  发起第一个话题
+                </button>
+              </div>
+            ) : (
+              filteredPosts.map((post, i) => (
+                <div
+                  key={post.id}
+                  style={{ animationDelay: `${i * 50}ms` }}
+                  className="scroll-in rounded-3xl border border-border bg-card p-6 transition hover:border-primary/30 hover:shadow-md"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-serif text-lg text-primary">
+                      {post.user_name?.charAt(0) || "匿"}
                     </div>
-                    <h3 className="mt-1 font-serif text-lg text-foreground">{post.title}</h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
-                    <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-3.5 w-3.5" /> {post.likes}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3.5 w-3.5" /> {post.replies}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {new Date(post.created_at).toLocaleDateString("zh-CN")}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{post.user_name}</span>
+                        <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-serif text-accent">
+                          {post.category}
+                        </span>
+                      </div>
+                      <h3 className="mt-1 font-serif text-lg text-foreground">{post.title}</h3>
+                      <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
+                      <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3.5 w-3.5" /> {post.likes}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-3.5 w-3.5" /> {post.replies}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {new Date(post.created_at).toLocaleDateString("zh-CN")}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -358,84 +535,119 @@ function CommunityPage() {
         <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* 左侧：答题区 */}
           <div className="space-y-6">
-            {/* 进度显示 */}
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  第 {quizIndex + 1} / {quizQuestions.length} 题
-                </span>
-                <span className="flex items-center gap-1 text-sm font-serif text-foreground">
-                  <Award className="h-4 w-4 text-accent" />
-                  得分：{score}
-                </span>
-              </div>
-              <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all"
-                  style={{ width: `${((quizIndex + 1) / quizQuestions.length) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* 题目卡片 */}
-            {currentQuiz && (
-              <div className="rounded-3xl border border-border bg-card p-6">
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-serif text-accent">
-                    {currentQuiz.category}
-                  </span>
+            {quizFinished ? (
+              /* 答题完成页面 */
+              <div className="rounded-3xl border border-border bg-card p-8 text-center">
+                <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
+                  <Trophy className="h-10 w-10 text-accent" />
                 </div>
-                
-                <h3 className="font-serif text-xl text-foreground">{currentQuiz.question}</h3>
-
-                {/* 选项 */}
-                <div className="mt-6 space-y-3">
-                  {currentQuiz.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(index)}
-                      disabled={showResult}
-                      className={`w-full rounded-2xl border px-5 py-4 text-left font-serif text-base transition ${
-                        showResult
-                          ? index === currentQuiz.correct_index
-                            ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/20"
-                            : selectedAnswer === index
-                              ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/20"
-                              : "border-border bg-background text-muted-foreground"
-                          : selectedAnswer === index
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background text-foreground hover:border-primary/30"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
+                <h2 className="font-serif text-2xl text-foreground">答题完成！</h2>
+                <div className="my-6">
+                  <p className="text-sm text-muted-foreground">你的得分</p>
+                  <p className="font-serif text-6xl text-primary">{score}<span className="text-2xl text-muted-foreground">/{quizQuestions.length}</span></p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {score === quizQuestions.length
+                    ? "🎉 满分！你是真正的文化达人！"
+                    : score >= quizQuestions.length * 0.8
+                      ? "👍 优秀！传统文化功底深厚"
+                      : score >= quizQuestions.length * 0.6
+                        ? "😊 不错！继续加油"
+                        : "💪 继续努力，多了解传统文化吧"
+                  }
+                </p>
+                {!isLoggedIn && (
+                  <p className="mt-3 text-xs text-muted-foreground">登录后可记录成绩并参与排行榜</p>
+                )}
+                <button
+                  onClick={handleRestartQuiz}
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-sm text-primary-foreground hover:opacity-90"
+                >
+                  <RefreshCw className="h-4 w-4" /> 再挑战一次
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* 进度显示 */}
+                <div className="rounded-2xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      第 {quizIndex + 1} / {quizQuestions.length} 题
+                    </span>
+                    <span className="flex items-center gap-1 text-sm font-serif text-foreground">
+                      <Award className="h-4 w-4 text-accent" />
+                      得分：{score}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${((quizIndex + 1) / quizQuestions.length) * 100}%` }}
+                    />
+                  </div>
                 </div>
 
-                {/* 结果解释 */}
-                {showResult && (
-                  <div className="mt-6 rounded-2xl border border-border bg-background/50 p-4">
-                    <p className="text-sm text-muted-foreground">
-                      {selectedAnswer === currentQuiz.correct_index
-                        ? "✓ 回答正确！"
-                        : "✗ 回答错误，正确答案是：" + currentQuiz.options[currentQuiz.correct_index]
-                      }
-                    </p>
-                    <p className="mt-2 text-sm text-foreground">{currentQuiz.explanation}</p>
+                {/* 题目卡片 */}
+                {currentQuiz && (
+                  <div className="rounded-3xl border border-border bg-card p-6">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-serif text-accent">
+                        {currentQuiz.category}
+                      </span>
+                    </div>
+                    
+                    <h3 className="font-serif text-xl text-foreground">{currentQuiz.question}</h3>
+
+                    {/* 选项 */}
+                    <div className="mt-6 space-y-3">
+                      {currentQuiz.options.map((option, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleAnswer(index)}
+                          disabled={showResult}
+                          className={`w-full rounded-2xl border px-5 py-4 text-left font-serif text-base transition ${
+                            showResult
+                              ? index === currentQuiz.correct_index
+                                ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/20"
+                                : selectedAnswer === index
+                                  ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/20"
+                                  : "border-border bg-background text-muted-foreground"
+                              : selectedAnswer === index
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-background text-foreground hover:border-primary/30"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* 结果解释 */}
+                    {showResult && (
+                      <div className="mt-6 rounded-2xl border border-border bg-background/50 p-4">
+                        <p className="text-sm text-muted-foreground">
+                          {selectedAnswer === currentQuiz.correct_index
+                            ? "✓ 回答正确！"
+                            : "✗ 回答错误，正确答案是：" + currentQuiz.options[currentQuiz.correct_index]
+                          }
+                        </p>
+                        <p className="mt-2 text-sm text-foreground">{currentQuiz.explanation}</p>
+                      </div>
+                    )}
+
+                    {/* 下一题按钮 */}
+                    {showResult && (
+                      <button
+                        onClick={handleNextQuiz}
+                        className="mt-6 w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm text-primary-foreground hover:opacity-90 transition"
+                      >
+                        {quizIndex < quizQuestions.length - 1 ? "下一题" : "查看成绩"}
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 )}
-
-                {/* 下一题按钮 */}
-                {showResult && (
-                  <button
-                    onClick={handleNextQuiz}
-                    className="mt-6 w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm text-primary-foreground hover:opacity-90 transition"
-                  >
-                    {quizIndex < quizQuestions.length - 1 ? "下一题" : "查看成绩"}
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+              </>
             )}
           </div>
 
@@ -471,24 +683,20 @@ function CommunityPage() {
             <div className="rounded-3xl border border-border bg-card p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Award className="h-5 w-5 text-accent" />
-                <h3 className="font-serif text-lg text-foreground">本周排行</h3>
+                <h3 className="font-serif text-lg text-foreground">排行榜</h3>
               </div>
               
               <div className="space-y-3">
-                {[
-                  { rank: 1, name: "诗词达人", score: 95 },
-                  { rank: 2, name: "文化爱好者", score: 88 },
-                  { rank: 3, name: "古籍学者", score: 82 },
-                ].map((item) => (
-                  <div key={item.rank} className="flex items-center gap-3">
+                {leaderboard.map((item: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3">
                     <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-serif ${
                       item.rank === 1 ? "bg-yellow-100 text-yellow-700" :
-                      item.rank === 2 ? "bg-gray-100 text-gray-700" :
+                      item.rank === 2 ? "bg-gray-200 text-gray-700" :
                       "bg-orange-100 text-orange-700"
                     }`}>
                       {item.rank}
                     </span>
-                    <span className="flex-1 text-sm text-foreground">{item.name}</span>
+                    <span className="flex-1 text-sm text-foreground truncate">{item.name}</span>
                     <span className="text-sm text-muted-foreground">{item.score}分</span>
                   </div>
                 ))}
