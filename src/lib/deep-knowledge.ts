@@ -374,6 +374,30 @@ export const liBaiDeepKnowledge = {
       { title: "《李白研究》", author: "裴斐", note: "李白研究的重要著作" },
       { title: "《李白年谱》", author: "詹锳", note: "详细的李白生平编年" },
       { title: "《李白诗选》", author: "郁贤皓", note: "权威选本" }
+    ],
+    
+    // 学习路径
+    learningPath: [
+      {
+        step: 1,
+        title: "入门",
+        resources: ["《静夜思》", "《早发白帝城》", "《望庐山瀑布》", "《赠汪伦》"]
+      },
+      {
+        step: 2,
+        title: "进阶",
+        resources: ["《将进酒》", "《蜀道难》", "《行路难》", "《黄鹤楼送孟浩然之广陵》"]
+      },
+      {
+        step: 3,
+        title: "深入",
+        resources: ["《梦游天姥吟留别》", "《梁甫吟》", "《宣州谢朓楼饯别校书叔云》", "《月下独酌》"]
+      },
+      {
+        step: 4,
+        title: "研究",
+        resources: ["《李白评传》", "《李白年谱》", "《李太白全集》", "李白与杜甫比较研究"]
+      }
     ]
   }
 };

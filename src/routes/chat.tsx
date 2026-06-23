@@ -3,12 +3,14 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User } from "lucide-react";
+import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { KnowledgeEntry, Person, Book, KnowledgeGraphNode } from "@/lib/cultural-knowledge";
 import { getPerson, getBook } from "@/lib/cultural-knowledge";
 import { KnowledgeGraph } from "@/components/knowledge-graph";
 import { Modal } from "@/components/modal";
+import { DeepPersonDetail } from "@/components/deep-person-detail";
+import { liBaiDeepKnowledge } from "@/lib/deep-knowledge";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -21,10 +23,10 @@ export const Route = createFileRoute("/chat")({
 });
 
 const HOT_QUESTIONS = [
+  "李白",
   "什么是二十四节气？",
   "端午节的由来？",
   "为什么中秋要赏月？",
-  "苏东坡有哪些代表作？",
   "《诗经》的'风雅颂'指什么？",
   "昆曲为何被称为'百戏之祖'？",
 ];
@@ -39,6 +41,8 @@ function ChatPage() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalType, setModalType] = useState<'person' | 'book'>('book');
   const [modalData, setModalData] = useState<Person | Book | null>(null);
+  const [deepDetailOpen, setDeepDetailOpen] = useState(false);
+  const [deepPersonName, setDeepPersonName] = useState<string | null>(null);
   
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
   const { messages, sendMessage, status } = useChat({
@@ -88,6 +92,13 @@ function ChatPage() {
   };
 
   const handleGraphNodeClick = (node: KnowledgeGraphNode) => {
+    // 如果是李白，打开深度人物详情
+    if (node.label === "李白" && node.type === "person") {
+      setDeepPersonName("李白");
+      setDeepDetailOpen(true);
+      return;
+    }
+    
     // 根据节点类型尝试获取对应的人物或典籍
     if (node.type === "person") {
       const person = getPerson(node.label);
@@ -171,7 +182,7 @@ function ChatPage() {
                     const prevMessage = messages[index - 1];
                     const userQuestion = prevMessage?.role === "user" ? extractText(prevMessage) : "";
                     const knowledge = knowledgeResponses[userQuestion];
-                    return <Message key={m.id} m={m} knowledge={knowledge} onOpenModal={setModalIsOpen} setModalType={setModalType} setModalData={setModalData} />;
+                    return <Message key={m.id} m={m} knowledge={knowledge} onOpenModal={setModalIsOpen} setModalType={setModalType} setModalData={setModalData} onOpenDeepDetail={(name) => { setDeepPersonName(name); setDeepDetailOpen(true); }} />;
                   }
                   return <Message key={m.id} m={m} />;
                 })}
@@ -262,6 +273,30 @@ function ChatPage() {
           data={modalData}
         />
       )}
+
+      {/* 深度人物详情 */}
+      {deepDetailOpen && deepPersonName === "李白" && (
+        <DeepPersonDetail
+          name={liBaiDeepKnowledge.person.name}
+          dynasty={liBaiDeepKnowledge.person.dynasty}
+          birthYear={liBaiDeepKnowledge.person.birthYear}
+          deathYear={liBaiDeepKnowledge.person.deathYear}
+          description="李白（701年-762年），字太白，号青莲居士，唐代伟大的浪漫主义诗人，被誉为诗仙。他一生创作诗歌千余首，在中国文学史上占有举足轻重的地位。"
+          timeline={liBaiDeepKnowledge.person.timeline}
+          relationships={liBaiDeepKnowledge.person.relationships}
+          poetryFeatures={liBaiDeepKnowledge.person.poetryCharacteristics}
+          famousQuotes={liBaiDeepKnowledge.person.famousQuotes}
+          relics={liBaiDeepKnowledge.person.relics}
+          allusions={liBaiDeepKnowledge.person.allusions}
+          historicalComments={liBaiDeepKnowledge.person.historicalComments}
+          recommendedReadings={liBaiDeepKnowledge.person.recommendedReadings}
+          learningPath={liBaiDeepKnowledge.person.learningPath}
+          onClose={() => setDeepDetailOpen(false)}
+          onNodeClick={(nodeId, nodeType) => {
+            console.log("Clicked node:", nodeId, nodeType);
+          }}
+        />
+      )}
     </AppShell>
   );
 }
@@ -276,9 +311,10 @@ interface KnowledgeMessageProps {
   onOpenModal: (open: boolean) => void;
   setModalType: (type: 'person' | 'book') => void;
   setModalData: (data: Person | Book | null) => void;
+  onOpenDeepDetail?: (name: string) => void;
 }
 
-function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData }: KnowledgeMessageProps) {
+function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, onOpenDeepDetail }: KnowledgeMessageProps) {
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
@@ -382,6 +418,19 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData }
           </div>
         )}
 
+        {/* 深度了解按钮 */}
+        {knowledge.quotes.some(q => q.author === "李白") && onOpenDeepDetail && (
+          <div className="mt-5">
+            <button
+              onClick={() => onOpenDeepDetail("李白")}
+              className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition"
+            >
+              <Expand className="h-4 w-4" />
+              深入了解李白
+            </button>
+          </div>
+        )}
+
         <div className="mt-6 flex items-center gap-1 border-t border-border/60 pt-3 text-muted-foreground">
           <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
             <ThumbsUp className="h-3.5 w-3.5" /> 赞
@@ -395,7 +444,7 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData }
   );
 }
 
-function Message({ m, knowledge, onOpenModal, setModalType, setModalData }: { m: UIMessage; knowledge?: KnowledgeEntry; onOpenModal?: (open: boolean) => void; setModalType?: (type: 'person' | 'book') => void; setModalData?: (data: Person | Book | null) => void; }) {
+function Message({ m, knowledge, onOpenModal, setModalType, setModalData, onOpenDeepDetail }: { m: UIMessage; knowledge?: KnowledgeEntry; onOpenModal?: (open: boolean) => void; setModalType?: (type: 'person' | 'book') => void; setModalData?: (data: Person | Book | null) => void; onOpenDeepDetail?: (name: string) => void; }) {
   const text = extractText(m);
   if (m.role === "user") {
     return (
@@ -408,7 +457,7 @@ function Message({ m, knowledge, onOpenModal, setModalType, setModalData }: { m:
   }
 
   if (knowledge && onOpenModal && setModalType && setModalData) {
-    return <KnowledgeMessage knowledge={knowledge} question={text} onOpenModal={onOpenModal} setModalType={setModalType} setModalData={setModalData} />;
+    return <KnowledgeMessage knowledge={knowledge} question={text} onOpenModal={onOpenModal} setModalType={setModalType} setModalData={setModalData} onOpenDeepDetail={onOpenDeepDetail} />;
   }
 
   const sourceMatch = text.match(/(——[\s\S]+)$/);
