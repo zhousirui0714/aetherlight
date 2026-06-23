@@ -638,6 +638,177 @@ export const culturalKnowledge: Record<string, KnowledgeEntry> = {
       { id: "su-shi", label: "苏轼", type: "person", description: "豪放词代表" },
       { id: "li-qingzhao", label: "李清照", type: "person", description: "婉约词代表" }
     ]
+  },
+  "静夜思": {
+    id: "jing-ye-si",
+    question: "李白的《静夜思》",
+    answer: "《静夜思》是唐代诗人李白的名作，描写了诗人在寂静的夜晚思念故乡的深情。全诗语言通俗易懂，意境深远，成为千古传诵的名篇。",
+    quotes: [
+      { text: "床前明月光，疑是地上霜。举头望明月，低头思故乡。", title: "静夜思", author: "李白", dynasty: "唐" }
+    ],
+    sources: [
+      { title: "李太白集", type: "book", isBook: true },
+      { title: "全唐诗", type: "book", isBook: true }
+    ],
+    interpretations: "这首诗以月光为媒介，表达了诗人对故乡的深切思念。'举头望明月，低头思故乡'两句，将动作与情感紧密结合，成为表达乡愁的经典意象。",
+    scholarAnalysis: "学者周汝昌认为，《静夜思》之所以千古传诵，在于它以最朴素的语言表达了最普遍的思乡之情。诗中的'床'字，有人认为是卧具，也有人认为是井栏上的木架。",
+    graphNodes: [
+      { id: "li-bai", label: "李白", type: "person", description: "作者" },
+      { id: "moon", label: "明月", type: "concept", description: "思乡意象" },
+      { id: "hometown", label: "思乡", type: "concept", description: "诗歌主题" }
+    ]
+  },
+  "春江花月夜": {
+    id: "chun-jiang-hua-yue-ye",
+    question: "张若虚与《春江花月夜》",
+    answer: "《春江花月夜》是唐代诗人张若虚的代表作，全诗以月为主体，以江为场景，描绘了一幅幽美邈远的春江月夜图，被闻一多先生誉为'诗中的诗，顶峰上的顶峰'。",
+    quotes: [
+      { text: "春江潮水连海平，海上明月共潮生。滟滟随波千万里，何处春江无月明！", title: "春江花月夜", author: "张若虚", dynasty: "唐" },
+      { text: "江畔何人初见月？江月何年初照人？人生代代无穷已，江月年年望相似。", title: "春江花月夜", author: "张若虚", dynasty: "唐" },
+      { text: "此时相望不相闻，愿逐月华流照君。", title: "春江花月夜", author: "张若虚", dynasty: "唐" }
+    ],
+    sources: [
+      { title: "全唐诗", type: "book", isBook: true },
+      { title: "唐诗鉴赏辞典", type: "book", isBook: true }
+    ],
+    interpretations: "这首诗以春、江、花、月、夜五种事物为中心，描绘了一幅幽美邈远的自然画卷。诗人通过对宇宙人生的追问，表达了对生命永恒的思考和对美好事物的追求。",
+    scholarAnalysis: "闻一多先生高度评价《春江花月夜》，认为它'是诗中的诗，顶峰上的顶峰'。学者叶嘉莹认为，这首诗展现了唐诗最高的艺术境界，是'以哲学的思辨融入诗歌艺术'的典范。",
+    graphNodes: [
+      { id: "zhang-ruoxu", label: "张若虚", type: "person", description: "作者" },
+      { id: "moon", label: "月", type: "concept", description: "诗歌意象" },
+      { id: "river", label: "江", type: "concept", description: "诗歌意象" },
+      { id: "spring", label: "春", type: "concept", description: "诗歌意象" }
+    ]
+  },
+  "赤壁怀古": {
+    id: "chi-bi-huai-gu",
+    question: "苏轼的《念奴娇·赤壁怀古》",
+    answer: "《念奴娇·赤壁怀古》是苏轼的代表作，通过描写赤壁古战场的壮丽景色，抒发了对古代英雄的仰慕和壮志难酬的感慨，被誉为'千古绝唱'。",
+    quotes: [
+      { text: "大江东去，浪淘尽，千古风流人物。故垒西边，人道是，三国周郎赤壁。乱石穿空，惊涛拍岸，卷起千堆雪。江山如画，一时多少豪杰。", title: "念奴娇·赤壁怀古", author: "苏轼", dynasty: "宋" },
+      { text: "遥想公瑾当年，小乔初嫁了，雄姿英发。羽扇纶巾，谈笑间，樯橹灰飞烟灭。故国神游，多情应笑我，早生华发。人生如梦，一尊还酹江月。", title: "念奴娇·赤壁怀古", author: "苏轼", dynasty: "宋" }
+    ],
+    sources: [
+      { title: "东坡全集", type: "book", isBook: true },
+      { title: "全宋词", type: "book", isBook: true },
+      { title: "宋词鉴赏辞典", type: "book", isBook: true }
+    ],
+    interpretations: "这首词上阙写景，下阙怀古，通过对三国英雄周瑜的赞美，表达了作者对建功立业的渴望。最后以'人生如梦'作结，体现了苏轼豁达超脱的人生态度。",
+    scholarAnalysis: "词学家龙榆生认为，此词'雄视百代，为豪放词之冠'。学者叶嘉莹指出，苏轼在这首词中展现了'以诗为词'的特点，将诗歌的意境引入词的创作。",
+    graphNodes: [
+      { id: "su-shi", label: "苏轼", type: "person", description: "作者" },
+      { id: "zhou-yu", label: "周瑜", type: "person", description: "词中人物" },
+      { id: "chibi", label: "赤壁", type: "event", description: "古战场遗址" },
+      { id: "haofang", label: "豪放派", type: "concept", description: "词派风格" }
+    ]
+  },
+  "水调歌头": {
+    id: "shui-diao-ge-tou",
+    question: "苏轼的《水调歌头·明月几时有》",
+    answer: "《水调歌头·明月几时有》是苏轼的中秋词代表作，表达了对亲人的思念和对人生的哲理思考。此词意境豁达，情理交融，是中秋词的绝唱。",
+    quotes: [
+      { text: "明月几时有？把酒问青天。不知天上宫阙，今夕是何年。我欲乘风归去，又恐琼楼玉宇，高处不胜寒。", title: "水调歌头", author: "苏轼", dynasty: "宋" },
+      { text: "人有悲欢离合，月有阴晴圆缺，此事古难全。但愿人长久，千里共婵娟。", title: "水调歌头", author: "苏轼", dynasty: "宋" }
+    ],
+    sources: [
+      { title: "东坡全集", type: "book", isBook: true },
+      { title: "全宋词", type: "book", isBook: true }
+    ],
+    interpretations: "这首词以问月开篇，引出对人生的思考。上阙写诗人想要超脱尘世，但又留恋人间；下阙感叹人生无常，最后以美好的祝愿作结。'但愿人长久，千里共婵娟'成为表达思念和祝福的千古名句。",
+    scholarAnalysis: "学者胡云翼在《宋词选》中评价此词'清旷豪放，兼而有之'。词学家俞平伯认为，这首词的哲理思考'不露痕迹，自然浑成'。",
+    graphNodes: [
+      { id: "su-shi", label: "苏轼", type: "person", description: "作者" },
+      { id: "moon", label: "明月", type: "concept", description: "核心意象" },
+      { id: "reunion", label: "团圆", type: "concept", description: "主题" },
+      { id: "mid-autumn", label: "中秋", type: "event", description: "节日背景" }
+    ]
+  },
+  "声声慢": {
+    id: "sheng-sheng-man",
+    question: "李清照的《声声慢》",
+    answer: "《声声慢》是宋代女词人李清照的代表作，通过描写秋日黄昏的景象，表达了词人晚年丧夫、颠沛流离的悲苦心情，被誉为'千古绝唱'。",
+    quotes: [
+      { text: "寻寻觅觅，冷冷清清，凄凄惨惨戚戚。乍暖还寒时候，最难将息。三杯两盏淡酒，怎敌他、晚来风急！", title: "声声慢", author: "李清照", dynasty: "宋" },
+      { text: "满地黄花堆积，憔悴损，如今有谁堪摘？守着窗儿，独自怎生得黑！梧桐更兼细雨，到黄昏、点点滴滴。这次第，怎一个愁字了得！", title: "声声慢", author: "李清照", dynasty: "宋" }
+    ],
+    sources: [
+      { title: "漱玉词", type: "book", isBook: true },
+      { title: "全宋词", type: "book", isBook: true }
+    ],
+    interpretations: "这首词开头连用七组叠字，层层递进，将愁绪推向极致。全词以秋景为依托，表达了词人内心的孤独、凄凉和对往事的追忆。",
+    scholarAnalysis: "词学家沈祖棻认为，'寻寻觅觅'七叠字'创意出奇'，'足以为此词生色'。学者叶嘉莹指出，李清照在这首词中展现了'女性特有的敏锐和细腻'。",
+    graphNodes: [
+      { id: "li-qingzhao", label: "李清照", type: "person", description: "作者" },
+      { id: "autumn", label: "秋", type: "concept", description: "季节意象" },
+      { id: "sadness", label: "愁", type: "concept", description: "情感主题" },
+      { id: "wanlou", label: "婉约派", type: "concept", description: "词派风格" }
+    ]
+  },
+  "满江红": {
+    id: "man-jiang-hong",
+    question: "岳飞的《满江红》",
+    answer: "《满江红》是南宋抗金名将岳飞的代表作，表达了岳飞精忠报国、收复中原的壮志豪情，是中华民族爱国主义精神的象征。",
+    quotes: [
+      { text: "怒发冲冠，凭栏处、潇潇雨歇。抬望眼，仰天长啸，壮怀激烈。三十功名尘与土，八千里路云和月。莫等闲、白了少年头，空悲切！", title: "满江红", author: "岳飞", dynasty: "宋" },
+      { text: "靖康耻，犹未雪。臣子恨，何时灭！驾长车，踏破贺兰山缺。壮志饥餐胡虏肉，笑谈渴饮匈奴血。待从头、收拾旧山河，朝天阙。", title: "满江红", author: "岳飞", dynasty: "宋" }
+    ],
+    sources: [
+      { title: "岳飞集", type: "book", isBook: true },
+      { title: "宋史·岳飞传", type: "book", isBook: true }
+    ],
+    interpretations: "这首词慷慨激昂，表达了岳飞对国家耻辱的悲愤和收复失地的决心。'莫等闲、白了少年头，空悲切'成为激励后世青年珍惜时光、建功立业的名言。",
+    scholarAnalysis: "历史学家邓广铭认为，《满江红》'气壮山河，志吞胡虏'，充分展现了岳飞的爱国精神。词学家王易在《词曲史》中评价此词'沉痛激烈，足以振聋发聩'。",
+    graphNodes: [
+      { id: "yue-fei", label: "岳飞", type: "person", description: "作者" },
+      { id: "patriotism", label: "爱国主义", type: "concept", description: "核心精神" },
+      { id: "jingkang", label: "靖康之耻", type: "event", description: "历史背景" },
+      { id: "national-hero", label: "民族英雄", type: "concept", description: "历史地位" }
+    ]
+  },
+  "蜀道难": {
+    id: "shu-dao-nan",
+    question: "李白的《蜀道难》",
+    answer: "《蜀道难》是李白代表作之一，描写了蜀道的高峻险阻，表达了诗人对自然的敬畏和对人生的感慨，是李白浪漫主义诗歌的巅峰之作。",
+    quotes: [
+      { text: "噫吁嚱，危乎高哉！蜀道之难，难于上青天！蚕丛及鱼凫，开国何茫然！尔来四万八千岁，不与秦塞通人烟。", title: "蜀道难", author: "李白", dynasty: "唐" },
+      { text: "地崩山摧壮士死，然后天梯石栈相钩连。上有六龙回日之高标，下有冲波逆折之回川。黄鹤之飞尚不得过，猿猱欲度愁攀援。", title: "蜀道难", author: "李白", dynasty: "唐" },
+      { text: "剑阁峥嵘而崔嵬，一夫当关，万夫莫开。", title: "蜀道难", author: "李白", dynasty: "唐" }
+    ],
+    sources: [
+      { title: "李太白集", type: "book", isBook: true },
+      { title: "全唐诗", type: "book", isBook: true }
+    ],
+    interpretations: "这首诗以雄奇的想象、夸张的手法描写蜀道之艰险，表达了诗人对自然力量的敬畏和对人生的独特思考。诗中'蜀道之难，难于上青天'成为千古名句。",
+    scholarAnalysis: "文学史家郁贤皓认为，《蜀道难》'以惊人的艺术想象力，把蜀道的艰险描绘得淋漓尽致'。学者周勋初指出，这首诗'充分体现了李白浪漫主义诗歌的艺术特色'。",
+    graphNodes: [
+      { id: "li-bai", label: "李白", type: "person", description: "作者" },
+      { id: "shudao", label: "蜀道", type: "concept", description: "地理背景" },
+      { id: "sichuan", label: "四川", type: "concept", description: "地区" },
+      { id: "romanticism", label: "浪漫主义", type: "concept", description: "诗歌风格" }
+    ]
+  },
+  "出师表": {
+    id: "chu-shi-biao",
+    question: "诸葛亮的《出师表》",
+    answer: "《出师表》是三国时期蜀汉丞相诸葛亮北伐前写给后主刘禅的奏章，表达了诸葛亮对蜀汉的忠诚和对国家的责任感，是中国古代忠臣的典范之作。",
+    quotes: [
+      { text: "先帝创业未半而中道崩殂，今天下三分，益州疲弊，此诚危急存亡之秋也。然侍卫之臣不懈于内，忠志之士忘身于外者，盖追先帝之殊遇，欲报之于陛下也。", title: "出师表", author: "诸葛亮", dynasty: "三国" },
+      { text: "亲贤臣，远小人，此先汉所以兴隆也；亲小人，远贤臣，此后汉所以倾颓也。", title: "出师表", author: "诸葛亮", dynasty: "三国" },
+      { text: "受任于败军之际，奉命于危难之间，尔来二十有一年矣。", title: "出师表", author: "诸葛亮", dynasty: "三国" },
+      { text: "鞠躬尽瘁，死而后已。", title: "出师表", author: "诸葛亮", dynasty: "三国" }
+    ],
+    sources: [
+      { title: "三国志·诸葛亮传", type: "book", isBook: true },
+      { title: "古文观止", type: "book", isBook: true }
+    ],
+    interpretations: "《出师表》以恳切的语言，表达了诸葛亮对国家的忠诚和对后主的期望。'鞠躬尽瘁，死而后已'成为形容忠臣鞠躬尽瘁的千古名言。",
+    scholarAnalysis: "文学批评家刘勰在《文心雕龙》中评价《出师表》为'表之英也'。历史学家黎东方认为，诸葛亮的忠诚和智慧在《出师表》中得到了充分体现。",
+    graphNodes: [
+      { id: "zhuge-liang", label: "诸葛亮", type: "person", description: "作者" },
+      { id: "shuhan", label: "蜀汉", type: "concept", description: "政权" },
+      { id: "liushan", label: "刘禅", type: "person", description: "后主" },
+      { id: "loyalty", label: "忠义", type: "concept", description: "核心精神" }
+    ]
   }
 };
 
