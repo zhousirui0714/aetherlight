@@ -27,11 +27,10 @@ export function DailyCard() {
       const res = await fetchDailyPush({ data: { date: fmtDate(d) } });
       setData(res);
 
-      // 生成图片 - 始终尝试生成，即使没有 image_prompt
+      // 使用 picsum.photos 获取真实图片
       setImageLoading(true);
-      const prompt = res.image_prompt || `Chinese traditional painting, ${res.title}, elegant, ink wash style, serene atmosphere`;
-      const encodedPrompt = encodeURIComponent(prompt);
-      const url = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=portrait_4_3`;
+      const seed = encodeURIComponent(res.title.replace(/\s+/g, '-'));
+      const url = `https://picsum.photos/seed/${seed}/512/768`;
       setImageUrl(url);
       setImageLoading(false);
 
@@ -51,10 +50,10 @@ export function DailyCard() {
 
   const handleImageError = () => {
     setImageError(true);
-    // 尝试使用备用图片服务
+    // 尝试使用备用图片
     if (data) {
-      const backupPrompt = encodeURIComponent(`Chinese traditional art, ${data.title}, landscape painting`);
-      const backupUrl = `https://neeko-copilot.bytedance.net/api/text2image?prompt=${backupPrompt}&size=512x768`;
+      const backupSeed = encodeURIComponent(`daily-${data.date}`);
+      const backupUrl = `https://picsum.photos/seed/${backupSeed}/512/768`;
       setImageUrl(backupUrl);
     }
   };

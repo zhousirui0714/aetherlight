@@ -127,10 +127,10 @@ function getImageUrl(title: string, category: string): string {
   const getSearchTerm = searchTerms[category] || ((t) => `chinese culture ${t}`);
   const searchTerm = getSearchTerm(title);
   
-  // 使用 Unsplash 免费图片搜索服务获取真实实拍图片
-  // 支持关键词搜索，返回与主题相关的真实照片
-  const encodedTerm = encodeURIComponent(searchTerm);
-  return `https://source.unsplash.com/random/400x300/?${encodedTerm}`;
+  // 使用 picsum.photos 免费图片服务
+  // 使用主题名称作为种子，确保同一主题始终返回相同图片
+  const seed = encodeURIComponent(searchTerm.replace(/\s+/g, '-'));
+  return `https://picsum.photos/seed/${seed}/400/300`;
 }
 
 export function KnowledgeGallery() {
