@@ -38,3 +38,13 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
   },
 });
 
+// Check if user is logged in
+export async function isLoggedIn() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return !!data.session?.user;
+  } catch {
+    return false;
+  }
+}
+
