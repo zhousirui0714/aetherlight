@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
+      chat_sessions: {
+        Row: {
+          character_id: string
+          created_at: string
+          id: string
+          message_count: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          created_at?: string
+          id?: string
+          message_count?: number
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          created_at?: string
+          id?: string
+          message_count?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_pushes: {
         Row: {
           body: string

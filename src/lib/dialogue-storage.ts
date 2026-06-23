@@ -40,10 +40,9 @@ export function clearDialogueLocal(sageId: string) {
 export interface DialogueSession {
   id: string;
   user_id: string;
-  sage_id: string;
+  character_id: string;
   title: string;
   message_count: number;
-  last_message: string;
   created_at: string;
   updated_at: string;
 }
@@ -202,7 +201,7 @@ export async function loadDialogue(sageId: string): Promise<UIMessage[]> {
   // 如果已登录，优先从云端加载
   if (await isLoggedIn()) {
     const sessions = await loadDialogueSessions();
-    const session = sessions.find((s) => s.sage_id === sageId);
+    const session = sessions.find((s) => s.character_id === sageId);
     if (session) {
       return await loadDialogueMessages(session.id);
     }
@@ -231,7 +230,7 @@ export async function clearDialogue(sageId: string): Promise<void> {
   // 如果已登录，清除云端
   if (await isLoggedIn()) {
     const sessions = await loadDialogueSessions();
-    const session = sessions.find((s) => s.sage_id === sageId);
+    const session = sessions.find((s) => s.character_id === sageId);
     if (session) {
       await deleteDialogueFromCloud(session.id);
     }
@@ -274,7 +273,7 @@ export async function listAllDialogues(
     return sessions.map((s) => ({
       sageId: s.character_id,
       count: s.message_count,
-      lastText: s.last_message?.slice(0, 80) || "暂无内容",
+      lastText: s.title?.slice(0, 80) || "暂无内容",
       lastAt: s.updated_at,
       sessionId: s.id,
     }));

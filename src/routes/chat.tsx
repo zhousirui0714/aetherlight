@@ -3,14 +3,17 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand } from "lucide-react";
+import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand, Loader2, PanelRightClose, PanelRight } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import type { KnowledgeEntry, Person, Book, KnowledgeGraphNode } from "@/lib/cultural-knowledge";
 import { getPerson, getBook } from "@/lib/cultural-knowledge";
 import { KnowledgeGraph } from "@/components/knowledge-graph";
 import { Modal } from "@/components/modal";
 import { DeepPersonDetail } from "@/components/deep-person-detail";
-import { liBaiDeepKnowledge, duFuDeepKnowledge, suShiDeepKnowledge } from "@/lib/deep-knowledge";
+import { liBaiDeepKnowledge, duFuDeepKnowledge, suShiDeepKnowledge, kongZiDeepKnowledge } from "@/lib/deep-knowledge";
+import { addFavorite, removeFavorite, checkIsFavorited, type FavoriteItem } from "@/lib/favorites-storage";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -26,12 +29,33 @@ const HOT_QUESTIONS = [
   "李白",
   "杜甫",
   "苏轼",
+  "孔子",
   "《诗经》的'风雅颂'指什么？",
   "端午节的由来？",
-  "昆曲为何被称为'百戏之祖'？",
 ];
 
-type HistoryItem = { id: string; question: string; created_at: string };
+const QA_HISTORY_KEY = "suguang:qa:history";
+
+type HistoryItem = { id: string; question: string; answer: string; created_at: string };
+
+// 本地存储问答历史（未登录用户使用）
+function loadQAHistoryLocal(): HistoryItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(QA_HISTORY_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as HistoryItem[];
+  } catch {
+    return [];
+  }
+}
+
+function saveQAHistoryLocal(items: HistoryItem[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(QA_HISTORY_KEY, JSON.stringify(items.slice(0, 50)));
+  } catch {}
+}
 
 function ChatPage() {
   const [input, setInput] = useState("");
@@ -43,25 +67,68 @@ function ChatPage() {
   const [modalData, setModalData] = useState<Person | Book | null>(null);
   const [deepDetailOpen, setDeepDetailOpen] = useState(false);
   const [deepPersonName, setDeepPersonName] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
   const { messages, sendMessage, status } = useChat({
     transport: transport.current,
     onFinish: async ({ message }) => {
       try {
-        const { data } = await supabase.auth.getSession();
-        const uid = data.session?.user?.id;
-        if (!uid) return;
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const q = lastUser ? extractText(lastUser) : "";
         const a = extractText(message);
-        if (q && a) {
+        if (!q || !a) return;
+
+        const { data } = await supabase.auth.getSession();
+        const uid = data.session?.user?.id;
+
+        if (uid) {
+          // 登录用户：存储到 Supabase
           await supabase.from("qa_history").insert({ user_id: uid, question: q, answer: a });
-          loadHistory();
+        } else {
+          // 未登录用户：存储到本地
+          const localHistory = loadQAHistoryLocal();
+          const newItem: HistoryItem = {
+            id: `local-${Date.now()}`,
+            question: q,
+            answer: a,
+            created_at: new Date().toISOString()
+          };
+          saveQAHistoryLocal([newItem, ...localHistory]);
         }
+        loadHistory();
       } catch {}
     },
   });
+
+  // 检查登录状态
+  useEffect(() => {
+    const checkLogin = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session?.user);
+    };
+    checkLogin();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => checkLogin());
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // 登录用户：从 Supabase 加载
+        const { data } = await supabase
+          .from("qa_history")
+          .select("id, question, created_at")
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (data) setHistory(data as HistoryItem[]);
+      } else {
+        // 未登录用户：从本地加载
+        setHistory(loadQAHistoryLocal());
+      }
+    } catch {}
+  };
 
   const handleKnowledgeResponse = async (question: string) => {
     try {
@@ -106,6 +173,11 @@ function ChatPage() {
       }
       if (node.label === "苏轼" || node.label === "苏东坡") {
         setDeepPersonName("苏轼");
+        setDeepDetailOpen(true);
+        return;
+      }
+      if (node.label === "孔子" || node.label === "孔丘") {
+        setDeepPersonName("孔子");
         setDeepDetailOpen(true);
         return;
       }
@@ -230,8 +302,63 @@ function ChatPage() {
           </form>
         </section>
 
-        {/* sidebar: knowledge graph + history */}
-        <aside className="flex flex-col gap-4">
+        {/* sidebar: 移动端使用 Sheet 抽屉，桌面端直接显示 */}
+        {/* 移动端触发按钮 */}
+        <div className="fixed bottom-24 right-4 z-40 lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg text-primary-foreground">
+                <PanelRight className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
+              <div className="flex flex-col gap-4 p-4 h-full">
+                {/* knowledge graph */}
+                <div className="flex-1 rounded-3xl border border-border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-accent" />
+                    <h3 className="font-serif text-sm tracking-[0.2em] text-foreground/80">知 识 图 谱</h3>
+                  </div>
+                  <KnowledgeGraph nodes={currentGraphNodes} onNodeClick={handleGraphNodeClick} />
+                </div>
+
+                {/* history */}
+                <div className="h-64 rounded-3xl border border-border bg-card p-4 overflow-hidden flex flex-col">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-accent" />
+                    <h3 className="font-serif text-sm tracking-[0.2em] text-foreground/80">历 史 问 答</h3>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {history.length === 0 ? (
+                      <p className="py-8 text-center text-xs text-muted-foreground">
+                        登录后可查看历史记录
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {history.map((h) => (
+                          <li key={h.id}>
+                            <button
+                              onClick={() => submit(h.question)}
+                              className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
+                            >
+                              <p className="line-clamp-2 font-serif text-xs">{h.question}</p>
+                              <p className="mt-1 text-[10px] text-muted-foreground">
+                                {new Date(h.created_at).toLocaleDateString("zh-CN")}
+                              </p>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* 桌面端侧边栏 */}
+        <aside className="hidden lg:flex flex-col gap-4">
           {/* knowledge graph */}
           <div className="flex-1 rounded-3xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center gap-2">
@@ -353,6 +480,30 @@ function ChatPage() {
           }}
         />
       )}
+
+      {/* 深度人物详情 - 孔子 */}
+      {deepDetailOpen && deepPersonName === "孔子" && (
+        <DeepPersonDetail
+          name={kongZiDeepKnowledge.person.name}
+          dynasty={kongZiDeepKnowledge.person.dynasty}
+          birthYear={kongZiDeepKnowledge.person.birthYear}
+          deathYear={kongZiDeepKnowledge.person.deathYear}
+          description="孔子（公元前551年-公元前479年），名丘，字仲尼，春秋时期鲁国陬邑人。中国古代伟大的思想家、政治家、教育家，儒家学派创始人。被后人尊称为'万世师表'。"
+          timeline={kongZiDeepKnowledge.person.timeline}
+          relationships={kongZiDeepKnowledge.person.relationships}
+          poetryFeatures={kongZiDeepKnowledge.person.poetryCharacteristics}
+          famousQuotes={kongZiDeepKnowledge.person.famousQuotes}
+          relics={kongZiDeepKnowledge.person.relics}
+          allusions={kongZiDeepKnowledge.person.allusions}
+          historicalComments={kongZiDeepKnowledge.person.historicalComments}
+          recommendedReadings={kongZiDeepKnowledge.person.recommendedReadings}
+          learningPath={kongZiDeepKnowledge.person.learningPath}
+          onClose={() => setDeepDetailOpen(false)}
+          onNodeClick={(nodeId, nodeType) => {
+            console.log("Clicked node:", nodeId, nodeType);
+          }}
+        />
+      )}
     </AppShell>
   );
 }
@@ -373,6 +524,17 @@ interface KnowledgeMessageProps {
 function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, onOpenDeepDetail }: KnowledgeMessageProps) {
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 检查是否已收藏
+  useEffect(() => {
+    const checkFavorite = async () => {
+      const favorited = await checkIsFavorited(knowledge.id);
+      setIsFavorited(favorited);
+    };
+    checkFavorite();
+  }, [knowledge.id]);
 
   const handleSourceClick = (sourceTitle: string) => {
     // 尝试匹配人物或典籍
@@ -387,6 +549,32 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
       setModalType('book');
       setModalData(book);
       onOpenModal(true);
+    }
+  };
+
+  const handleFavorite = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      if (isFavorited) {
+        await removeFavorite(knowledge.id);
+        setIsFavorited(false);
+        toast("已取消收藏");
+      } else {
+        await addFavorite({
+          item_id: knowledge.id,
+          item_type: "knowledge",
+          title: knowledge.question,
+          snippet: knowledge.answer.slice(0, 100),
+        });
+        setIsFavorited(true);
+        toast("已添加收藏");
+      }
+    } catch (error) {
+      console.error("Favorite error:", error);
+      toast("操作失败，请重试");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -477,7 +665,8 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
         {/* 深度了解按钮 */}
         {(knowledge.quotes.some(q => q.author === "李白") ||
           knowledge.quotes.some(q => q.author === "杜甫") ||
-          knowledge.quotes.some(q => q.author === "苏轼")) && onOpenDeepDetail && (
+          knowledge.quotes.some(q => q.author === "苏轼") ||
+          knowledge.quotes.some(q => q.author === "孔子" || q.author === "孔丘")) && onOpenDeepDetail && (
           <div className="mt-5 flex flex-wrap gap-2">
             {knowledge.quotes.some(q => q.author === "李白") && (
               <button
@@ -506,6 +695,15 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
                 深入了解苏轼
               </button>
             )}
+            {(knowledge.quotes.some(q => q.author === "孔子") || knowledge.quotes.some(q => q.author === "孔丘")) && (
+              <button
+                onClick={() => onOpenDeepDetail("孔子")}
+                className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-500/10 transition"
+              >
+                <Expand className="h-4 w-4" />
+                深入了解孔子
+              </button>
+            )}
           </div>
         )}
 
@@ -513,8 +711,21 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
           <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
             <ThumbsUp className="h-3.5 w-3.5" /> 赞
           </button>
-          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
-            <Heart className="h-3.5 w-3.5" /> 收藏
+          <button
+            onClick={handleFavorite}
+            disabled={isLoading}
+            className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs transition ${
+              isFavorited
+                ? "text-red-500 hover:bg-red-50"
+                : "hover:bg-secondary hover:text-foreground"
+            }`}
+          >
+            {isLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Heart className={`h-3.5 w-3.5 ${isFavorited ? "fill-current" : ""}`} />
+            )}
+            {isFavorited ? "已收藏" : "收藏"}
           </button>
         </div>
       </div>
