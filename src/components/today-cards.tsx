@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Calendar, BookOpen, User, Scroll, Award } from "lucide-react";
+import { fetchDailyPush } from "@/lib/daily-push.functions";
 
 interface TodayItem {
   id: string;
@@ -84,101 +85,102 @@ function getCurrentSolarTerm(): { name: string; description: string } {
   return solarTerms[0];
 }
 
-// 优化后的文化图片 URL（更贴切的主题）
-const culturalImages: Record<string, string> = {
-  // 节气图片 - 使用中国风元素
-  "节气-小寒": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Winter_in_Beijing_2013.jpg/400px-Winter_in_Beijing_2013.jpg",
-  "节气-大寒": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Winter_in_Beijing_2013.jpg/400px-Winter_in_Beijing_2013.jpg",
-  "节气-立春": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Plum_blossom.jpg/400px-Plum_blossom.jpg",
-  "节气-雨水": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Rainy_season_in_Shenzhen.jpg/400px-Rainy_season_in_Shenzhen.jpg",
-  "节气-惊蛰": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Lightning_over_Oradea_Romania_2.jpg/400px-Lightning_over_Oradea_Romania_2.jpg",
-  "节气-春分": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Wisteria_at_Katsura_River.jpg/400px-Wisteria_at_Katsura_River.jpg",
-  "节气-清明": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Andre-Michel_Guerchon.jpg/400px-Andre-Michel_Guerchon.jpg",
-  "节气-谷雨": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Rice_paddy_in_Yangsan.jpg/400px-Rice_paddy_in_Yangsan.jpg",
-  "节气-立夏": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Katsura_River_summer.jpg/400px-Katsura_River_summer.jpg",
-  "节气-小满": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wheat_field_in_Gansu.jpg/400px-Wheat_field_in_Gansu.jpg",
-  "节气-芒种": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wheat_field_in_Gansu.jpg/400px-Wheat_field_in_Gansu.jpg",
-  "节气-夏至": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Scenery_of_the_sunrise.jpg/400px-Scenery_of_the_sunrise.jpg",
-  "节气-小暑": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lake_Sunset_Pond.jpg/400px-Lake_Sunset_Pond.jpg",
-  "节气-大暑": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Lake_in_Switzerland.jpg/400px-Lake_in_Switzerland.jpg",
-  "节气-立秋": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
-  "节气-处暑": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_leaves_in_Johvi.jpg/400px-Autumn_leaves_in_Johvi.jpg",
-  "节气-白露": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Morning_dew_on_leaf.jpg/400px-Morning_dew_on_leaf.jpg",
-  "节气-秋分": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Chrysanthemum_in_Gansu.jpg/400px-Chrysanthemum_in_Gansu.jpg",
-  "节气-寒露": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Morning_dew_on_leaf.jpg/400px-Morning_dew_on_leaf.jpg",
-  "节气-霜降": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Frost_on_leaves.jpg/400px-Frost_on_leaves.jpg",
-  "节气-立冬": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
-  "节气-小雪": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
-  "节气-大雪": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
-  "节气-冬至": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Snowy_landscape.jpg/400px-Snowy_landscape.jpg",
-  
-  // 诗词图片 - 使用山水、月夜主题
-  "诗词": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Chinese_landscape_painting.jpg/400px-Chinese_landscape_painting.jpg",
-  
-  // 人物图片 - 使用古代文人画像
-  "人物": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Li_Bai.jpg/400px-Li_Bai.jpg",
-  
-  // 典故图片 - 使用古代山水画
-  "典故": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Ma_Yuan_-_Water_Album_-_Walters_W11020B.jpg/400px-Ma_Yuan_-_Water_Album_-_Walters_W11020B.jpg",
-  
-  // 非遗图片 - 使用传统戏曲
-  "非遗": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Kunqu_Opera%2C_2007.jpg/400px-Kunqu_Opera%2C_2007.jpg",
-};
-
-function getImageUrl(category: string, termName?: string): string {
-  if (termName) {
-    const key = `${category}-${termName}`;
-    return culturalImages[key] || culturalImages[`${category}-${termName.slice(0, 2)}`] || culturalImages[category];
-  }
-  return culturalImages[category] || "";
-}
-
 export function TodayCards() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    initializeTodayItems();
+    loadTodayItems();
   }, []);
 
-  const initializeTodayItems = () => {
-    const currentTerm = getCurrentSolarTerm();
-    const baseItems: TodayItem[] = [
-      {
-        id: "solar-term",
-        title: "今日节气",
-        excerpt: `今日是${currentTerm.name}，${currentTerm.description}`,
-        category: "节气",
-        termName: currentTerm.name,
-      },
-      {
-        id: "poetry",
-        title: "今日诗词",
-        excerpt: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
-        category: "诗词",
-      },
-      {
-        id: "figure",
-        title: "今日人物",
-        excerpt: "李白，唐代伟大的浪漫主义诗人，被誉为诗仙。",
-        category: "人物",
-      },
-      {
-        id: "story",
-        title: "今日典故",
-        excerpt: "卧薪尝胆：形容人刻苦自励，立志报仇雪耻。",
-        category: "典故",
-      },
-      {
-        id: "heritage",
-        title: "今日非遗",
-        excerpt: "昆曲，中国传统戏曲中最古老的剧种之一。",
-        category: "非遗",
-      },
-    ];
+  const loadTodayItems = async () => {
+    try {
+      // 获取今天的日期
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD 格式
+      
+      // 从每日推送中获取今天的个性化内容
+      const dailyPushData = await fetchDailyPush({ data: { date: dateStr } });
+      
+      // 创建今天的主要文化推送卡片
+      const todayItems: TodayItem[] = [
+        {
+          id: "daily-push",
+          title: dailyPushData.title,
+          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          category: "今日推荐",
+          termName: dailyPushData.source_note || ""
+        },
+        {
+          id: "solar-term",
+          title: "今日节气",
+          excerpt: `今日是${getCurrentSolarTerm().name}，${getCurrentSolarTerm().description}`,
+          category: "节气",
+          termName: getCurrentSolarTerm().name,
+        },
+        {
+          id: "poetry",
+          title: "诗词赏析",
+          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          category: "诗词",
+        },
+        {
+          id: "figure",
+          title: "文化名人",
+          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          category: "人物",
+        },
+        {
+          id: "heritage",
+          title: "文化瑰宝",
+          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          category: "非遗",
+        },
+      ];
 
-    setTodayItems(baseItems);
+      setTodayItems(todayItems);
+    } catch (error) {
+      console.error("加载今日推送内容失败:", error);
+      
+      // 如果加载失败，则使用默认内容
+      const currentTerm = getCurrentSolarTerm();
+      const fallbackItems: TodayItem[] = [
+        {
+          id: "fallback-1",
+          title: "今日文化",
+          excerpt: "今日为您推荐一份独特的文化内容，感受千年智慧的魅力。",
+          category: "文化",
+        },
+        {
+          id: "solar-term",
+          title: "今日节气",
+          excerpt: `今日是${currentTerm.name}，${currentTerm.description}`,
+          category: "节气",
+          termName: currentTerm.name,
+        },
+        {
+          id: "poetry",
+          title: "今日诗词",
+          excerpt: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+          category: "诗词",
+        },
+        {
+          id: "figure",
+          title: "今日人物",
+          excerpt: "李白，唐代伟大的浪漫主义诗人，被誉为诗仙。",
+          category: "人物",
+        },
+        {
+          id: "heritage",
+          title: "今日非遗",
+          excerpt: "昆曲，中国传统戏曲中最古老的剧种之一。",
+          category: "非遗",
+        },
+      ];
+
+      setTodayItems(fallbackItems);
+    }
   };
 
   const handleImageLoad = (id: string) => {
@@ -202,14 +204,19 @@ export function TodayCards() {
         {todayItems.map((item) => {
           const Icon = categoryIcons[item.category] || BookOpen;
           const bgColor = categoryColors[item.category] || "bg-gray-500";
-          const imageUrl = getImageUrl(item.category, item.termName);
+          
+          // 为每个卡片生成基于内容的图片
+          const imageUrl = item.id === "daily-push" 
+            ? `https://picsum.photos/seed/${encodeURIComponent(item.title)}/400/200` 
+            : `https://picsum.photos/seed/${item.category}/400/200`;
+            
           const isLoaded = loadedImages.has(item.id);
           const isFailed = failedImages.has(item.id);
           
           return (
             <a
               key={item.id}
-              href={`/gallery?category=${encodeURIComponent(item.category)}`}
+              href={item.id === "daily-push" ? `/daily` : `/gallery?category=${encodeURIComponent(item.category)}`}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
             >
               <div className="relative h-28 overflow-hidden">
