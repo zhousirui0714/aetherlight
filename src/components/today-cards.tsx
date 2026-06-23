@@ -85,6 +85,75 @@ function getCurrentSolarTerm(): { name: string; description: string } {
   return solarTerms[0];
 }
 
+function getPoetryExcerpt(content: string): string {
+  // 从内容中提取与诗词相关的信息
+  const poetryKeywords = ['诗', '词', '韵', '吟', '咏', '赋', '律', '绝', '古体', '近体', '风雅', '骚人'];
+  const poetryPatterns = [
+    new RegExp(`(['"\`][^'\`"]{10,80}['"\`])`, 'g'),  // 引号内的内容
+    /([^\s]{10,80}[，。；！？])/g,  // 句子片段
+  ];
+  
+  for (const keyword of poetryKeywords) {
+    if (content.includes(keyword)) {
+      for (const pattern of poetryPatterns) {
+        const match = content.match(pattern);
+        if (match) {
+          return match[0].substring(0, 100) + (match[0].length > 100 ? "..." : "");
+        }
+      }
+    }
+  }
+  
+  // 如果没有找到诗词相关内容，生成一个示例
+  return "采菊东篱下，悠然见南山。山气日夕佳，飞鸟相与还。";
+}
+
+function getFigureExcerpt(content: string): string {
+  // 从内容中提取与人物相关的信息
+  const figureKeywords = ['人', '士', '贤', '杰', '圣', '师', '家', '先贤', '名士', '大家', '学者', '文人', '诗人'];
+  const figurePatterns = [
+    new RegExp(`([^，。；！？]*?[^，。；！？]*?(?:${figureKeywords.join('|')})[^，。；！？]*?[，。；！？])`, 'g'),
+    /([^，。；！？]*?[^，。；！？]*?(?:生于|著有|擅长|开创)[^，。；！？]*?[，。；！？])/g,
+  ];
+  
+  for (const keyword of figureKeywords) {
+    if (content.includes(keyword)) {
+      for (const pattern of figurePatterns) {
+        const matches = content.match(pattern);
+        if (matches && matches.length > 0) {
+          return matches[0].substring(0, 100) + (matches[0].length > 100 ? "..." : "");
+        }
+      }
+    }
+  }
+  
+  // 如果没有找到人物相关内容，生成一个示例
+  return "李白（701年-762年），字太白，号青莲居士，唐代伟大的浪漫主义诗人，被誉为诗仙。";
+}
+
+function getHeritageExcerpt(content: string): string {
+  // 从内容中提取与非遗相关的信息
+  const heritageKeywords = ['遗', '传', '艺', '技', '工', '俗', '风', '习', '匠', '手', '古法', '传统', '技艺', '工艺', '民俗'];
+  const heritagePatterns = [
+    new RegExp(`([^，。；！？]*?[^，。；！？]*?(?:${heritageKeywords.join('|')})[^，。；！？]*?[，。；！？])`, 'g'),
+    /([^，。；！？]*?[^，。；！？]*?(?:流传|传承|古老|传统)[^，。；！？]*?[，。；！？])/g,
+  ];
+  
+  for (const keyword of heritageKeywords) {
+    if (content.includes(keyword)) {
+      for (const pattern of heritagePatterns) {
+        const matches = content.match(pattern);
+        if (matches && matches.length > 0) {
+          return matches[0].substring(0, 100) + (matches[0].length > 100 ? "..." : "");
+        }
+      }
+    }
+  }
+  
+  // 如果没有找到非遗相关内容，生成一个示例
+  return "昆曲，中国现存最古老的戏曲形式之一，被誉为百戏之祖，2001年被联合国教科文组织列为人类口述和非物质遗产代表作。";
+}
+
 export function TodayCards() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
@@ -103,6 +172,9 @@ export function TodayCards() {
       // 从每日推送中获取今天的个性化内容
       const dailyPushData = await fetchDailyPush({ data: { date: dateStr } });
       
+      // 获取不同类型的文化内容
+      const solarTerm = getCurrentSolarTerm();
+      
       // 创建今天的主要文化推送卡片
       const todayItems: TodayItem[] = [
         {
@@ -115,26 +187,26 @@ export function TodayCards() {
         {
           id: "solar-term",
           title: "今日节气",
-          excerpt: `今日是${getCurrentSolarTerm().name}，${getCurrentSolarTerm().description}`,
+          excerpt: `今日是${solarTerm.name}，${solarTerm.description}`,
           category: "节气",
-          termName: getCurrentSolarTerm().name,
+          termName: solarTerm.name,
         },
         {
           id: "poetry",
           title: "诗词赏析",
-          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          excerpt: getPoetryExcerpt(dailyPushData.body),
           category: "诗词",
         },
         {
           id: "figure",
           title: "文化名人",
-          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          excerpt: getFigureExcerpt(dailyPushData.body),
           category: "人物",
         },
         {
           id: "heritage",
           title: "文化瑰宝",
-          excerpt: dailyPushData.body.substring(0, 100) + (dailyPushData.body.length > 100 ? "..." : ""),
+          excerpt: getHeritageExcerpt(dailyPushData.body),
           category: "非遗",
         },
       ];
