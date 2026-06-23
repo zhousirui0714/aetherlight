@@ -12,8 +12,26 @@ type DbArticle = {
   body: string;
   favorites: number;
   cover: string | null;
+  image_prompt?: string;
   created_at: string;
 };
+
+// 生成图片URL
+function getImageUrl(title: string, category: string): string {
+  const prompts: Record<string, string> = {
+    "节气": "Chinese traditional solar term, seasonal landscape, watercolor painting style, elegant",
+    "节日": "Chinese traditional festival celebration, cultural elements, festive atmosphere",
+    "诗词": "Chinese ancient poetry scene, ink painting, calligraphy, serene landscape",
+    "典籍": "Ancient Chinese book, traditional literature, scholarly atmosphere, scroll",
+    "非遗": "Chinese intangible cultural heritage, traditional craft, artisanal work",
+    "民俗": "Chinese folk customs, traditional culture, daily life scenes",
+    "人物": "Ancient Chinese scholar portrait, elegant attire, classical setting",
+  };
+  
+  const basePrompt = prompts[category] || "Chinese traditional culture, elegant art";
+  const prompt = encodeURIComponent(`${basePrompt}, ${title}, classical Chinese aesthetics`);
+  return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3`;
+}
 
 export function KnowledgeGallery() {
   const [cat, setCat] = useState<"全部" | string>("全部");
@@ -21,6 +39,7 @@ export function KnowledgeGallery() {
   const [articles, setArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Fetch articles from Supabase
   useEffect(() => {
@@ -30,7 +49,7 @@ export function KnowledgeGallery() {
       try {
         const { data, error: fetchError } = await supabase
           .from("knowledge_articles")
-          .select("id, title, category, excerpt, favorites, cover, created_at")
+          .select("id, title, category, excerpt, favorites, cover, image_prompt, created_at")
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
@@ -44,6 +63,10 @@ export function KnowledgeGallery() {
     };
     fetchArticles();
   }, []);
+
+  const handleImageError = (articleId: string) => {
+    setImageErrors(prev => new Set([...prev, articleId]));
+  };
 
   // Use Supabase data if available, otherwise fallback to static data
   const displayArticles = useMemo(() => {
@@ -170,9 +193,22 @@ export function KnowledgeGallery() {
                       "radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)",
                   }}
                 />
-                <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
-                  {isDb ? (item.cover || "📜") : (item as Article).cover}
-                </div>
+                
+                {/* AI生成图片 */}
+                {!imageErrors.has(item.id) ? (
+                  <img
+                    src={getImageUrl(item.title, item.category)}
+                    alt={item.title}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    onError={() => handleImageError(item.id)}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
+                    {isDb ? (item.cover || "📜") : (item as Article).cover}
+                  </div>
+                )}
+                
                 <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
                   {item.category}
                 </span>
