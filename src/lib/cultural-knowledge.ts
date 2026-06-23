@@ -466,29 +466,51 @@ export const books: Record<string, Book> = {
 };
 
 export const culturalKnowledge: Record<string, KnowledgeEntry> = {
-  "李白喝酒": {
-    id: "li-bai-drinking",
-    question: "李白为什么喜欢喝酒？",
-    answer: "李白嗜酒，与其豪放洒脱的个性、诗歌创作的灵感需求以及人生际遇密切相关。酒是他抒发豪情、排解苦闷、激发创作灵感的重要媒介。李白一生与酒结下不解之缘，留下大量饮酒诗作。",
+  "李白": {
+    id: "li-bai-comprehensive",
+    question: "李白",
+    answer: "李白（701年-762年），字太白，号青莲居士，唐代伟大的浪漫主义诗人，被誉为"诗仙"。他一生创作诗歌千余首，内容涵盖山水、饮酒、游仙、送别、政治等多种题材，想象奇特，语言豪放，在中国文学史上占有举足轻重的地位。",
+
     quotes: [
       { text: "君不见黄河之水天上来，奔流到海不复回。君不见高堂明镜悲白发，朝如青丝暮成雪。人生得意须尽欢，莫使金樽空对月。天生我材必有用，千金散尽还复来。", title: "将进酒", author: "李白", dynasty: "唐" },
-      { text: "花间一壶酒，独酌无相亲。举杯邀明月，对影成三人。月既不解饮，影徒随我身。暂伴月将影，行乐须及春。", title: "月下独酌", author: "李白", dynasty: "唐" },
-      { text: "抽刀断水水更流，举杯消愁愁更愁。人生在世不称意，明朝散发弄扁舟。", title: "宣州谢朓楼饯别校书叔云", author: "李白", dynasty: "唐" },
-      { text: "两人对酌山花开，一杯一杯复一杯。我醉欲眠卿且去，明朝有意抱琴来。", title: "山中与幽人对酌", author: "李白", dynasty: "唐" }
+      { text: "床前明月光，疑是地上霜。举头望明月，低头思故乡。", title: "静夜思", author: "李白", dynasty: "唐" },
+      { text: "蜀道之难，难于上青天！", title: "蜀道难", author: "李白", dynasty: "唐" },
+      { text: "两岸猿声啼不住，轻舟已过万重山。", title: "早发白帝城", author: "李白", dynasty: "唐" },
+      { text: "飞流直下三千尺，疑是银河落九天。", title: "望庐山瀑布", author: "李白", dynasty: "唐" },
+      { text: "长风破浪会有时，直挂云帆济沧海。", title: "行路难", author: "李白", dynasty: "唐" },
+      { text: "桃花潭水深千尺，不及汪伦送我情。", title: "赠汪伦", author: "李白", dynasty: "唐" },
+      { text: "孤帆远影碧空尽，唯见长江天际流。", title: "黄鹤楼送孟浩然之广陵", author: "李白", dynasty: "唐" }
     ],
+
     sources: [
-      { title: "李太白集", type: "book", isBook: true },
-      { title: "全唐诗", type: "book", isBook: true },
-      { title: "新唐书·李白传", type: "book", isBook: true },
-      { title: "国家图书馆数字资源", type: "database" }
+      { title: "李太白全集", type: "book", isBook: true },
+      { title: "旧唐书·李白列传", type: "book", isBook: true },
+      { title: "新唐书·李白列传", type: "book", isBook: true },
+      { title: "李白年谱", type: "book", isBook: true },
+      { title: "李白评传", type: "book", isBook: true },
+      { title: "唐才子传", type: "book", isBook: true }
     ],
-    interpretations: "李白的饮酒诗展现了他对自由、理想和生命的深刻思考。酒在他的诗歌中不仅是物质的饮品，更是精神的寄托和艺术的催化剂。他借酒抒情，以酒会友，在酒中寻找创作的灵感。",
-    scholarAnalysis: "学者陈贻焮认为，李白的饮酒是一种审美沉醉，他通过饮酒达到一种超越现实、进入艺术创作最佳状态的境界。这种状态与庄子的心斋、坐忘有相似之处。学者袁行霈则指出，李白饮酒诗的独特之处在于他把饮酒提升到了哲学的高度，通过酒来表达对人生的思考和对自由的追求。",
+
+    interpretations: "李白的诗歌代表了中国古典诗歌浪漫主义的最高成就。他以豪放的笔调、奇特的想象、清新的语言，创造了一个独特的诗歌世界。李白的诗歌不仅在当时广为传诵，而且对后世产生了深远影响，成为中国诗歌史上一座永恒的丰碑。",
+
+    scholarAnalysis: "学者周勋初在《李白评传》中指出，李白的诗歌具有"清水出芙蓉，天然去雕饰"的美学特征，想象奇特、气势豪迈、感情充沛，是中国浪漫主义诗歌的巅峰。学者袁行霈在《中国文学史》中评价李白是"中国文学史上最具天才、最富于想象力的诗人"。",
+
     graphNodes: [
-      { id: "li-bai", label: "李白", type: "person", description: "唐代浪漫主义诗人" },
-      { id: "wine", label: "酒文化", type: "concept", description: "中国传统酒文化" },
-      { id: "poetry", label: "诗歌创作", type: "concept", description: "古代诗歌艺术" },
-      { id: "jiang-jin-jiu", label: "将进酒", type: "quote", description: "李白代表作" }
+      { id: "li-bai", label: "李白", type: "person", description: "诗仙、浪漫主义诗人", connections: ["du-fu", "meng-haoran", "he-zhizhang"] },
+      { id: "du-fu", label: "杜甫", type: "person", description: "诗圣、李白挚友", connections: ["li-bai"] },
+      { id: "meng-haoran", label: "孟浩然", type: "person", description: "山水诗人、李白挚友", connections: ["li-bai"] },
+      { id: "he-zhizhang", label: "贺知章", type: "person", description: "称李白为谪仙人", connections: ["li-bai"] },
+      { id: "wang-lun", label: "汪伦", type: "person", description: "送别李白", connections: ["li-bai"] },
+      { id: "jiang-jin-jiu", label: "将进酒", type: "book", description: "李白代表作", connections: ["li-bai"] },
+      { id: "jing-ye-si", label: "静夜思", type: "book", description: "最著名的思乡诗", connections: ["li-bai"] },
+      { id: "shu-dao-nan", label: "蜀道难", type: "book", description: "贺知章称谪仙人", connections: ["li-bai"] },
+      { id: "langman-zhuyi", label: "浪漫主义", type: "concept", description: "李白诗歌的核心风格", connections: ["li-bai"] },
+      { id: "shi-xian", label: "诗仙", type: "concept", description: "李白的称号", connections: ["li-bai"] },
+      { id: "li-du", label: "李杜", type: "concept", description: "李白与杜甫的并称", connections: ["li-bai", "du-fu"] },
+      { id: "kai-yuan", label: "开元盛世", type: "event", description: "李白成长的时代背景", connections: ["li-bai"] },
+      { id: "an-shi", label: "安史之乱", type: "event", description: "李白晚年的历史背景", connections: ["li-bai"] },
+      { id: "jiangyou", label: "江油李白故里", type: "event", description: "李白青少年时期居住地", connections: ["li-bai"] },
+      { id: "dangtu", label: "当涂李白墓", type: "event", description: "李白终老之地", connections: ["li-bai"] }
     ]
   },
   "端午节由来": {
