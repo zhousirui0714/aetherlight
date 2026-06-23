@@ -3,8 +3,9 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock } from "lucide-react";
+import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { KnowledgeEntry } from "@/lib/cultural-knowledge";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -30,6 +31,7 @@ type HistoryItem = { id: string; question: string; created_at: string };
 function ChatPage() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [knowledgeResponses, setKnowledgeResponses] = useState<Record<string, KnowledgeEntry>>({});
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
   const { messages, sendMessage, status } = useChat({
     transport: transport.current,
@@ -48,6 +50,26 @@ function ChatPage() {
       } catch {}
     },
   });
+
+  const handleKnowledgeResponse = async (question: string) => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: question }] }),
+      });
+      
+      const data = await response.json();
+      if (data.type === "knowledge" && data.data) {
+        setKnowledgeResponses(prev => ({
+          ...prev,
+          [question]: data.data as KnowledgeEntry
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch knowledge response:", error);
+    }
+  };
 
   const loadHistory = async () => {
     try {
@@ -72,6 +94,7 @@ function ChatPage() {
   const submit = (text: string) => {
     if (!text.trim() || loading) return;
     sendMessage({ text });
+    handleKnowledgeResponse(text);
     setInput("");
   };
 
@@ -108,7 +131,15 @@ function ChatPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {messages.map((m) => <Message key={m.id} m={m} />)}
+                {messages.map((m, index) => {
+                  if (m.role === "assistant") {
+                    const prevMessage = messages[index - 1];
+                    const userQuestion = prevMessage?.role === "user" ? extractText(prevMessage) : "";
+                    const knowledge = knowledgeResponses[userQuestion];
+                    return <Message key={m.id} m={m} knowledge={knowledge} />;
+                  }
+                  return <Message key={m.id} m={m} />;
+                })}
                 {status === "submitted" && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
@@ -180,7 +211,112 @@ function extractText(m: UIMessage) {
   return m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
 }
 
-function Message({ m }: { m: UIMessage }) {
+interface KnowledgeMessageProps {
+  knowledge: KnowledgeEntry;
+  question: string;
+}
+
+function KnowledgeMessage({ knowledge }: KnowledgeMessageProps) {
+  const [showInterpretation, setShowInterpretation] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+
+  return (
+    <div className="flex gap-3">
+      <div className="seal mt-1 h-7 shrink-0 px-2.5">溯</div>
+      <div className="flex-1 rounded-2xl rounded-tl-md border border-border bg-background/40 p-5">
+        {/* 答案 */}
+        <p className="whitespace-pre-wrap font-serif leading-[2] text-foreground">
+          {knowledge.answer}
+        </p>
+
+        {/* 引用原文 */}
+        {knowledge.quotes.length > 0 && (
+          <div className="mt-6 border-l-2 border-primary/30 pl-4">
+            <p className="text-xs text-muted-foreground mb-3">📖 引用原文</p>
+            {knowledge.quotes.map((quote, index) => (
+              <div key={index} className="mb-4 last:mb-0">
+                <p className="font-serif text-sm text-primary">{quote.title}</p>
+                <p className="mt-2 font-serif text-sm leading-relaxed italic text-foreground/90">
+                  {quote.text}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  —— {quote.dynasty} · {quote.author}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 出处 */}
+        <div className="mt-6">
+          <p className="text-xs text-muted-foreground mb-2">📚 出处</p>
+          <div className="flex flex-wrap gap-2">
+            {knowledge.sources.map((source, index) => (
+              <a
+                key={index}
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-full bg-secondary/50 px-3 py-1.5 text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition"
+              >
+                {source.title}
+                {source.url && <ExternalLink className="h-3 w-3" />}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* 现代释义按钮 */}
+        {knowledge.interpretations && (
+          <div className="mt-4">
+            <button
+              onClick={() => setShowInterpretation(!showInterpretation)}
+              className="flex items-center gap-2 rounded-lg border border-border/50 px-4 py-2 text-sm text-muted-foreground hover:border-primary/30 hover:text-foreground transition"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {showInterpretation ? "收起现代释义" : "点击查看现代释义"}
+            </button>
+            {showInterpretation && (
+              <p className="mt-3 pl-2 font-serif text-sm leading-relaxed text-foreground/90">
+                {knowledge.interpretations}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 学者解读按钮 */}
+        {knowledge.scholarAnalysis && (
+          <div className="mt-3">
+            <button
+              onClick={() => setShowAnalysis(!showAnalysis)}
+              className="flex items-center gap-2 rounded-lg border border-border/50 px-4 py-2 text-sm text-muted-foreground hover:border-primary/30 hover:text-foreground transition"
+            >
+              <GraduationCap className="h-4 w-4" />
+              {showAnalysis ? "收起学者解读" : "点击查看学者解读"}
+            </button>
+            {showAnalysis && (
+              <p className="mt-3 pl-2 font-serif text-sm leading-relaxed text-foreground/90 italic">
+                {knowledge.scholarAnalysis}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 操作按钮 */}
+        <div className="mt-6 flex items-center gap-1 border-t border-border/60 pt-3 text-muted-foreground">
+          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
+            <ThumbsUp className="h-3.5 w-3.5" /> 赞
+          </button>
+          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
+            <Heart className="h-3.5 w-3.5" /> 收藏
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Message({ m, knowledge }: { m: UIMessage; knowledge?: KnowledgeEntry }) {
   const text = extractText(m);
   if (m.role === "user") {
     return (
@@ -191,7 +327,13 @@ function Message({ m }: { m: UIMessage }) {
       </div>
     );
   }
-  // separate body and source
+
+  // 如果有知识库数据，显示结构化回答
+  if (knowledge) {
+    return <KnowledgeMessage knowledge={knowledge} question={text} />;
+  }
+
+  // AI回答
   const sourceMatch = text.match(/(——[\s\S]+)$/);
   const body = sourceMatch ? text.slice(0, sourceMatch.index).trimEnd() : text;
   const source = sourceMatch ? sourceMatch[1].trim() : null;

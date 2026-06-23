@@ -1,6 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createAiProvider, getDefaultModel } from "@/lib/ai-gateway.server";
+import { searchKnowledge, type KnowledgeEntry } from "@/lib/cultural-knowledge";
+
+function formatKnowledgeResponse(entry: KnowledgeEntry): string {
+  let response = `## ${entry.question}\n\n`;
+  response += `${entry.answer}\n\n`;
+  
+  if (entry.quotes.length > 0) {
+    response += "---\n\n";
+    for (const quote of entry.quotes) {
+      response += `### 《${quote.title}》\n\n`;
+      response += `${quote.text}\n\n`;
+      response += `—— ${quote.dynasty} · ${quote.author}\n\n`;
+    }
+  }
+  
+  response += "---\n\n";
+  response += "**出处：**\n";
+  for (const source of entry.sources) {
+    const urlPart = source.url ? ` ([查看](${source.url}))` : "";
+    response += `- ${source.title}${urlPart}\n`;
+  }
+  
+  if (entry.interpretations) {
+    response += "\n---\n\n";
+    response += `**现代释义：** ${entry.interpretations}\n`;
+  }
+  
+  if (entry.scholarAnalysis) {
+    response += "\n**学者解读：** " + entry.scholarAnalysis.substring(0, 150) + "…\n";
+  }
+  
+  return response;
+}
 
 export const Route = createFileRoute("/api/chat")({
   server: {
@@ -9,6 +42,22 @@ export const Route = createFileRoute("/api/chat")({
         const { messages } = (await request.json()) as { messages?: UIMessage[] };
         if (!Array.isArray(messages)) return new Response("messages required", { status: 400 });
 
+        const lastMessage = messages[messages.length - 1];
+        const userQuestion = lastMessage?.parts?.find(p => p.type === "text")?.text || "";
+        
+        // 先尝试从知识库获取答案
+        const knowledgeEntry = searchKnowledge(userQuestion);
+        if (knowledgeEntry) {
+          const formattedResponse = formatKnowledgeResponse(knowledgeEntry);
+          return new Response(JSON.stringify({
+            type: "knowledge",
+            data: knowledgeEntry
+          }), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // 如果知识库没有匹配，使用AI回答
         const provider = createAiProvider();
         const result = streamText({
           model: provider(getDefaultModel()),
