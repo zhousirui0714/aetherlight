@@ -198,7 +198,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         navigate({ to: "/article/$id", params: { id: result.id } });
         break;
       case "post":
-        navigate({ to: "/community/$id", params: { id: result.id } });
+        navigate({ to: "/tongyou/community/$id", params: { id: result.id } });
         break;
       case "creation":
         navigate({ to: "/create" });

@@ -89,10 +89,10 @@ export function HotList() {
 
         <div className="mt-6 text-center md:hidden">
           <button
-            onClick={() => navigate({ to: "/qa-square" })}
+            onClick={() => navigate({ to: "/tongyou/community" })}
             className="inline-flex items-center gap-1 font-serif text-sm tracking-[0.2em] text-foreground/70"
           >
-            全部问题
+            去讨论
             <ArrowUpRight className="h-3.5 w-3.5" />
           </button>
         </div>

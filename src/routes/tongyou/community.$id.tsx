@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Heart, MessageSquare, Clock, User, Send, Loader2, X, ThumbsUp, Reply } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/community/$id")({
+export const Route = createFileRoute("/tongyou/community/$id")({
   head: () => ({
     meta: [
       { title: "帖子详情 · 文化社区 · 溯光" },
@@ -302,7 +302,7 @@ function PostDetailPage() {
         <div className="flex flex-col items-center justify-center py-20">
           <p className="font-serif text-lg text-muted-foreground">帖子不存在</p>
           <Link
-            to="/community"
+            to="/tongyou/community"
             className="mt-4 text-sm text-primary hover:underline"
           >
             返回社区

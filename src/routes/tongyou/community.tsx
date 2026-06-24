@@ -6,7 +6,7 @@ import { MessageSquare, Trophy, Plus, Heart, Clock, User, Award, Send, Loader2, 
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/journey-storage";
 
-export const Route = createFileRoute("/community")({
+export const Route = createFileRoute("/tongyou/community")({
   head: () => ({
     meta: [
       { title: "文化社区 · 溯光" },
@@ -518,7 +518,7 @@ function CommunityPage() {
               filteredPosts.map((post, i) => (
                 <Link
                   key={post.id}
-                  to="/community/$id"
+                  to="/tongyou/community/$id"
                   params={{ id: post.id }}
                   style={{ animationDelay: `${i * 50}ms` }}
                   className="scroll-in group flex rounded-3xl border border-border bg-card p-6 transition hover:border-primary/30 hover:shadow-md"

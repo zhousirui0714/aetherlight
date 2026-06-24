@@ -98,7 +98,7 @@ function SearchPage() {
         navigate({ to: "/article/$id", params: { id: r.id } });
         break;
       case "post":
-        navigate({ to: "/community/$id", params: { id: r.id } });
+        navigate({ to: "/tongyou/community/$id", params: { id: r.id } });
         break;
       case "creation":
         navigate({ to: "/create" });

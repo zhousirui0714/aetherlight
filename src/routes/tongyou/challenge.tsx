@@ -5,7 +5,7 @@ import { trackEvent } from "@/lib/journey-storage";
 import { Calendar, CheckCircle, Flame, Star, Trophy, Users, Clock, ChevronLeft, ChevronRight, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/challenge")({
+export const Route = createFileRoute("/tongyou/challenge")({
   head: () => ({ meta: [{ title: "诗词打卡挑战 · 溯光" }] }),
   component: ChallengePage,
 });

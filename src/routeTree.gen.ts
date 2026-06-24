@@ -19,16 +19,15 @@ import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as DialogueRouteImport } from './routes/dialogue'
 import { Route as CreateRouteImport } from './routes/create'
-import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
-import { Route as ChallengeRouteImport } from './routes/challenge'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnnotationsRouteImport } from './routes/annotations'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DialogueIndexRouteImport } from './routes/dialogue.index'
+import { Route as TongyouCommunityRouteImport } from './routes/tongyou/community'
+import { Route as TongyouChallengeRouteImport } from './routes/tongyou/challenge'
 import { Route as DialogueHistoryRouteImport } from './routes/dialogue.history'
 import { Route as DialogueIdRouteImport } from './routes/dialogue.$id'
-import { Route as CommunityIdRouteImport } from './routes/community.$id'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
 import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
 import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
@@ -37,6 +36,7 @@ import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiArticlesRouteImport } from './routes/api/articles'
 import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
+import { Route as TongyouCommunityIdRouteImport } from './routes/tongyou/community.$id'
 import { Route as ApiArticlesTagsRouteImport } from './routes/api/articles/tags'
 import { Route as ApiArticlesStatsRouteImport } from './routes/api/articles/stats'
 import { Route as ApiArticlesCategoriesRouteImport } from './routes/api/articles/categories'
@@ -93,19 +93,9 @@ const CreateRoute = CreateRouteImport.update({
   path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CommunityRoute = CommunityRouteImport.update({
-  id: '/community',
-  path: '/community',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChallengeRoute = ChallengeRouteImport.update({
-  id: '/challenge',
-  path: '/challenge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -128,6 +118,16 @@ const DialogueIndexRoute = DialogueIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DialogueRoute,
 } as any)
+const TongyouCommunityRoute = TongyouCommunityRouteImport.update({
+  id: '/tongyou/community',
+  path: '/tongyou/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TongyouChallengeRoute = TongyouChallengeRouteImport.update({
+  id: '/tongyou/challenge',
+  path: '/tongyou/challenge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DialogueHistoryRoute = DialogueHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -137,11 +137,6 @@ const DialogueIdRoute = DialogueIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => DialogueRoute,
-} as any)
-const CommunityIdRoute = CommunityIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CommunityRoute,
 } as any)
 const ArticleIdRoute = ArticleIdRouteImport.update({
   id: '/article/$id',
@@ -183,6 +178,11 @@ const ApiAncientBooksRoute = ApiAncientBooksRouteImport.update({
   path: '/api/ancient-books',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TongyouCommunityIdRoute = TongyouCommunityIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TongyouCommunityRoute,
+} as any)
 const ApiArticlesTagsRoute = ApiArticlesTagsRouteImport.update({
   id: '/tags',
   path: '/tags',
@@ -213,9 +213,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
-  '/challenge': typeof ChallengeRoute
   '/chat': typeof ChatRoute
-  '/community': typeof CommunityRouteWithChildren
   '/create': typeof CreateRoute
   '/dialogue': typeof DialogueRouteWithChildren
   '/favorites': typeof FavoritesRoute
@@ -234,23 +232,23 @@ export interface FileRoutesByFullPath {
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
   '/article/$id': typeof ArticleIdRoute
-  '/community/$id': typeof CommunityIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
+  '/tongyou/challenge': typeof TongyouChallengeRoute
+  '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/dialogue/': typeof DialogueIndexRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/tongyou/community/$id': typeof TongyouCommunityIdRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
-  '/challenge': typeof ChallengeRoute
   '/chat': typeof ChatRoute
-  '/community': typeof CommunityRouteWithChildren
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
@@ -268,14 +266,16 @@ export interface FileRoutesByTo {
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
   '/article/$id': typeof ArticleIdRoute
-  '/community/$id': typeof CommunityIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
+  '/tongyou/challenge': typeof TongyouChallengeRoute
+  '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/dialogue': typeof DialogueIndexRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/tongyou/community/$id': typeof TongyouCommunityIdRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRoutesById {
@@ -283,9 +283,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
-  '/challenge': typeof ChallengeRoute
   '/chat': typeof ChatRoute
-  '/community': typeof CommunityRouteWithChildren
   '/create': typeof CreateRoute
   '/dialogue': typeof DialogueRouteWithChildren
   '/favorites': typeof FavoritesRoute
@@ -304,14 +302,16 @@ export interface FileRoutesById {
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
   '/article/$id': typeof ArticleIdRoute
-  '/community/$id': typeof CommunityIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
+  '/tongyou/challenge': typeof TongyouChallengeRoute
+  '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/dialogue/': typeof DialogueIndexRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/tongyou/community/$id': typeof TongyouCommunityIdRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRouteTypes {
@@ -320,9 +320,7 @@ export interface FileRouteTypes {
     | '/'
     | '/annotations'
     | '/auth'
-    | '/challenge'
     | '/chat'
-    | '/community'
     | '/create'
     | '/dialogue'
     | '/favorites'
@@ -341,23 +339,23 @@ export interface FileRouteTypes {
     | '/api/search-image'
     | '/api/text-to-image'
     | '/article/$id'
-    | '/community/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
+    | '/tongyou/challenge'
+    | '/tongyou/community'
     | '/dialogue/'
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/stats'
     | '/api/articles/tags'
+    | '/tongyou/community/$id'
     | '/api/articles/$id/relations'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/annotations'
     | '/auth'
-    | '/challenge'
     | '/chat'
-    | '/community'
     | '/create'
     | '/favorites'
     | '/gallery'
@@ -375,23 +373,23 @@ export interface FileRouteTypes {
     | '/api/search-image'
     | '/api/text-to-image'
     | '/article/$id'
-    | '/community/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
+    | '/tongyou/challenge'
+    | '/tongyou/community'
     | '/dialogue'
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/stats'
     | '/api/articles/tags'
+    | '/tongyou/community/$id'
     | '/api/articles/$id/relations'
   id:
     | '__root__'
     | '/'
     | '/annotations'
     | '/auth'
-    | '/challenge'
     | '/chat'
-    | '/community'
     | '/create'
     | '/dialogue'
     | '/favorites'
@@ -410,14 +408,16 @@ export interface FileRouteTypes {
     | '/api/search-image'
     | '/api/text-to-image'
     | '/article/$id'
-    | '/community/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
+    | '/tongyou/challenge'
+    | '/tongyou/community'
     | '/dialogue/'
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/stats'
     | '/api/articles/tags'
+    | '/tongyou/community/$id'
     | '/api/articles/$id/relations'
   fileRoutesById: FileRoutesById
 }
@@ -425,9 +425,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnnotationsRoute: typeof AnnotationsRoute
   AuthRoute: typeof AuthRoute
-  ChallengeRoute: typeof ChallengeRoute
   ChatRoute: typeof ChatRoute
-  CommunityRoute: typeof CommunityRouteWithChildren
   CreateRoute: typeof CreateRoute
   DialogueRoute: typeof DialogueRouteWithChildren
   FavoritesRoute: typeof FavoritesRoute
@@ -446,6 +444,8 @@ export interface RootRouteChildren {
   ApiSearchImageRoute: typeof ApiSearchImageRoute
   ApiTextToImageRoute: typeof ApiTextToImageRoute
   ArticleIdRoute: typeof ArticleIdRoute
+  TongyouChallengeRoute: typeof TongyouChallengeRoute
+  TongyouCommunityRoute: typeof TongyouCommunityRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -520,25 +520,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/community': {
-      id: '/community'
-      path: '/community'
-      fullPath: '/community'
-      preLoaderRoute: typeof CommunityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/chat': {
       id: '/chat'
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/challenge': {
-      id: '/challenge'
-      path: '/challenge'
-      fullPath: '/challenge'
-      preLoaderRoute: typeof ChallengeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -569,6 +555,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DialogueIndexRouteImport
       parentRoute: typeof DialogueRoute
     }
+    '/tongyou/community': {
+      id: '/tongyou/community'
+      path: '/tongyou/community'
+      fullPath: '/tongyou/community'
+      preLoaderRoute: typeof TongyouCommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tongyou/challenge': {
+      id: '/tongyou/challenge'
+      path: '/tongyou/challenge'
+      fullPath: '/tongyou/challenge'
+      preLoaderRoute: typeof TongyouChallengeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dialogue/history': {
       id: '/dialogue/history'
       path: '/history'
@@ -582,13 +582,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dialogue/$id'
       preLoaderRoute: typeof DialogueIdRouteImport
       parentRoute: typeof DialogueRoute
-    }
-    '/community/$id': {
-      id: '/community/$id'
-      path: '/$id'
-      fullPath: '/community/$id'
-      preLoaderRoute: typeof CommunityIdRouteImport
-      parentRoute: typeof CommunityRoute
     }
     '/article/$id': {
       id: '/article/$id'
@@ -646,6 +639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAncientBooksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tongyou/community/$id': {
+      id: '/tongyou/community/$id'
+      path: '/$id'
+      fullPath: '/tongyou/community/$id'
+      preLoaderRoute: typeof TongyouCommunityIdRouteImport
+      parentRoute: typeof TongyouCommunityRoute
+    }
     '/api/articles/tags': {
       id: '/api/articles/tags'
       path: '/tags'
@@ -683,18 +683,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface CommunityRouteChildren {
-  CommunityIdRoute: typeof CommunityIdRoute
-}
-
-const CommunityRouteChildren: CommunityRouteChildren = {
-  CommunityIdRoute: CommunityIdRoute,
-}
-
-const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
-  CommunityRouteChildren,
-)
 
 interface DialogueRouteChildren {
   DialogueIdRoute: typeof DialogueIdRoute
@@ -742,13 +730,22 @@ const ApiArticlesRouteWithChildren = ApiArticlesRoute._addFileChildren(
   ApiArticlesRouteChildren,
 )
 
+interface TongyouCommunityRouteChildren {
+  TongyouCommunityIdRoute: typeof TongyouCommunityIdRoute
+}
+
+const TongyouCommunityRouteChildren: TongyouCommunityRouteChildren = {
+  TongyouCommunityIdRoute: TongyouCommunityIdRoute,
+}
+
+const TongyouCommunityRouteWithChildren =
+  TongyouCommunityRoute._addFileChildren(TongyouCommunityRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnnotationsRoute: AnnotationsRoute,
   AuthRoute: AuthRoute,
-  ChallengeRoute: ChallengeRoute,
   ChatRoute: ChatRoute,
-  CommunityRoute: CommunityRouteWithChildren,
   CreateRoute: CreateRoute,
   DialogueRoute: DialogueRouteWithChildren,
   FavoritesRoute: FavoritesRoute,
@@ -767,6 +764,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSearchImageRoute: ApiSearchImageRoute,
   ApiTextToImageRoute: ApiTextToImageRoute,
   ArticleIdRoute: ArticleIdRoute,
+  TongyouChallengeRoute: TongyouChallengeRoute,
+  TongyouCommunityRoute: TongyouCommunityRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

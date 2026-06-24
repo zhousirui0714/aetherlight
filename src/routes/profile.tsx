@@ -180,7 +180,7 @@ function ProfilePage() {
           <Row 
             label="答题记录" 
             value={`最高 ${quizScore} 分`} 
-            onClick={() => navigate({ to: "/community?tab=quiz" })} 
+            onClick={() => navigate({ to: "/tongyou/community" })} 
             icon={<Trophy className="h-4 w-4" />} 
           />
           <Row 
