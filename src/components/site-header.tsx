@@ -27,7 +27,6 @@ export function SiteHeader() {
   const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isCommunityActive = pathname.startsWith("/tongyou");
 
@@ -62,16 +61,7 @@ export function SiteHeader() {
             : "border-transparent bg-background/60 backdrop-blur-md"
         }`}
       >
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-2 px-4 sm:gap-8 sm:px-6">
-          {/* 移动端：汉堡按钮 */}
-          <button
-            aria-label="打开菜单"
-            onClick={() => setMobileMenuOpen(true)}
-            className="-ml-1 rounded-full p-2 text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground md:hidden"
-          >
-            <Menu className="h-5 w-5" strokeWidth={1.6} />
-          </button>
-
+        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-8 px-6">
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             <span className="seal text-sm">溯光</span>
             <span className="font-serif text-lg tracking-[0.25em] text-foreground/90 hidden sm:inline">
@@ -172,119 +162,6 @@ export function SiteHeader() {
       </header>
 
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-
-      {/* 移动端抽屉菜单 */}
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent
-          side="right"
-          className="w-[82vw] max-w-[340px] p-0 paper-texture"
-        >
-          <SheetHeader className="border-b border-border px-6 pb-5 pt-6">
-            <div className="flex items-center gap-2.5">
-              <span className="seal text-base">溯光</span>
-              <SheetTitle className="font-serif text-xl tracking-[0.25em] text-foreground">
-                溯 · 光
-              </SheetTitle>
-            </div>
-            <SheetDescription className="text-left text-xs text-muted-foreground">
-              文明长河中的一缕光
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="flex flex-col px-3 py-4">
-            {/* 主导航 */}
-            <div className="px-3 pb-2 font-serif text-[10px] tracking-[0.4em] text-muted-foreground">
-              NAVIGATION
-            </div>
-            {NAV.map((item) => {
-              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  activeOptions={{ exact: !!item.exact }}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3.5 font-serif text-base transition-colors ${
-                    active
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/85 hover:bg-secondary"
-                  }`}
-                >
-                  <span className="tracking-wider">{item.label}</span>
-                  {active && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
-                </Link>
-              );
-            })}
-
-            {/* 同游分组 */}
-            <div className="mt-5 px-3 pb-2 font-serif text-[10px] tracking-[0.4em] text-muted-foreground">
-              同 游
-            </div>
-            {COMMUNITY_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.to;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-start gap-3 rounded-xl px-4 py-3 transition-colors ${
-                    active ? "bg-secondary text-primary" : "text-foreground/85 hover:bg-secondary"
-                  }`}
-                >
-                  <Icon className="h-4 w-4 mt-0.5 shrink-0" strokeWidth={1.6} />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-serif text-sm tracking-wider">{item.label}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</div>
-                  </div>
-                </Link>
-              );
-            })}
-
-            {/* 我的 */}
-            <div className="mt-5 px-3 pb-2 font-serif text-[10px] tracking-[0.4em] text-muted-foreground">
-              个 人
-            </div>
-            <Link
-              to="/favorites"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
-                pathname === "/favorites" ? "bg-secondary text-primary" : "text-foreground/85 hover:bg-secondary"
-              }`}
-            >
-              <Heart className="h-4 w-4" strokeWidth={1.6} />
-              <span className="font-serif text-sm tracking-wider">我的收藏</span>
-            </Link>
-            <Link
-              to="/auth"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-foreground/85 transition-colors hover:bg-secondary"
-            >
-              <span className="font-serif text-sm tracking-wider">登录 / 注册</span>
-            </Link>
-
-            {/* 主题切换 */}
-            <div className="mt-4 flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
-              <span className="font-serif text-xs text-muted-foreground">主题</span>
-              <button
-                onClick={toggle}
-                className="flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:text-foreground"
-                aria-label="切换主题"
-              >
-                {theme === "dark" ? (
-                  <>
-                    <Sun className="h-3.5 w-3.5" strokeWidth={1.6} /> 浅色
-                  </>
-                ) : (
-                  <>
-                    <Moon className="h-3.5 w-3.5" strokeWidth={1.6} /> 深色
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
     </>
   );
 }
