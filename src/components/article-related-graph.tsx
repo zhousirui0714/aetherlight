@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, Network, Info, X, Clock } from "lucide-react";
+import { Loader2, Network, Info, X, Clock, Compass, ArrowLeft } from "lucide-react";
 import { knowledgeApi } from "@/lib/knowledge-api";
 import type { KnowledgeGraph, GraphNode, GraphEdge } from "@/lib/knowledge-types";
 
@@ -256,6 +256,12 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
   const TIME_MAX = 2100;
   const [timeRange, setTimeRange] = useState<[number, number]>([TIME_MIN, TIME_MAX]);
 
+  // 钻取状态：当前图谱中心 id + 历史栈
+  const [centerId, setCenterId] = useState<string>(articleId);
+  const [centerTitle, setCenterTitle] = useState<string>(articleTitle || "");
+  const [history, setHistory] = useState<{ id: string; title: string }[]>([]);
+  const [drillingLoading, setDrillingLoading] = useState(false);
+
   // 容器尺寸
   const [size, setSize] = useState({ w: 800, h: 520 });
   useEffect(() => {
@@ -272,30 +278,76 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
     let alive = true;
     setLoading(true);
     setError(null);
-    knowledgeApi.getRelations(articleId)
-      .then(data => { if (alive) setGraph(data); })
+    setDrillingLoading(true);
+    knowledgeApi.getRelations(centerId)
+      .then(data => {
+        if (alive) {
+          setGraph(data);
+          // 中心 title 兜底
+          if (data?.center?.title) {
+            setCenterTitle(data.center.title);
+          }
+        }
+      })
       .catch(err => { if (alive) setError(err?.message || "图谱加载失败"); })
-      .finally(() => { if (alive) setLoading(false); });
+      .finally(() => { if (alive) { setLoading(false); setDrillingLoading(false); } });
     return () => { alive = false; };
-  }, [articleId]);
+  }, [centerId]);
+
+  // 外部 articleId 变化时, 重置中心与历史
+  useEffect(() => {
+    setCenterId(articleId);
+    setCenterTitle(articleTitle || "");
+    setHistory([]);
+    setSelectedId(null);
+  }, [articleId, articleTitle]);
+
+  // 钻取：以某节点为新中心
+  const drillInto = useCallback(async (nodeId: string, nodeTitle: string) => {
+    if (nodeId === centerId) return;
+    setHistory((h) => [...h, { id: centerId, title: centerTitle }]);
+    setCenterId(nodeId);
+    setCenterTitle(nodeTitle);
+    setSelectedId(null);
+  }, [centerId, centerTitle]);
+
+  // 返回上一级
+  const goBack = useCallback(() => {
+    setHistory((h) => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setCenterId(prev.id);
+      setCenterTitle(prev.title);
+      return h.slice(0, -1);
+    });
+    setSelectedId(null);
+  }, []);
+
+  // 返回文章原中心
+  const goRoot = useCallback(() => {
+    setHistory([]);
+    setCenterId(articleId);
+    setCenterTitle(articleTitle || "");
+    setSelectedId(null);
+  }, [articleId, articleTitle]);
 
   // 数据预处理 + 布局（应用时间过滤）
   const { nodes, edges, center, positions, centerPos, allNodeIds, timeStats } = useMemo(() => {
     if (!graph) return { nodes: [], edges: [], center: null, positions: new Map(), centerPos: { x: 0, y: 0 }, allNodeIds: new Set(), timeStats: null };
-    const p = preprocessGraph(graph, articleId);
+    const p = preprocessGraph(graph, centerId);
     // 时间窗内的节点
     const [t0, t1] = timeRange;
     const visibleNodes = p.nodes.filter(n => n.year >= t0 && n.year <= t1);
     const visibleIds = new Set(visibleNodes.map(n => n.id));
-    // 边：两端节点都可见才显示
+    // 边：任一端点可见即显示（更宽容，让"消失"的节点仍能从中心出连边）
     const visibleEdges = p.edges.filter(e =>
       visibleIds.has(e.source) || visibleIds.has(e.target)
     );
-    const positions = layoutNodes(visibleNodes, visibleEdges, p.center?.id || articleId, articleId, size.w, size.h);
-    const centerPos = positions.get(p.center?.id || articleId) || { x: size.w / 2, y: size.h / 2 };
-    const allNodeIds = new Set<string>([p.center?.id || articleId, ...visibleNodes.map(n => n.id)]);
+    const positions = layoutNodes(visibleNodes, visibleEdges, p.center?.id || centerId, centerId, size.w, size.h);
+    const centerPos = positions.get(p.center?.id || centerId) || { x: size.w / 2, y: size.h / 2 };
+    const allNodeIds = new Set<string>([p.center?.id || centerId, ...visibleNodes.map(n => n.id)]);
     // 时间统计
-    const allYears = p.nodes.map(n => n.year).concat([inferYear(p.center || { id: articleId, title: "" })]);
+    const allYears = p.nodes.map(n => n.year).concat([inferYear(p.center || { id: centerId, title: "" })]);
     const timeStats = {
       min: Math.min(...allYears),
       max: Math.max(...allYears),
@@ -303,7 +355,7 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
       visible: visibleNodes.length,
     };
     return { nodes: visibleNodes, edges: visibleEdges, center: p.center, positions, centerPos, allNodeIds, timeStats };
-  }, [graph, articleId, size, timeRange]);
+  }, [graph, centerId, size, timeRange]);
 
   // 当 timeRange 改变, 关闭溯光选中（避免暗化所有）
   useEffect(() => {
@@ -383,7 +435,7 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
 
   return (
     <div className="space-y-4">
-      {/* 标题 + 概览 */}
+      {/* 标题 + 概览 + 钻取导航 */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-secondary/30 px-4 py-2.5 text-xs">
         <Network className="h-4 w-4 text-primary" />
         <span className="text-foreground">
@@ -393,9 +445,61 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
         <span className="text-foreground">
           关系 <b className="text-primary">{edges.length}</b> 条
         </span>
-        <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Info className="h-3 w-3" /> hover · click · 墨为结构 · 光为路径
-        </span>
+
+        {/* 钻取历史面包屑 */}
+        {history.length > 0 && (
+          <span className="ml-2 flex items-center gap-1 text-[10px] text-amber-900/60">
+            <Compass className="h-3 w-3" />
+            {history.slice(-3).map((h, i) => (
+              <span key={h.id} className="font-serif">
+                {i > 0 && <span className="mx-1 text-amber-900/40">›</span>}
+                <button
+                  onClick={() => {
+                    // 跳回到此节点
+                    const idx = history.findIndex(x => x.id === h.id);
+                    if (idx >= 0) {
+                      setHistory((cur) => cur.slice(0, idx));
+                      setCenterId(h.id);
+                      setCenterTitle(h.title);
+                      setSelectedId(null);
+                    }
+                  }}
+                  className="hover:text-amber-900 hover:underline"
+                >
+                  {h.title.length > 6 ? h.title.slice(0, 5) + "…" : h.title}
+                </button>
+              </span>
+            ))}
+            <span className="mx-1 text-amber-900/40">›</span>
+            <span className="font-serif text-amber-900">{centerTitle.length > 6 ? centerTitle.slice(0, 5) + "…" : centerTitle}</span>
+          </span>
+        )}
+
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* 返回上一级 */}
+          {history.length > 0 && (
+            <button
+              onClick={goBack}
+              className="flex items-center gap-1 rounded border border-amber-200/60 bg-amber-50/60 px-2 py-0.5 text-[10px] text-amber-900/80 transition hover:bg-amber-100/60"
+              title="返回上一级"
+            >
+              <ArrowLeft className="h-3 w-3" /> 上级
+            </button>
+          )}
+          {/* 返回文章原中心 */}
+          {centerId !== articleId && (
+            <button
+              onClick={goRoot}
+              className="rounded border border-amber-200/60 bg-amber-50/60 px-2 py-0.5 text-[10px] text-amber-900/80 transition hover:bg-amber-100/60"
+              title="返回文章原图谱"
+            >
+              回原图
+            </button>
+          )}
+          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Info className="h-3 w-3" /> 单击溯光 · 双击钻取
+          </span>
+        </div>
       </div>
 
       {/* 时间维度滑块 */}
@@ -417,6 +521,16 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
            style={{ aspectRatio: `${size.w} / ${size.h}` }}>
         {/* 3 层背景：宣纸 + 云雾 + 留白 */}
         <BackgroundLayers />
+
+        {/* 钻取加载遮罩 */}
+        {drillingLoading && !loading && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#F5F0E8]/60 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-2 rounded-lg border border-amber-200/50 bg-[#FAF6EC]/95 px-6 py-4 shadow-sm">
+              <Loader2 className="h-5 w-5 animate-spin text-accent" />
+              <p className="font-serif text-xs tracking-widest text-amber-900/80">钻取子宇宙…</p>
+            </div>
+          </div>
+        )}
 
         {/* 选中信息栏 */}
         {selectedId && (() => {
@@ -587,9 +701,10 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
               <CoreNode
                 cx={centerPos.x}
                 cy={centerPos.y}
-                title={articleTitle || center.title}
+                title={centerTitle || center.title}
                 lit={isNodeLit(center.id)}
                 dimmed={isDimmed(center.id)}
+                isRoot={centerId === articleId}
                 onClick={(e) => { e.stopPropagation(); setSelectedId(center.id); }}
               />
             )}
@@ -614,6 +729,7 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
                       title={n.title}
                       lit={lit} hovered={isHov} neighbor={isNei}
                       onClick={(e) => { e.stopPropagation(); setSelectedId(n.id); }}
+                      onDoubleClick={(e) => { e.stopPropagation(); drillInto(n.id, n.title); }}
                       onHover={(h) => setHoveredId(h ? n.id : null)}
                     />
                   ) : (
@@ -621,7 +737,8 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
                       cx={p.x} cy={p.y}
                       title={n.title}
                       lit={lit} hovered={isHov} neighbor={isNei}
-                      onClick={(e) => { e.stopPropagation(); setSelectedId(n.id); navigate({ to: "/article/$id", params: { id: n.id } }); }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedId(n.id); }}
+                      onDoubleClick={(e) => { e.stopPropagation(); drillInto(n.id, n.title); }}
                       onHover={(h) => setHoveredId(h ? n.id : null)}
                     />
                   )}
@@ -635,8 +752,8 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
       {/* 选中节点的关联文字说明 */}
       {selectedId && (() => {
         const relatedEdges = edges.filter(e =>
-          (e.source === selectedId && e.target === (center?.id || articleId)) ||
-          (e.target === selectedId && e.source === (center?.id || articleId))
+          (e.source === selectedId && e.target === (center?.id || centerId)) ||
+          (e.target === selectedId && e.source === (center?.id || centerId))
         );
         if (relatedEdges.length === 0) return null;
         return (
@@ -828,8 +945,8 @@ function TimeSlider({
 }
 
 // 核心节点：墨团 + 印章 + 铜金光晕
-function CoreNode({ cx, cy, title, lit, dimmed, onClick }: {
-  cx: number; cy: number; title: string; lit: boolean; dimmed: boolean; onClick: (e: React.MouseEvent) => void;
+function CoreNode({ cx, cy, title, lit, dimmed, isRoot, onClick }: {
+  cx: number; cy: number; title: string; lit: boolean; dimmed: boolean; isRoot: boolean; onClick: (e: React.MouseEvent) => void;
 }) {
   const r = 38;
   return (
@@ -858,7 +975,7 @@ function CoreNode({ cx, cy, title, lit, dimmed, onClick }: {
         filter="url(#ink-rough)"
         transform={`rotate(0 ${cx} ${cy})`}
       />
-      {/* 中心字符（核心） */}
+      {/* 中心字符（核心/根） */}
       <text
         x={cx} y={cy + 5}
         textAnchor="middle"
@@ -867,7 +984,7 @@ function CoreNode({ cx, cy, title, lit, dimmed, onClick }: {
         fill="#F5F0E8"
         style={{ opacity: dimmed ? 0.3 : 1, pointerEvents: "none" }}
       >
-        核
+        {isRoot ? "核" : "心"}
       </text>
       {/* 标题 */}
       <text
@@ -880,15 +997,32 @@ function CoreNode({ cx, cy, title, lit, dimmed, onClick }: {
       >
         {title.length > 8 ? title.slice(0, 7) + "…" : title}
       </text>
+      {/* 钻取指示（非根时显示） */}
+      {!isRoot && (
+        <g style={{ pointerEvents: "none" }}>
+          <text
+            x={cx} y={cy - r - 8}
+            textAnchor="middle"
+            fontFamily="'Noto Serif SC', serif"
+            fontSize="9" fontWeight="500"
+            letterSpacing="0.2em"
+            fill="#B8860B"
+            opacity={0.85}
+          >
+            · 子宇宙 ·
+          </text>
+        </g>
+      )}
     </g>
   );
 }
 
 // 内容节点：半透明小墨点
-function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onHover }: {
+function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleClick, onHover }: {
   cx: number; cy: number; title: string;
   lit: boolean; hovered: boolean; neighbor: boolean;
   onClick: (e: React.MouseEvent) => void;
+  onDoubleClick?: (e: React.MouseEvent) => void;
   onHover: (h: boolean) => void;
 }) {
   const baseR = 12;
@@ -897,6 +1031,7 @@ function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onHover }
   return (
     <g
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
       style={{ cursor: "pointer", transition: "all 0.3s" }}
@@ -930,10 +1065,11 @@ function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onHover }
 }
 
 // 概念节点：雾状不规则墨影
-function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onHover }: {
+function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleClick, onHover }: {
   cx: number; cy: number; title: string;
   lit: boolean; hovered: boolean; neighbor: boolean;
   onClick: (e: React.MouseEvent) => void;
+  onDoubleClick?: (e: React.MouseEvent) => void;
   onHover: (h: boolean) => void;
 }) {
   const baseR = 22;
@@ -942,6 +1078,7 @@ function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onHover }
   return (
     <g
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
       style={{ cursor: "pointer", transition: "all 0.4s" }}
