@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
@@ -15,12 +15,18 @@ import { liBaiDeepKnowledge, duFuDeepKnowledge, suShiDeepKnowledge, kongZiDeepKn
 import { addFavorite, removeFavorite, checkIsFavorited, type FavoriteItem } from "@/lib/favorites-storage";
 import { toast } from "sonner";
 
+type ChatSearch = { q?: string; sage?: string };
+
 export const Route = createFileRoute("/chat")({
   head: () => ({
     meta: [
       { title: "问答助手 · 溯光" },
       { name: "description", content: "向 AI 雅士请教中国传统文化，每答皆有出处。" },
     ],
+  }),
+  validateSearch: (input: Record<string, unknown>): ChatSearch => ({
+    q: typeof input.q === "string" ? input.q : undefined,
+    sage: typeof input.sage === "string" ? input.sage : undefined,
   }),
   component: ChatPage,
 });
@@ -58,6 +64,7 @@ function saveQAHistoryLocal(items: HistoryItem[]) {
 }
 
 function ChatPage() {
+  const search = useSearch({ from: "/chat" }) as ChatSearch;
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [knowledgeResponses, setKnowledgeResponses] = useState<Record<string, KnowledgeEntry>>({});
@@ -117,6 +124,46 @@ function ChatPage() {
     const { data: listener } = supabase.auth.onAuthStateChange(() => checkLogin());
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // 处理 URL ?q= 和 ?sage= 自动发送
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    if (autoSentRef.current) return;
+    if (status !== "ready") return;
+    if (messages.length > 0) {
+      autoSentRef.current = true;
+      return;
+    }
+    if (search.q && search.q.trim()) {
+      autoSentRef.current = true;
+      const text = search.q.trim();
+      setInput(text);
+      // 延迟到 input 渲染完成
+      setTimeout(() => {
+        try {
+          sendMessage({ text });
+        } catch (e) {
+          console.error("auto send failed", e);
+        }
+      }, 100);
+    } else if (search.sage) {
+      autoSentRef.current = true;
+      // 圣贤人物：用 SAGES 数据查名字，自动提问"请介绍一下自己"
+      import("@/lib/sages").then(({ SAGES }) => {
+        const sage = SAGES.find((s) => s.id === search.sage);
+        const name = sage?.name || search.sage;
+        const text = `请介绍一下${name}以及他的主要作品、思想与历史影响`;
+        setInput(text);
+        setTimeout(() => {
+          try {
+            sendMessage({ text });
+          } catch (e) {
+            console.error("auto send failed", e);
+          }
+        }, 100);
+      });
+    }
+  }, [search.q, search.sage, status, messages.length, sendMessage]);
 
   const loadHistory = async () => {
     try {
