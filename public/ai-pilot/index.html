@@ -3,40 +3,127 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 插图试点 - 9 张评估</title>
+<title>AI 插图试点 v2 - 6 张 v1 vs v2 对比</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #faf7f0; color: #2c2c2c; margin: 0; padding: 16px; }
   h1 { font-size: 20px; color: #8b4513; border-bottom: 2px solid #c0392b; padding-bottom: 6px; margin: 0 0 12px 0; }
   h2 { color: #8b4513; margin: 24px 0 10px 0; font-size: 16px; }
+  h3 { color: #5d2914; margin: 14px 0 8px 0; font-size: 13px; }
   .meta { background: #fff; padding: 10px 12px; border-left: 3px solid #c0392b; margin: 10px 0; font-size: 12px; line-height: 1.7; }
   .grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 12px 0; }
   @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .compare-cell { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); position: relative; }
+  .compare-cell img { width: 100%; height: auto; display: block; background: #f0e6d2; }
+  .compare-label { position: absolute; top: 6px; left: 6px; background: rgba(192, 57, 43, 0.95); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .compare-label.v2 { background: rgba(39, 174, 96, 0.95); }
   .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
   .card img { width: 100%; height: auto; display: block; background: #f0e6d2; }
   .card-body { padding: 12px 14px; }
   .card-title { font-size: 15px; font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
   .card-sub { color: #7f8c8d; font-size: 11px; margin-bottom: 6px; }
-  .prompt { background: #f8f4ed; padding: 6px 8px; border-radius: 4px; font-size: 10px; font-family: "Consolas", monospace; color: #5d2914; word-break: break-word; line-height: 1.4; max-height: 80px; overflow-y: auto; }
   .stat { display: inline-block; padding: 1px 6px; background: #27ae60; color: #fff; border-radius: 3px; font-size: 10px; margin-right: 4px; }
-  .stat.qa { background: #c0392b; }
   .verdict { background: #fff3cd; border: 1px solid #ffe69c; padding: 10px 12px; border-radius: 8px; margin: 16px 0; font-size: 12px; line-height: 1.6; }
+  .verdict-ok { background: #d4edda; border-color: #c3e6cb; }
 </style>
 </head>
 <body>
-<h1>AI 插图试点 - 9 张评估</h1>
+
+<h1>AI 插图试点 v2 - v1 vs v2 对比</h1>
+
 <div class="meta">
   <strong>源</strong>: pollinations.ai · 2026-06-24<br>
-  <strong>成功率</strong>: 9/9 · <strong>平均</strong>: 26s/张 · <strong>分辨率</strong>: 1024×576<br>
-  <strong>前情</strong>: TRAE API 实测是空壳, 已修复 text-to-image.ts
+  <strong>v2 成功率</strong>: 6/6 (artifacts+intangible) · figures 保留 v1<br>
+  <strong>v2 改动</strong>:<br>
+  &nbsp;&nbsp;• <strong>artifacts</strong>: 水墨抽象 → <span style="color:#c0392b">工笔重彩 + 具象建筑结构</span><br>
+  &nbsp;&nbsp;• <strong>intangible</strong>: 装饰纹样 → <span style="color:#c0392b">实物/表演场景</span><br>
+  <strong>分辨率</strong>: 1024×576 · <strong>平均</strong>: 27.8s/张 · <strong>重试</strong>: 0
 </div>
 
 <div class="verdict">
-  <strong>请评估</strong>: 满意 → 推广到 342 张 · 部分行 → 重写 prompt · 不行 → 回退
+  <strong>v1 反馈</strong>: 人物不错 / 建筑太抽象 / 非遗只生成一块布<br>
+  <strong>v2 验证</strong>: 每张并排看 v1 vs v2 评估
 </div>
 
-<h2>figures (人物)</h2>
+<!-- ─── 对比区 ─── -->
+<h2>🔍 v1 vs v2 对比 (6 张)</h2>
+
+<h3>artifacts - 故宫</h3>
+<div class="compare">
+  <div class="compare-cell">
+    <span class="compare-label">v1 抽象</span>
+    <img src="v1/cover-artifacts-gugong.jpg" alt="故宫 v1" loading="lazy">
+  </div>
+  <div class="compare-cell">
+    <span class="compare-label v2">v2 具象</span>
+    <img src="cover-artifacts-gugong.jpg" alt="故宫 v2" loading="lazy">
+  </div>
+</div>
+
+<h3>artifacts - 秦始皇陵</h3>
+<div class="compare">
+  <div class="compare-cell">
+    <span class="compare-label">v1 抽象</span>
+    <img src="v1/cover-artifacts-qin-shihuang-ling.jpg" alt="秦始皇陵 v1" loading="lazy">
+  </div>
+  <div class="compare-cell">
+    <span class="compare-label v2">v2 具象</span>
+    <img src="cover-artifacts-qin-shihuang-ling.jpg" alt="秦始皇陵 v2" loading="lazy">
+  </div>
+</div>
+
+<h3>artifacts - 都江堰</h3>
+<div class="compare">
+  <div class="compare-cell">
+    <span class="compare-label">v1 抽象</span>
+    <img src="v1/cover-artifacts-dujiangyan.jpg" alt="都江堰 v1" loading="lazy">
+  </div>
+  <div class="compare-cell">
+    <span class="compare-label v2">v2 具象</span>
+    <img src="cover-artifacts-dujiangyan.jpg" alt="都江堰 v2" loading="lazy">
+  </div>
+</div>
+
+<h3>intangible - 京剧</h3>
+<div class="compare">
+  <div class="compare-cell">
+    <span class="compare-label">v1 一块布</span>
+    <img src="v1/cover-intangible-jingju.jpg" alt="京剧 v1" loading="lazy">
+  </div>
+  <div class="compare-cell">
+    <span class="compare-label v2">v2 场景</span>
+    <img src="cover-intangible-jingju.jpg" alt="京剧 v2" loading="lazy">
+  </div>
+</div>
+
+<h3>intangible - 古琴</h3>
+<div class="compare">
+  <div class="compare-cell">
+    <span class="compare-label">v1 一块布</span>
+    <img src="v1/cover-intangible-guqin.jpg" alt="古琴 v1" loading="lazy">
+  </div>
+  <div class="compare-cell">
+    <span class="compare-label v2">v2 场景</span>
+    <img src="cover-intangible-guqin.jpg" alt="古琴 v2" loading="lazy">
+  </div>
+</div>
+
+<h3>intangible - 昆曲</h3>
+<div class="compare">
+  <div class="compare-cell">
+    <span class="compare-label">v1 一块布</span>
+    <img src="v1/cover-intangible-kunqu.jpg" alt="昆曲 v1" loading="lazy">
+  </div>
+  <div class="compare-cell">
+    <span class="compare-label v2">v2 场景</span>
+    <img src="cover-intangible-kunqu.jpg" alt="昆曲 v2" loading="lazy">
+  </div>
+</div>
+
+<!-- ─── figures (v1 保留) ─── -->
+<h2>figures (人物, v1 保留)</h2>
 <div class="grid">
   <div class="card">
     <img src="cover-figures-libai.jpg" alt="李白" loading="lazy">
@@ -61,59 +148,9 @@
   </div>
 </div>
 
-<h2>artifacts (建筑器物)</h2>
-<div class="grid">
-  <div class="card">
-    <img src="cover-artifacts-gugong.jpg" alt="故宫" loading="lazy">
-    <div class="card-body">
-      <div class="card-title">故宫 <span class="stat">artifacts</span></div>
-      <div class="card-sub">gugong · 明清 · 紫禁城</div>
-    </div>
-  </div>
-  <div class="card">
-    <img src="cover-artifacts-qin-shihuang-ling.jpg" alt="秦始皇陵" loading="lazy">
-    <div class="card-body">
-      <div class="card-title">秦始皇陵 <span class="stat">artifacts</span></div>
-      <div class="card-sub">qin-shihuang-ling · 秦 · 兵马俑</div>
-    </div>
-  </div>
-  <div class="card">
-    <img src="cover-artifacts-dujiangyan.jpg" alt="都江堰" loading="lazy">
-    <div class="card-body">
-      <div class="card-title">都江堰 <span class="stat">artifacts</span></div>
-      <div class="card-sub">dujiangyan · 战国 · 水利</div>
-    </div>
-  </div>
-</div>
-
-<h2>intangible (非遗艺术)</h2>
-<div class="grid">
-  <div class="card">
-    <img src="cover-intangible-jingju.jpg" alt="京剧" loading="lazy">
-    <div class="card-body">
-      <div class="card-title">京剧 <span class="stat">intangible</span></div>
-      <div class="card-sub">jingju · 国粹 · 生旦净末丑</div>
-    </div>
-  </div>
-  <div class="card">
-    <img src="cover-intangible-guqin.jpg" alt="古琴" loading="lazy">
-    <div class="card-body">
-      <div class="card-title">古琴 <span class="stat">intangible</span></div>
-      <div class="card-sub">guqin · 文人四艺 · 减字谱</div>
-    </div>
-  </div>
-  <div class="card">
-    <img src="cover-intangible-kunqu.jpg" alt="昆曲" loading="lazy">
-    <div class="card-body">
-      <div class="card-title">昆曲 <span class="stat">intangible</span></div>
-      <div class="card-sub">kunqu · 百戏之祖 · 牡丹亭</div>
-    </div>
-  </div>
-</div>
-
-<div class="verdict" style="margin-top: 30px;">
-  <strong>说明</strong>: 9 张由 pollinations.ai 生成。手机端看图可能略慢 (pollinations CDN)。
-  质量如不满意, 可选我重写 prompt 重跑, 或整体回退到现有 fallback。
+<div class="verdict verdict-ok" style="margin-top: 30px;">
+  <strong>下一步</strong>: 如 v2 通过 → 推广到 342 张 (figures 保留 prompt) + 同步 DB cover_url<br>
+  v2 未通过 → 继续重写 prompt / 考虑仅 artifacts 用 AI 其余回退
 </div>
 
 </body>

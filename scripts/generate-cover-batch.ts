@@ -19,6 +19,8 @@ const OUTPUT_DIR = join(ROOT, "scripts/output");
 const REPORT_FILE = join(OUTPUT_DIR, "report.json");
 
 const PER_CATEGORY = 3;
+// v2 试点: 只跑 artifacts + intangible (figures 保留 v1)
+const CATEGORIES = ["artifacts", "intangible"] as const;
 const POLLINATIONS_BASE = "https://image.pollinations.ai/prompt";
 const WIDTH = 1024;
 const HEIGHT = 576;
@@ -47,29 +49,34 @@ function promptForFigures(a: any): string {
 }
 
 function promptForArtifacts(a: any): string {
+  // v2 改写: 从水墨抽象 → 工笔重彩 + 具象建筑结构
+  // v1 失败: "fine line drawing with subtle watercolor wash" → 输出太抽象不像建筑
   const dynasty = a.dynasty || "ancient China";
   return [
     `Ancient Chinese ${a.title}`,
-    "traditional Chinese architecture or artifact",
-    `${dynasty} dynasty architectural style`,
-    "Chinese ink wash painting (shuimo) technique",
-    "fine line drawing with subtle watercolor wash",
-    "centered composition, clear silhouette",
-    "no people, no text, no watermark",
-    "elevated perspective, full subject visible",
+    "Chinese realistic architectural painting",
+    `${dynasty} dynasty style building`,
+    "gongbi (meticulous brush) with rich traditional colors",
+    "clear recognizable building structure, full facade visible",
+    "golden glazed roof tiles, red wooden pillars, white stone walls",
+    "elevated frontal perspective, centered composition",
+    "no people in foreground, no text, no watermark",
+    "background of blue sky and traditional Chinese cloud patterns",
   ].join(", ");
 }
 
 function promptForIntangible(a: any): string {
+  // v2 改写: 从装饰纹样 → 实物/表演场景
+  // v1 失败: "decorative pattern, symmetrical" → 只生成一块布/一个抽象图案
   const tags = (a.tags || []).join(", ");
   return [
-    `Traditional Chinese intangible cultural heritage: ${a.title}`,
-    "decorative pattern or icon",
-    "symmetrical composition, ornamental borders",
-    "Chinese traditional color palette (vermilion, gold, indigo, jade)",
-    "meticulous gongbi brushwork",
-    "vibrant, no text, no people",
-    `pattern style: ${tags}`,
+    `Ancient Chinese ${a.title}`,
+    "realistic cultural scene illustration",
+    `traditional Chinese ${a.title} artifact or performance scene`,
+    "vibrant traditional Chinese colors",
+    "centered composition, single subject focus",
+    "no text, no watermark, no people in extreme close-up",
+    `cultural context: ${tags}`,
   ].join(", ");
 }
 
@@ -192,11 +199,13 @@ async function main() {
   console.log(`📚 加载 ${articles.length} 条 article`);
 
   const picked: { article: any; category: string }[] = [];
-  for (const cat of Object.keys(PROMPT_BUILDERS)) {
+  for (const cat of CATEGORIES) {
+    const builder = PROMPT_BUILDERS[cat];
+    if (!builder) continue;
     const list = pickArticles(articles, cat, PER_CATEGORY);
     for (const a of list) picked.push({ article: a, category: cat });
   }
-  console.log(`🎯 选中 ${picked.length} 条 (每类 ${PER_CATEGORY} 条)`);
+  console.log(`🎯 选中 ${picked.length} 条 (${CATEGORIES.join("+")} × ${PER_CATEGORY})`);
 
   const results: any[] = [];
   let okCount = 0;
