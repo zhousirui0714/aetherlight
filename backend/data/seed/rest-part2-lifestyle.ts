@@ -540,6 +540,27 @@ const foodArticles: Article[] = [
     related_events:[],
     related_poems:[],
     related_articles:[{id:"yuanxiao",title:"元宵",category:"festivals"}]
+  },
+  { id:"luyu",title:"陆羽",category:"lifestyle",sub_category:"茶文化",tags:["唐","茶圣","茶经"],
+    excerpt:"唐代复州竟陵(今湖北天门)人,'茶圣',著世界第一部茶学专著《茶经》。",
+    body:"陆羽(733年-804年),字鸿渐,唐代复州竟陵(今湖北天门)人,中国茶道的奠基人。",
+    dynasty:"唐",era:"唐代",region:"湖北/浙江",author:"溯光编辑部",cover:"🍵",sort_weight:90,
+    history:"陆羽三岁被遗弃,被竟陵龙盖寺智积禅师收养。年少时为寺中煮茶,钻研茶艺。安史之乱后流亡江南,遍访茶区。建中元年(780年)成书《茶经》三卷。",
+    influence:"陆羽《茶经》是中国乃至世界现存最早、最完整、最全面的茶学专著,被尊为'茶圣'。'茶道'之始,日本茶道追宗。",
+    body_extended:"《茶经》分三卷十节:一之源(茶之起源)、二之具(采制工具)、三之造(采制方法)、四之器(饮茶器具)、五之煮(烹茶方法)、六之饮(饮茶风俗)、七之事(茶事历史)、八之出(茶叶产地)、九之略(茶具省略)、十之图(茶事图录)。",
+    faq:[
+      {question:"陆羽真的是被遗弃的吗？",answer:"据《新唐书·隐逸传》,陆羽三岁为弃儿,为竟陵龙盖寺智积禅师收养,故以《周易》'鸿渐于陆'为姓为名。"},
+      {question:"《茶经》有多少字？",answer:"约7000余字,分三卷十节,是世界上第一部茶学专著。"}
+    ],
+    related_people:[],
+    related_books:[],
+    related_events:[],
+    related_poems:[],
+    related_articles:[
+      {id:"longjing",title:"西湖龙井",category:"lifestyle"},
+      {id:"biluochun",title:"碧螺春",category:"lifestyle"},
+      {id:"maofeng",title:"黄山毛峰",category:"lifestyle"}
+    ]
   }
 ];
 

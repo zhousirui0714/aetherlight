@@ -43,6 +43,23 @@ const mathArticles: Article[] = [
     related_people:[{id:"zuchongzhi",title:"祖冲之",category:"figures"}],
     related_books:[],related_events:[],related_poems:[],related_articles:[]
   },
+  { id:"gougu",title:"勾股定理",category:"technology",sub_category:"数学",tags:["周","直角三角形","中国/希腊独立发现"],
+    excerpt:"直角三角形三边关系'a²+b²=c²',中国《周髀算经》'勾三股四弦五',早于毕达哥拉斯。",
+    body:"勾股定理:直角三角形两条直角边的平方和等于斜边的平方。",
+    dynasty:"周",era:"周代",region:"全国",author:"溯光编辑部",cover:"📏",sort_weight:75,
+    history:"《周髀算经》载'故折矩以为勾广三、股修四、径隅五',商高答周公。中国发现早于古希腊毕达哥拉斯(约前6世纪)。",
+    influence:"勾股定理是平面几何基础,广泛应用于测量、建筑、工程。",
+    body_extended:"勾股定理:若直角三角形两直角边为a、b,斜边为c,则a²+b²=c²。中国'勾'为短直角边,'股'为长直角边,'弦'为斜边。",
+    faq:[
+      {question:"勾股定理是谁先发现的？",answer:"中国古代《周髀算经》记载,早于古希腊毕达哥拉斯。中国、古印度、古巴比伦均独立发现。"},
+      {question:"'勾三股四弦五'是什么意思？",answer:"直角三角形两直角边分别为3和4,斜边必为5,因3²+4²=5²=25。" }
+    ],
+    related_people:[],
+    related_books:[{id:"zhoubi",title:"《周髀算经》",category:"classics"}],
+    related_events:[],
+    related_poems:[],
+    related_articles:[{id:"jiuzhang",title:"九章算术",category:"technology"}]
+  },
   { id:"sushujiuzhang",title:"数书九章",category:"technology",sub_category:"数学",tags:["宋","秦九韶","大衍术"],
     excerpt:"南宋秦九韶著,大衍术(中国剩余定理)、正负开方术,领先世界数百年。",
     body:"《数书九章》南宋秦九韶(约1202-1261)于1247年著,18卷81题。",

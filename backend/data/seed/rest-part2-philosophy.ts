@@ -588,6 +588,20 @@ const conceptArticles: Article[] = [
     related_events:[],
     related_poems:[],
     related_articles:[]
+  },
+  { id:"ren",title:"仁",category:"philosophy",sub_category:"儒家概念",tags:["孔子","儒家","核心"],
+    excerpt:"儒家核心伦理概念,'克己复礼为仁','仁者爱人'。",
+    body:"'仁'是儒家伦理的最高准则,孔子'仁者爱人''克己复礼为仁'。",
+    dynasty:"周",era:"春秋至今",region:"全国",author:"溯光编辑部",cover:"🤲",sort_weight:85,
+    history:"春秋时期孔子首倡'仁',作为儒家伦理最高范畴。孟子发展为'仁政'。",
+    influence:"仁是中国传统道德核心,塑造中华民族'仁爱'精神,影响东亚儒家文化圈。",
+    body_extended:"仁的展开:恭/宽/信/敏/惠(孔子五达道);仁/义/礼/智/信(五常)。",
+    faq:[{question:"什么是'克己复礼为仁'？",answer:"克制自己、恢复礼制,就是仁。《论语·颜渊》颜渊问仁,孔子答。"}],
+    related_people:[{id:"kongzi",title:"孔子",category:"figures"},{id:"mengzi",title:"孟子",category:"figures"}],
+    related_books:[{id:"lunyu",title:"《论语》",category:"classics"}],
+    related_events:[],
+    related_poems:[],
+    related_articles:[]
   }
 ];
 

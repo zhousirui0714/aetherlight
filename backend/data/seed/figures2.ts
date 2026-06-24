@@ -132,7 +132,7 @@ export const figures2: Article[] = [
     faq:[{question:"钱学森为什么能回国？",answer:"中国政府以释放11名美军战俘为条件换回钱学森，1955年他终于回到祖国。"}],
     related_people:[],related_books:[],related_events:[],related_poems:[],related_articles:[]
   },
-  { id:"dunhuang",title:"莫高窟",category:"figures",sub_category:"民族英雄",tags:["唐","佛教","敦煌"],
+  { id:"dunhuang",title:"莫高窟",category:"artifacts",sub_category:"石窟",tags:["唐","佛教","敦煌"],
     excerpt:"位于敦煌的佛教石窟艺术宝库，1987年列入世界文化遗产。",
     body:"莫高窟俗称千佛洞，位于甘肃省敦煌市东南25公里处的鸣沙山东麓断崖上，开凿于十六国前秦建元二年（366年），历经北朝、隋、唐、五代、宋、西夏、元等朝代连续营造。",
     dynasty:"多朝代",era:"前秦至今",region:"甘肃",author:"溯光编辑部",cover:"🛕",sort_weight:80,

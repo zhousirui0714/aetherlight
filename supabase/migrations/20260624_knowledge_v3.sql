@@ -58,13 +58,28 @@ CREATE TABLE IF NOT EXISTS knowledge_relations (
   to_article_id   TEXT        NOT NULL,
   relation_type   TEXT        NOT NULL CHECK (relation_type IN (
                       'person_of','book_of','place_of','concept_of',
-                      'event_of','poem_of','mentioned_in','related'
+                      'event_of','poem_of','mentioned_in','related',
+                      'work_of','teacher_of'
                    )),
   weight          INT         DEFAULT 1,
   description     TEXT        DEFAULT '',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (from_article_id, to_article_id, relation_type)
 );
+
+-- 旧版本仅 8 种类别，迁移后扩展到 10 种
+DO $do$
+BEGIN
+  ALTER TABLE knowledge_relations DROP CONSTRAINT IF EXISTS knowledge_relations_relation_type_check;
+  ALTER TABLE knowledge_relations
+    ADD CONSTRAINT knowledge_relations_relation_type_check
+    CHECK (relation_type IN (
+      'person_of','book_of','place_of','concept_of',
+      'event_of','poem_of','mentioned_in','related',
+      'work_of','teacher_of'
+    ));
+END
+$do$;
 
 CREATE INDEX IF NOT EXISTS idx_relations_from ON knowledge_relations(from_article_id);
 CREATE INDEX IF NOT EXISTS idx_relations_to   ON knowledge_relations(to_article_id);

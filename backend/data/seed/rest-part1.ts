@@ -105,7 +105,7 @@ const figuresExtra: Article[] = [
     faq:[{question:"张大千最贵的画？",answer:"2011年《爱痕湖》以1.008亿元成交，刷新中国近现代书画拍卖纪录。"}],
     related_people:[],related_books:[],related_events:[],related_poems:[],related_articles:[]
   },
-  { id:"wusong",title:"武松",category:"figures",sub_category:"民族英雄",tags:["水浒","打虎","小说"],
+  { id:"wusong",title:"武松",category:"classics",sub_category:"集部",tags:["水浒","打虎","小说"],
     excerpt:"《水浒传》人物，行者武松，景阳冈打虎，醉打蒋门神。",
     body:"武松是《水浒传》中的重要人物，绰号'行者'，梁山泊一百单八将之一，排行第十四。",
     dynasty:"宋",era:"北宋",region:"山东/河南/浙江",author:"施耐庵",cover:"🐅",sort_weight:75,
@@ -155,7 +155,7 @@ const figuresExtra: Article[] = [
     faq:[{question:"猪八戒为什么调戏嫦娥？",answer:"天蓬元帅醉酒后闯入广寒宫，调戏嫦娥，被玉帝贬下凡间。"}],
     related_people:[],related_books:[],related_events:[],related_poems:[],related_articles:[]
   },
-  { id:"tangseng",title:"唐僧",category:"figures",sub_category:"思想家",tags:["西游记","取经","玄奘"],
+  { id:"tangseng",title:"唐僧",category:"mythology",sub_category:"志怪故事",tags:["西游记","取经","玄奘"],
     excerpt:"《西游记》主角，玄奘法师，西天取经的圣僧。",
     body:"唐僧是《西游记》的主角，法名'玄奘'，是金蝉子转世，西天取经的取经人。",
     dynasty:"唐",era:"传说",region:"长安/西天",author:"吴承恩",cover:"📿",sort_weight:86,
