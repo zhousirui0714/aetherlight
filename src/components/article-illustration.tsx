@@ -452,6 +452,152 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
+  "戏曲": {
+    bgGradient: "linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f093fb 100%)",
+    pattern: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0%, transparent 45%)",
+    accentColor: "#8b4513",
+    decorativeElements: (title: string) => {
+      const keywords = extractKeywords(title);
+      const hasPeking = keywords.some(k => ["京剧", "国粹"].includes(k));
+      const hasShadow = keywords.some(k => ["皮影", "影"].includes(k));
+      const hasKunqu = keywords.some(k => ["昆曲", "昆"].includes(k));
+      
+      return (
+        <>
+          {hasPeking && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="35" fill="#c0392b" opacity="0.3" />
+                <circle cx="50" cy="50" r="30" fill="none" stroke="#8b4513" strokeWidth="2" />
+                <path d="M35 40 L40 35 M65 40 L60 35" stroke="#8b4513" strokeWidth="2" />
+                <circle cx="42" cy="48" r="3" fill="#8b4513" />
+                <circle cx="58" cy="48" r="3" fill="#8b4513" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-14 h-14 opacity-30" viewBox="0 0 100 100">
+                <path d="M20 50 Q50 20 80 50 Q50 80 20 50" fill="none" stroke="#c0392b" strokeWidth="2" />
+              </svg>
+            </>
+          )}
+          {hasShadow && (
+            <>
+              <svg className="absolute top-4 right-4 w-20 h-16 opacity-40" viewBox="0 0 120 80">
+                <rect x="10" y="10" width="100" height="60" rx="4" fill="none" stroke="#8b4513" strokeWidth="2" />
+                <path d="M30 30 Q50 20 70 30 L70 50 Q50 60 30 50 Z" fill="#8b4513" opacity="0.3" />
+                <circle cx="40" cy="35" r="2" fill="#8b4513" />
+                <circle cx="60" cy="35" r="2" fill="#8b4513" />
+              </svg>
+              <svg className="absolute bottom-3 left-0 w-full h-8 opacity-25" viewBox="0 0 200 30">
+                <path d="M0 15 Q25 5 50 15 T100 15 T150 15 T200 15" fill="none" stroke="#8b4513" strokeWidth="2" />
+              </svg>
+            </>
+          )}
+          {hasKunqu && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-20 opacity-40" viewBox="0 0 100 120">
+                <ellipse cx="50" cy="40" rx="20" ry="25" fill="#f6d365" opacity="0.5" />
+                <path d="M30 65 Q50 55 70 65 L70 100 Q50 110 30 100 Z" fill="#fda085" opacity="0.4" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-12 h-8 opacity-30" viewBox="0 0 80 40">
+                <path d="M10 25 Q5 25 5 20 Q5 15 10 15 Q10 10 20 10 Q30 10 30 15 Q35 12 40 18 Q45 15 50 20 Q55 20 55 25 Z" fill="#fff" />
+              </svg>
+            </>
+          )}
+          {!hasPeking && !hasShadow && !hasKunqu && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="35" fill="#c0392b" opacity="0.3" />
+                <circle cx="50" cy="50" r="30" fill="none" stroke="#8b4513" strokeWidth="2" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-14 h-14 opacity-30" viewBox="0 0 100 100">
+                <path d="M20 50 Q50 20 80 50 Q50 80 20 50" fill="none" stroke="#c0392b" strokeWidth="2" />
+              </svg>
+            </>
+          )}
+        </>
+      );
+    },
+  },
+  "工艺": {
+    bgGradient: "linear-gradient(135deg, #d4fc79 0%, #96e6a1 50%, #84fab0 100%)",
+    pattern: "radial-gradient(circle at 30% 50%, rgba(255,255,255,0.3) 0%, transparent 40%)",
+    accentColor: "#2d6a4f",
+    decorativeElements: (title: string) => {
+      const keywords = extractKeywords(title);
+      const hasEmbroidery = keywords.some(k => ["刺绣", "绣"].includes(k));
+      const hasDye = keywords.some(k => ["扎染", "染"].includes(k));
+      const hasKite = keywords.some(k => ["风筝", "鸢"].includes(k));
+      const hasIron = keywords.some(k => ["铁画", "铁"].includes(k));
+      
+      return (
+        <>
+          {hasEmbroidery && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="8" fill="#e74c3c" />
+                <circle cx="50" cy="30" r="8" fill="#e74c3c" opacity="0.6" />
+                <circle cx="70" cy="50" r="8" fill="#e74c3c" opacity="0.6" />
+                <circle cx="50" cy="70" r="8" fill="#e74c3c" opacity="0.6" />
+                <circle cx="30" cy="50" r="8" fill="#e74c3c" opacity="0.6" />
+                <line x1="50" y1="20" x2="50" y2="80" stroke="#2d6a4f" strokeWidth="1" opacity="0.4" />
+                <line x1="20" y1="50" x2="80" y2="50" stroke="#2d6a4f" strokeWidth="1" opacity="0.4" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-12 h-12 opacity-30" viewBox="0 0 60 60">
+                <path d="M30 10 L35 25 L50 25 L38 35 L43 50 L30 40 L17 50 L22 35 L10 25 L25 25 Z" fill="#2d6a4f" />
+              </svg>
+            </>
+          )}
+          {hasDye && (
+            <>
+              <svg className="absolute top-4 right-4 w-20 h-20 opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="30" fill="#3498db" opacity="0.3" />
+                <circle cx="50" cy="50" r="20" fill="#fff" opacity="0.4" />
+                <circle cx="50" cy="50" r="10" fill="#3498db" opacity="0.3" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-16 h-16 opacity-30" viewBox="0 0 100 100">
+                <path d="M20 50 Q35 30 50 50 T80 50" fill="none" stroke="#3498db" strokeWidth="2" />
+                <path d="M20 60 Q35 40 50 60 T80 60" fill="none" stroke="#3498db" strokeWidth="2" />
+              </svg>
+            </>
+          )}
+          {hasKite && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-20 opacity-40" viewBox="0 0 80 120">
+                <path d="M40 10 L60 40 L40 70 L20 40 Z" fill="#e74c3c" opacity="0.5" />
+                <line x1="40" y1="70" x2="35" y2="110" stroke="#2d6a4f" strokeWidth="1" />
+                <line x1="40" y1="70" x2="45" y2="110" stroke="#2d6a4f" strokeWidth="1" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-12 h-8 opacity-30" viewBox="0 0 80 40">
+                <path d="M10 25 Q5 25 5 20 Q5 15 10 15 Q10 10 20 10 Q30 10 30 15 Q35 12 40 18 Q45 15 50 20 Q55 20 55 25 Z" fill="#fff" />
+              </svg>
+            </>
+          )}
+          {hasIron && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <path d="M20 80 L35 20 L50 50 L65 20 L80 80" fill="none" stroke="#2c3e50" strokeWidth="3" />
+                <circle cx="35" cy="20" r="3" fill="#2c3e50" />
+                <circle cx="65" cy="20" r="3" fill="#2c3e50" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-12 h-12 opacity-30" viewBox="0 0 60 60">
+                <path d="M30 5 L35 20 L50 20 L38 30 L43 45 L30 35 L17 45 L22 30 L10 20 L25 20 Z" fill="#2c3e50" />
+              </svg>
+            </>
+          )}
+          {!hasEmbroidery && !hasDye && !hasKite && !hasIron && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="30" fill="#2d6a4f" opacity="0.2" />
+                <path d="M50 20 L50 80 M20 50 L80 50" stroke="#2d6a4f" strokeWidth="1" opacity="0.3" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-12 h-12 opacity-30" viewBox="0 0 60 60">
+                <path d="M30 10 L35 25 L50 25 L38 35 L43 50 L30 40 L17 50 L22 35 L10 25 L25 25 Z" fill="#2d6a4f" />
+              </svg>
+            </>
+          )}
+        </>
+      );
+    },
+  },
 };
 
 export function ArticleIllustration({ category, title, emoji }: ArticleIllustrationProps) {

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, ArrowLeft, Calendar, BookOpen, Loader2, Share2 } from "lucide-react";
+import { Heart, ArrowLeft, Calendar, BookOpen, Loader2, Share2, ScrollText, Sparkles, GraduationCap, Lightbulb } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { trackEvent } from "@/lib/journey-storage";
@@ -202,6 +202,7 @@ function ArticlePage() {
             </p>
           </div>
 
+          {/* 正文概述 */}
           <div className="prose prose-lg max-w-none font-serif leading-loose text-foreground/85">
             {article.body ? (
               <div className="whitespace-pre-wrap">{article.body}</div>
@@ -211,25 +212,82 @@ function ArticlePage() {
                   <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
                     {article.excerpt?.charAt(0) || "溯"}
                   </span>
-                  {article.excerpt}
-                </p>
-                <p>
-                  中华文化源远流长，博大精深。在五千年的历史长河中，先人为我们留下了无数珍贵的文化遗产。从诗词歌赋到琴棋书画，从节气节日到民俗传统，每一项都是中华民族智慧的结晶。
-                </p>
-                <p>
-                  {article.category}作为中华文化的重要组成部分，承载着先人的思想与情感，记录着历史的变迁与发展。通过了解这些文化知识，我们可以更好地理解中华文明的精神内核，感受传统文化的独特魅力。
-                </p>
-                <h2 className="font-serif text-2xl text-foreground">文化意义</h2>
-                <p>
-                  每一种文化形式都有其独特的存在价值和历史意义。它们不仅是过去的见证，更是连接过去与未来的桥梁。在当今快速发展的时代，传承和弘扬中华优秀传统文化，具有重要的现实意义。
-                </p>
-                <h2 className="font-serif text-2xl text-foreground">传承与发展</h2>
-                <p>
-                  传统文化的传承需要代代相传，也需要与时俱进。在保留核心精神的同时，结合现代元素进行创新发展，才能让传统文化焕发新的生机与活力。
+                  {article.content || article.excerpt}
                 </p>
               </div>
             )}
           </div>
+
+          {/* 历史背景 */}
+          {article.history && (
+            <section className="mt-10 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
+              <div className="mb-4 flex items-center gap-2">
+                <ScrollText className="h-5 w-5 text-accent" />
+                <h2 className="font-serif text-2xl text-foreground">历史背景</h2>
+              </div>
+              <p className="font-serif leading-loose text-foreground/80">{article.history}</p>
+            </section>
+          )}
+
+          {/* 文化影响 */}
+          {article.influence && (
+            <section className="mt-6 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
+              <div className="mb-4 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-accent" />
+                <h2 className="font-serif text-2xl text-foreground">文化影响</h2>
+              </div>
+              <p className="font-serif leading-loose text-foreground/80">{article.influence}</p>
+            </section>
+          )}
+
+          {/* 经典作品 */}
+          {article.classics && article.classics.length > 0 && (
+            <section className="mt-6 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
+              <div className="mb-4 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-accent" />
+                <h2 className="font-serif text-2xl text-foreground">经典作品</h2>
+              </div>
+              <ul className="space-y-3">
+                {article.classics.map((item: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-3 font-serif leading-relaxed text-foreground/80">
+                    <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent/50" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* 体验教程 */}
+          {article.tutorial && article.tutorial.length > 0 && (
+            <section className="mt-6 rounded-2xl border border-accent/20 bg-accent/5 p-6 md:p-8">
+              <div className="mb-4 flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-accent" />
+                <h2 className="font-serif text-2xl text-foreground">入门指南</h2>
+              </div>
+              <ol className="space-y-4">
+                {article.tutorial.map((step: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-4">
+                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/15 font-serif text-sm font-semibold text-accent">
+                      {idx + 1}
+                    </span>
+                    <p className="pt-0.5 font-serif leading-relaxed text-foreground/80">{step}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {/* 欣赏小贴士 */}
+          {article.tips && (
+            <section className="mt-6 rounded-2xl border border-amber-200/50 bg-amber-50/50 p-6 md:p-8 dark:border-amber-900/30 dark:bg-amber-950/10">
+              <div className="mb-4 flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-amber-500" />
+                <h2 className="font-serif text-2xl text-foreground">欣赏小贴士</h2>
+              </div>
+              <p className="font-serif leading-loose text-foreground/80">{article.tips}</p>
+            </section>
+          )}
 
           {/* 底部操作 */}
           <div className="mt-12 flex items-center justify-between border-t border-border pt-8">
