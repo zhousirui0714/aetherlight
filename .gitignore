@@ -17,6 +17,7 @@ dist
 dist-ssr
 .output
 .vinvi
+.vercel/
 .tanstack/**
 .nitro
 

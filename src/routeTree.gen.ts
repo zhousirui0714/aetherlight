@@ -9,22 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as QaSquareRouteImport } from './routes/qa-square'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as JourneyRouteImport } from './routes/journey'
+import { Route as HeritageRouteImport } from './routes/heritage'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as DialogueRouteImport } from './routes/dialogue'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ChallengeRouteImport } from './routes/challenge'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AnnotationsRouteImport } from './routes/annotations'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DialogueIndexRouteImport } from './routes/dialogue.index'
 import { Route as DialogueHistoryRouteImport } from './routes/dialogue.history'
 import { Route as DialogueIdRouteImport } from './routes/dialogue.$id'
+import { Route as CommunityIdRouteImport } from './routes/community.$id'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
+import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
+import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
+import { Route as ApiKnowledgeAiFillRouteImport } from './routes/api/knowledge-ai-fill'
 import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
 
+const QaSquareRoute = QaSquareRouteImport.update({
+  id: '/qa-square',
+  path: '/qa-square',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -35,9 +51,24 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JourneyRoute = JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeritageRoute = HeritageRouteImport.update({
+  id: '/heritage',
+  path: '/heritage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DialogueRoute = DialogueRouteImport.update({
@@ -60,9 +91,19 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChallengeRoute = ChallengeRouteImport.update({
+  id: '/challenge',
+  path: '/challenge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnotationsRoute = AnnotationsRouteImport.update({
+  id: '/annotations',
+  path: '/annotations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -85,9 +126,29 @@ const DialogueIdRoute = DialogueIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => DialogueRoute,
 } as any)
+const CommunityIdRoute = CommunityIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CommunityRoute,
+} as any)
 const ArticleIdRoute = ArticleIdRouteImport.update({
   id: '/article/$id',
   path: '/article/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTextToImageRoute = ApiTextToImageRouteImport.update({
+  id: '/api/text-to-image',
+  path: '/api/text-to-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSearchImageRoute = ApiSearchImageRouteImport.update({
+  id: '/api/search-image',
+  path: '/api/search-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKnowledgeAiFillRoute = ApiKnowledgeAiFillRouteImport.update({
+  id: '/api/knowledge-ai-fill',
+  path: '/api/knowledge-ai-fill',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDialogueRoute = ApiDialogueRouteImport.update({
@@ -100,36 +161,63 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAncientBooksRoute = ApiAncientBooksRouteImport.update({
+  id: '/api/ancient-books',
+  path: '/api/ancient-books',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
+  '/challenge': typeof ChallengeRoute
   '/chat': typeof ChatRoute
-  '/community': typeof CommunityRoute
+  '/community': typeof CommunityRouteWithChildren
   '/create': typeof CreateRoute
   '/dialogue': typeof DialogueRouteWithChildren
+  '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
+  '/heritage': typeof HeritageRoute
+  '/journey': typeof JourneyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/qa-square': typeof QaSquareRoute
+  '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/chat': typeof ApiChatRoute
   '/api/dialogue': typeof ApiDialogueRoute
+  '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
+  '/api/search-image': typeof ApiSearchImageRoute
+  '/api/text-to-image': typeof ApiTextToImageRoute
   '/article/$id': typeof ArticleIdRoute
+  '/community/$id': typeof CommunityIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/dialogue/': typeof DialogueIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
+  '/challenge': typeof ChallengeRoute
   '/chat': typeof ChatRoute
-  '/community': typeof CommunityRoute
+  '/community': typeof CommunityRouteWithChildren
   '/create': typeof CreateRoute
+  '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
+  '/heritage': typeof HeritageRoute
+  '/journey': typeof JourneyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/qa-square': typeof QaSquareRoute
+  '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/chat': typeof ApiChatRoute
   '/api/dialogue': typeof ApiDialogueRoute
+  '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
+  '/api/search-image': typeof ApiSearchImageRoute
+  '/api/text-to-image': typeof ApiTextToImageRoute
   '/article/$id': typeof ArticleIdRoute
+  '/community/$id': typeof CommunityIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/dialogue': typeof DialogueIndexRoute
@@ -137,17 +225,28 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
+  '/challenge': typeof ChallengeRoute
   '/chat': typeof ChatRoute
-  '/community': typeof CommunityRoute
+  '/community': typeof CommunityRouteWithChildren
   '/create': typeof CreateRoute
   '/dialogue': typeof DialogueRouteWithChildren
+  '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
+  '/heritage': typeof HeritageRoute
+  '/journey': typeof JourneyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/qa-square': typeof QaSquareRoute
+  '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/chat': typeof ApiChatRoute
   '/api/dialogue': typeof ApiDialogueRoute
+  '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
+  '/api/search-image': typeof ApiSearchImageRoute
+  '/api/text-to-image': typeof ApiTextToImageRoute
   '/article/$id': typeof ArticleIdRoute
+  '/community/$id': typeof CommunityIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/dialogue/': typeof DialogueIndexRoute
@@ -156,50 +255,83 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/annotations'
     | '/auth'
+    | '/challenge'
     | '/chat'
     | '/community'
     | '/create'
     | '/dialogue'
+    | '/favorites'
     | '/gallery'
+    | '/heritage'
+    | '/journey'
     | '/onboarding'
     | '/profile'
+    | '/qa-square'
+    | '/api/ancient-books'
     | '/api/chat'
     | '/api/dialogue'
+    | '/api/knowledge-ai-fill'
+    | '/api/search-image'
+    | '/api/text-to-image'
     | '/article/$id'
+    | '/community/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/dialogue/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/annotations'
     | '/auth'
+    | '/challenge'
     | '/chat'
     | '/community'
     | '/create'
+    | '/favorites'
     | '/gallery'
+    | '/heritage'
+    | '/journey'
     | '/onboarding'
     | '/profile'
+    | '/qa-square'
+    | '/api/ancient-books'
     | '/api/chat'
     | '/api/dialogue'
+    | '/api/knowledge-ai-fill'
+    | '/api/search-image'
+    | '/api/text-to-image'
     | '/article/$id'
+    | '/community/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/dialogue'
   id:
     | '__root__'
     | '/'
+    | '/annotations'
     | '/auth'
+    | '/challenge'
     | '/chat'
     | '/community'
     | '/create'
     | '/dialogue'
+    | '/favorites'
     | '/gallery'
+    | '/heritage'
+    | '/journey'
     | '/onboarding'
     | '/profile'
+    | '/qa-square'
+    | '/api/ancient-books'
     | '/api/chat'
     | '/api/dialogue'
+    | '/api/knowledge-ai-fill'
+    | '/api/search-image'
+    | '/api/text-to-image'
     | '/article/$id'
+    | '/community/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/dialogue/'
@@ -207,21 +339,38 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnnotationsRoute: typeof AnnotationsRoute
   AuthRoute: typeof AuthRoute
+  ChallengeRoute: typeof ChallengeRoute
   ChatRoute: typeof ChatRoute
-  CommunityRoute: typeof CommunityRoute
+  CommunityRoute: typeof CommunityRouteWithChildren
   CreateRoute: typeof CreateRoute
   DialogueRoute: typeof DialogueRouteWithChildren
+  FavoritesRoute: typeof FavoritesRoute
   GalleryRoute: typeof GalleryRoute
+  HeritageRoute: typeof HeritageRoute
+  JourneyRoute: typeof JourneyRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  QaSquareRoute: typeof QaSquareRoute
+  ApiAncientBooksRoute: typeof ApiAncientBooksRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDialogueRoute: typeof ApiDialogueRoute
+  ApiKnowledgeAiFillRoute: typeof ApiKnowledgeAiFillRoute
+  ApiSearchImageRoute: typeof ApiSearchImageRoute
+  ApiTextToImageRoute: typeof ApiTextToImageRoute
   ArticleIdRoute: typeof ArticleIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/qa-square': {
+      id: '/qa-square'
+      path: '/qa-square'
+      fullPath: '/qa-square'
+      preLoaderRoute: typeof QaSquareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -236,11 +385,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/journey': {
+      id: '/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof JourneyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heritage': {
+      id: '/heritage'
+      path: '/heritage'
+      fullPath: '/heritage'
+      preLoaderRoute: typeof HeritageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gallery': {
       id: '/gallery'
       path: '/gallery'
       fullPath: '/gallery'
       preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dialogue': {
@@ -271,11 +441,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/challenge': {
+      id: '/challenge'
+      path: '/challenge'
+      fullPath: '/challenge'
+      preLoaderRoute: typeof ChallengeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/annotations': {
+      id: '/annotations'
+      path: '/annotations'
+      fullPath: '/annotations'
+      preLoaderRoute: typeof AnnotationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -306,11 +490,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DialogueIdRouteImport
       parentRoute: typeof DialogueRoute
     }
+    '/community/$id': {
+      id: '/community/$id'
+      path: '/$id'
+      fullPath: '/community/$id'
+      preLoaderRoute: typeof CommunityIdRouteImport
+      parentRoute: typeof CommunityRoute
+    }
     '/article/$id': {
       id: '/article/$id'
       path: '/article/$id'
       fullPath: '/article/$id'
       preLoaderRoute: typeof ArticleIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/text-to-image': {
+      id: '/api/text-to-image'
+      path: '/api/text-to-image'
+      fullPath: '/api/text-to-image'
+      preLoaderRoute: typeof ApiTextToImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/search-image': {
+      id: '/api/search-image'
+      path: '/api/search-image'
+      fullPath: '/api/search-image'
+      preLoaderRoute: typeof ApiSearchImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/knowledge-ai-fill': {
+      id: '/api/knowledge-ai-fill'
+      path: '/api/knowledge-ai-fill'
+      fullPath: '/api/knowledge-ai-fill'
+      preLoaderRoute: typeof ApiKnowledgeAiFillRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/dialogue': {
@@ -327,8 +539,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ancient-books': {
+      id: '/api/ancient-books'
+      path: '/api/ancient-books'
+      fullPath: '/api/ancient-books'
+      preLoaderRoute: typeof ApiAncientBooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface CommunityRouteChildren {
+  CommunityIdRoute: typeof CommunityIdRoute
+}
+
+const CommunityRouteChildren: CommunityRouteChildren = {
+  CommunityIdRoute: CommunityIdRoute,
+}
+
+const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
+  CommunityRouteChildren,
+)
 
 interface DialogueRouteChildren {
   DialogueIdRoute: typeof DialogueIdRoute
@@ -348,18 +579,38 @@ const DialogueRouteWithChildren = DialogueRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnnotationsRoute: AnnotationsRoute,
   AuthRoute: AuthRoute,
+  ChallengeRoute: ChallengeRoute,
   ChatRoute: ChatRoute,
-  CommunityRoute: CommunityRoute,
+  CommunityRoute: CommunityRouteWithChildren,
   CreateRoute: CreateRoute,
   DialogueRoute: DialogueRouteWithChildren,
+  FavoritesRoute: FavoritesRoute,
   GalleryRoute: GalleryRoute,
+  HeritageRoute: HeritageRoute,
+  JourneyRoute: JourneyRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  QaSquareRoute: QaSquareRoute,
+  ApiAncientBooksRoute: ApiAncientBooksRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDialogueRoute: ApiDialogueRoute,
+  ApiKnowledgeAiFillRoute: ApiKnowledgeAiFillRoute,
+  ApiSearchImageRoute: ApiSearchImageRoute,
+  ApiTextToImageRoute: ApiTextToImageRoute,
   ArticleIdRoute: ArticleIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

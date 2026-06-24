@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search, Loader2 } from "lucide-react";
-import { ARTICLES, CATEGORIES, type Article } from "@/lib/knowledge-data";
+import { Heart, Search, Loader2, Database } from "lucide-react";
+import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleIllustration } from "./article-illustration";
 
@@ -10,15 +10,40 @@ type DbArticle = {
   title: string;
   category: string;
   excerpt: string;
-  body: string;
+  body?: string;
   favorites: number;
   cover: string | null;
   image_prompt?: string;
   created_at: string;
 };
 
+// 15 大分类（与 DB / 后端契约一致）
+const ALL_CATEGORIES = [
+  "全部",
+  "节气", "节日", "诗词", "典籍", "非遗", "民俗",
+  "人物", "建筑", "神话", "艺术", "哲学", "医学",
+  "科技", "饮食", "服饰",
+] as const;
+
+// 旧 Article 分类 → 新分类映射
+const CATEGORY_ALIAS: Record<string, string> = {
+  "诗词文学": "诗词",
+  "历史人物": "人物",
+  "节日节气": "节气",
+  "传统艺术": "艺术",
+  "传统技艺": "非遗",
+  "民俗文化": "民俗",
+  "经典典籍": "典籍",
+  "建筑古迹": "建筑",
+  "神话传说": "神话",
+};
+
+function normalizeCategory(c: string): string {
+  return CATEGORY_ALIAS[c] || c;
+}
+
 export function KnowledgeGallery() {
-  const [cat, setCat] = useState<"全部" | string>("全部");
+  const [cat, setCat] = useState<string>("全部");
   const [q, setQ] = useState("");
   const [articles, setArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,25 +55,23 @@ export function KnowledgeGallery() {
       setLoading(true);
       setError(null);
       try {
-        const { data, error: fetchError } = await supabase
+        const { data, fetchError } = await supabase
           .from("knowledge_articles")
           .select("id, title, category, excerpt, favorites, cover, image_prompt, created_at")
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
-        
+
         if (data && data.length > 0) {
           setArticles(data);
         } else {
-          // 数据库为空时使用静态数据
           console.log("Supabase data is empty, using static fallback");
           setArticles([]);
         }
       } catch (err) {
         console.error("Failed to fetch articles from Supabase:", err);
-        // Supabase 失败时不报错，使用静态数据回退
         setArticles([]);
-        setError(null); // 清除错误状态，以便使用静态数据
+        setError(null);
       } finally {
         setLoading(false);
       }
@@ -58,11 +81,12 @@ export function KnowledgeGallery() {
 
   // Use Supabase data if available, otherwise fallback to static data
   const displayArticles = useMemo(() => {
+    const k = q.trim().toLowerCase();
+
     if (articles.length > 0) {
       let list: DbArticle[] = [...articles];
-      if (cat !== "全部") list = list.filter((a) => a.category === cat);
-      if (q.trim()) {
-        const k = q.trim().toLowerCase();
+      if (cat !== "全部") list = list.filter((a) => normalizeCategory(a.category) === cat);
+      if (k) {
         list = list.filter(
           (a) => a.title.toLowerCase().includes(k) || a.excerpt.toLowerCase().includes(k)
         );
@@ -70,11 +94,9 @@ export function KnowledgeGallery() {
       return { list, fromDb: true };
     }
 
-    // Fallback to static data
     let list: Article[] = ARTICLES;
-    if (cat !== "全部") list = list.filter((a) => a.category === cat);
-    if (q.trim()) {
-      const k = q.trim().toLowerCase();
+    if (cat !== "全部") list = list.filter((a) => normalizeCategory(a.category as string) === cat);
+    if (k) {
       list = list.filter(
         (a) => a.title.toLowerCase().includes(k) || a.excerpt.toLowerCase().includes(k)
       );
@@ -84,6 +106,7 @@ export function KnowledgeGallery() {
 
   const isDb = displayArticles.fromDb;
   const items = displayArticles.list;
+  const total = isDb ? articles.length : ARTICLES.length;
 
   return (
     <section className="mt-24">
@@ -112,19 +135,19 @@ export function KnowledgeGallery() {
 
         {/* categories */}
         <div className="flex flex-wrap items-center justify-center gap-1">
-          {CATEGORIES.map((c) => {
+          {ALL_CATEGORIES.map((c) => {
             const active = cat === c;
             return (
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`relative px-4 py-2 font-serif text-sm tracking-widest transition ${
+                className={`relative px-3 py-2 font-serif text-xs tracking-widest transition ${
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {c}
                 {active && (
-                  <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary" />
+                  <span className="absolute inset-x-2 -bottom-0.5 h-0.5 rounded-full bg-primary" />
                 )}
               </button>
             );
@@ -177,10 +200,10 @@ export function KnowledgeGallery() {
                 {(() => {
                   const emoji = isDb ? (item.cover || "📜") : (item as Article).cover;
                   return (
-                    <ArticleIllustration 
-                      category={item.category} 
-                      title={item.title} 
-                      emoji={emoji} 
+                    <ArticleIllustration
+                      category={normalizeCategory(item.category)}
+                      title={item.title}
+                      emoji={emoji}
                     />
                   );
                 })()}
@@ -188,6 +211,9 @@ export function KnowledgeGallery() {
 
               {/* content */}
               <div className="flex flex-1 flex-col gap-2 p-5">
+                <span className="inline-block w-fit rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-accent">
+                  {normalizeCategory(item.category)}
+                </span>
                 <h3 className="font-serif text-lg font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
                   {item.title}
                 </h3>
@@ -204,9 +230,10 @@ export function KnowledgeGallery() {
       )}
 
       {/* source indicator */}
-      {!loading && articles.length > 0 && (
-        <p className="mt-8 text-center text-xs text-muted-foreground/50">
-          共 {items.length} 篇篇章 {isDb ? "· 数据来源：溯光知识库" : ""}
+      {!loading && (
+        <p className="mt-8 text-center text-xs text-muted-foreground/50 flex items-center justify-center gap-1.5">
+          {isDb && <Database className="h-3 w-3" />}
+          共 {items.length} 篇篇章（库内 {total} 篇）{isDb ? "· 数据来源：溯光知识库" : "· 静态数据"}
         </p>
       )}
     </section>

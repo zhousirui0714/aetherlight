@@ -2,13 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, ArrowLeft, Calendar, Loader2, Share2 } from "lucide-react";
+import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
+import type { Article } from "@/lib/knowledge-data";
 import { getExpandedContent } from "@/lib/expanded-content";
 import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { trackEvent } from "@/lib/journey-storage";
 import { AnnotationPanel } from "@/components/annotation-panel";
 import { AIInsightsPanel } from "@/components/ai-insights-panel";
+import { aiFillArticle, type ArticleDetail } from "@/lib/knowledge-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/article/$id")({
@@ -21,13 +23,44 @@ export const Route = createFileRoute("/article/$id")({
   component: ArticlePage,
 });
 
+/**
+ * 字段归一化：DB snake_case / API camelCase 都统一为 Article 接口
+ */
+function normalizeArticle(raw: any): Article {
+  if (!raw) return raw;
+  return {
+    id: raw.id,
+    title: raw.title,
+    category: raw.category as any,
+    excerpt: raw.excerpt || "",
+    content: raw.content || raw.body || "",
+    favorites: raw.favorites ?? 0,
+    cover: raw.cover || "📜",
+    source: raw.source,
+    history: raw.history,
+    relatedPeople: raw.relatedPeople || raw.related_people || [],
+    relatedBooks: raw.relatedBooks || raw.related_books || [],
+    relatedEvents: raw.relatedEvents || raw.related_events || [],
+    relatedPoems: raw.relatedPoems || raw.related_poems || [],
+    relatedArticles: raw.relatedArticles || raw.related_articles || [],
+    influence: raw.influence,
+    tags: raw.tags,
+    author: raw.author,
+    created_at: raw.created_at,
+    dynasty: raw.dynasty,
+    era: raw.era,
+    region: raw.region,
+  } as Article;
+}
+
 function ArticlePage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const [article, setArticle] = useState<any>(null);
+  const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [aiFilling, setAiFilling] = useState(false);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -41,7 +74,7 @@ function ArticlePage() {
           .single();
 
         if (data && !error) {
-          setArticle(data);
+          setArticle(normalizeArticle(data));
         } else {
           // 回退到静态数据
           const staticArticle = ARTICLES.find(a => a.id === id);
@@ -62,6 +95,54 @@ function ArticlePage() {
 
     fetchArticle();
   }, [id]);
+
+  // AI 懒加载补全：history/influence/faq 任意一个为空时调用
+  useEffect(() => {
+    if (!article) return;
+
+    const missing: string[] = [];
+    if (!article.history) missing.push("history");
+    if (!article.influence) missing.push("influence");
+    if (!article.faq || (article.faq as any).length === 0) missing.push("faq");
+
+    if (missing.length === 0) return;
+
+    // 已有的 expanded-content 也可以兜底，不打接口
+    const expanded = getExpandedContent(article.id);
+    const stillMissing = missing.filter((f) => {
+      if (f === "history") return !article.history && !expanded?.history;
+      if (f === "influence") return !article.influence && !expanded?.influence;
+      if (f === "faq") return (!article.faq || (article.faq as any).length === 0);
+      return false;
+    });
+
+    if (stillMissing.length === 0) return;
+
+    setAiFilling(true);
+    aiFillArticle(article.id, stillMissing, {
+      title: article.title,
+      category: String(article.category),
+      excerpt: article.excerpt,
+      body: (article as any).content || (article as any).body,
+    })
+      .then((res) => {
+        if (!res || !res.filled) return;
+        setArticle((prev) => {
+          if (!prev) return prev;
+          const updated: Article = { ...prev } as Article;
+          if (res.filled.history) updated.history = res.filled.history;
+          if (res.filled.influence) updated.influence = res.filled.influence;
+          if (Array.isArray(res.filled.faq) && res.filled.faq.length > 0) {
+            (updated as any).faq = res.filled.faq;
+          }
+          return updated;
+        });
+      })
+      .catch((err) => {
+        console.warn("[article-page] ai-fill failed:", err);
+      })
+      .finally(() => setAiFilling(false));
+  }, [article?.id]);
 
   // 追踪文章阅读
   useEffect(() => {
@@ -164,7 +245,12 @@ function ArticlePage() {
           <h1 className="mt-5 font-serif text-4xl leading-relaxed text-foreground md:text-5xl">
             {article.title}
           </h1>
-          <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            {(article as any).dynasty && (
+              <span className="rounded-full bg-secondary px-2.5 py-0.5">
+                {String((article as any).dynasty)}
+              </span>
+            )}
             {article.created_at && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
@@ -175,6 +261,12 @@ function ArticlePage() {
               <span className="flex items-center gap-1">
                 <Heart className="h-3.5 w-3.5" />
                 {article.favorites} 收藏
+              </span>
+            )}
+            {aiFilling && (
+              <span className="flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-accent">
+                <Sparkles className="h-3 w-3 animate-pulse" />
+                AI 补全中
               </span>
             )}
           </div>
@@ -204,20 +296,18 @@ function ArticlePage() {
             </p>
           </div>
 
-          {/* 正文概述 - 优先用百炼 LLM 扩写的深度内容 */}
+          {/* 正文 */}
           <div className="prose prose-lg max-w-none font-serif leading-loose text-foreground/85">
             {(() => {
               const expanded = getExpandedContent(article.id);
-              if (article.body) {
-                return <div className="whitespace-pre-wrap">{article.body}</div>;
+              if (article.content) {
+                return <div className="whitespace-pre-wrap">{article.content}</div>;
               }
               if (expanded) {
-                // 渲染扩写正文：按 \n\n 分段
                 const paragraphs = expanded.content.split(/\n\n+/);
                 return (
                   <div className="space-y-5">
                     {paragraphs.map((para, idx) => {
-                      // 提取小标题（【xxx】）
                       const match = para.match(/^(【[^】]+】)\s*([\s\S]*)$/);
                       if (match) {
                         return (
@@ -237,14 +327,12 @@ function ArticlePage() {
                 );
               }
               return (
-                <div className="space-y-6">
-                  <p>
-                    <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
-                      {article.excerpt?.charAt(0) || "溯"}
-                    </span>
-                    {article.content || article.excerpt}
-                  </p>
-                </div>
+                <p>
+                  <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
+                    {article.excerpt?.charAt(0) || "溯"}
+                  </span>
+                  {article.content || article.excerpt}
+                </p>
               );
             })()}
           </div>

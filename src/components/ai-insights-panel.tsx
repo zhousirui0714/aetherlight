@@ -2,7 +2,7 @@
 // 包含：知识图谱、时间线、现代解读、常见问题四大模块
 
 import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Network,
   Clock,
@@ -27,6 +27,8 @@ interface AIInsightsPanelProps {
 
 // ===== 知识图谱组件 =====
 function KnowledgeGraphView({ graph }: { graph: KnowledgeGraph }) {
+  const navigate = useNavigate();
+
   if (!graph.nodes.length) return null;
 
   // 计算每个节点的位置（环形布局 + 中心节点）
@@ -69,6 +71,11 @@ function KnowledgeGraphView({ graph }: { graph: KnowledgeGraph }) {
     concept: { fill: "#ede9fe", stroke: "#8b5cf6", text: "#5b21b6" },
   };
 
+  const handleNodeClick = (link?: string) => {
+    if (!link) return;
+    navigate({ to: "/article/$id", params: { id: link } });
+  };
+
   return (
     <div className="overflow-x-auto">
       <svg
@@ -108,7 +115,23 @@ function KnowledgeGraphView({ graph }: { graph: KnowledgeGraph }) {
         {positionedNodes.map((node) => {
           const color = nodeColors[node.type] || nodeColors.concept;
           return (
-            <g key={node.id}>
+            <g
+              key={node.id}
+              onClick={() => handleNodeClick(node.link)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleNodeClick(node.link);
+                }
+              }}
+              tabIndex={node.link ? 0 : -1}
+              role={node.link ? "button" : undefined}
+              style={{
+                cursor: node.link ? "pointer" : "default",
+                transition: "transform 0.2s",
+              }}
+              className="hover:opacity-80 focus:outline-none focus:opacity-80"
+            >
               <circle
                 cx={node.x}
                 cy={node.y}
@@ -124,6 +147,7 @@ function KnowledgeGraphView({ graph }: { graph: KnowledgeGraph }) {
                 fontWeight={node.type === "core" ? 700 : 500}
                 fill={color.text}
                 textAnchor="middle"
+                pointerEvents="none"
               >
                 {node.label.length > 5 ? node.label.slice(0, 5) : node.label}
               </text>
@@ -135,6 +159,7 @@ function KnowledgeGraphView({ graph }: { graph: KnowledgeGraph }) {
                   fill={color.text}
                   textAnchor="middle"
                   opacity="0.7"
+                  pointerEvents="none"
                 >
                   {node.type === "person" ? "人物" :
                    node.type === "book" ? "典籍" :
@@ -162,6 +187,9 @@ function KnowledgeGraphView({ graph }: { graph: KnowledgeGraph }) {
           </div>
         ))}
       </div>
+      <p className="mt-3 text-center text-xs text-muted-foreground/60">
+        💡 提示：点击有下划线暗示的节点可跳转至对应详情页
+      </p>
     </div>
   );
 }
@@ -351,6 +379,13 @@ function RelatedItemsView({
 // ===== 主组件 =====
 export function AIInsightsPanel({ article }: AIInsightsPanelProps) {
   const insights: AIInsights = useMemo(() => generateAIInsights(article), [article]);
+
+  // 历史背景/现代解读兜底：DB 字段 > expanded-content.json > 空串
+  const expanded = getExpandedContent(article.id);
+  const displayHistory: string =
+    (article as any).history || expanded?.history || "";
+  const displayInfluence: string =
+    (article as any).influence || expanded?.influence || "";
 
   return (
     <div className="mt-10 space-y-8">
