@@ -251,7 +251,7 @@ function getRelatedPoetryTitle(solarTerm: string, content: string): string {
     "寒露": [
       "《池上》",
       "《寒露》",
-      " "寒露惊秋晚》",
+      "《寒露惊秋晚》",
       "《寒露日》"
     ],
     "霜降": [
