@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Heart, Search, Loader2 } from "lucide-react";
 import { ARTICLES, CATEGORIES, type Article } from "@/lib/knowledge-data";
 import { supabase } from "@/integrations/supabase/client";
-import { STATIC_IMAGE_MAP, CATEGORY_IMAGES } from "@/lib/static-images";
+import { ArticleIllustration } from "./article-illustration";
 
 type DbArticle = {
   id: string;
@@ -23,24 +23,6 @@ export function KnowledgeGallery() {
   const [articles, setArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-
-  // 获取文章对应的静态图片URL，优先使用专门图片，其次使用分类通用图片
-  const getStaticImageUrl = (title: string, category: string): string | null => {
-    // 优先使用专门配置的图片
-    if (STATIC_IMAGE_MAP[title]) {
-      return STATIC_IMAGE_MAP[title];
-    }
-    // 其次使用分类级别的通用图片
-    if (CATEGORY_IMAGES[category]) {
-      return CATEGORY_IMAGES[category];
-    }
-    return null;
-  };
-
-  const handleImageError = (articleId: string) => {
-    setImageErrors(prev => new Set([...prev, articleId]));
-  };
 
   // Fetch articles from Supabase
   useEffect(() => {
@@ -191,48 +173,15 @@ export function KnowledgeGallery() {
               className="scroll-in group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.25)]"
             >
               {/* cover */}
-              <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-secondary via-background to-secondary">
-                <div
-                  className="absolute inset-0 opacity-40"
-                  style={{
-                    background:
-                      "radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)",
-                  }}
-                />
-                
-                {/* 静态图片 + emoji fallback */}
+              <div className="relative h-[180px] w-full overflow-hidden">
                 {(() => {
-                  const staticUrl = getStaticImageUrl(item.title, item.category);
-                  const hasError = imageErrors.has(item.id);
                   const emoji = isDb ? (item.cover || "📜") : (item as Article).cover;
-                  
-                  if (staticUrl && !hasError) {
-                    return (
-                      <>
-                        <img
-                          src={staticUrl}
-                          alt={item.title}
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={() => handleImageError(item.id)}
-                          loading="lazy"
-                        />
-                        <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
-                          {item.category}
-                        </span>
-                      </>
-                    );
-                  }
-                  
-                  // 没有静态图片或加载失败，显示 emoji
                   return (
-                    <>
-                      <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
-                        {emoji}
-                      </div>
-                      <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
-                        {item.category}
-                      </span>
-                    </>
+                    <ArticleIllustration 
+                      category={item.category} 
+                      title={item.title} 
+                      emoji={emoji} 
+                    />
                   );
                 })()}
               </div>

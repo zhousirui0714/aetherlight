@@ -1,6 +1,5 @@
-// 静态图片映射 - 为每篇文章提供经过验证的相关图片
-// 使用 Wikimedia Commons 的高质量图片
-// 优先使用真正相关的图片，找不到相关图片的条目使用分类级别的通用图片
+// 静态图片映射 - 只保留真正相关的高质量图片
+// 其他条目使用渐变背景 + emoji，确保 100% 内容匹配
 
 export const STATIC_IMAGE_MAP: Record<string, string> = {
   // 节气 - 使用真实相关的自然图片
@@ -28,34 +27,33 @@ export const STATIC_IMAGE_MAP: Record<string, string> = {
   "小寒": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Snow_Scene_at_Shipka_Pass_1.JPG/400px-Snow_Scene_at_Shipka_Pass_1.JPG",
   "大寒": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Winter_in_Tatras%2C_Poland_%2855156292085%29.jpg/400px-Winter_in_Tatras%2C_Poland_%2855156292085%29.jpg",
   
-  // 节日 - 使用分类级别的通用图片
+  // 节日 - 只保留真正相关的
   "端午：汨罗江畔的千年追思": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/VM_3852_Singapore_-_Qu_Yuan_in_a_dragon_boat.jpg/400px-VM_3852_Singapore_-_Qu_Yuan_in_a_dragon_boat.jpg",
   "中秋：月圆人团圆": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/The_moon_at_night_in_the_sky_of_Hyderabad.jpg/400px-The_moon_at_night_in_the_sky_of_Hyderabad.jpg",
-  "重阳：登高望远": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Red_Maple_Leaves_in_Yahiko.JPG/400px-Red_Maple_Leaves_in_Yahiko.JPG",
   "清明：慎终追远": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Along_the_River_During_the_Qingming_Festival_%28Qing_Court_Version%29_04a.jpg/400px-Along_the_River_During_the_Qingming_Festival_%28Qing_Court_Version%29_04a.jpg",
   
-  // 诗词 - 使用分类级别的通用图片
+  // 诗词 - 只保留真正相关的
   "静夜思·李白": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/The_moon_at_night_in_the_sky_of_Hyderabad.jpg/400px-The_moon_at_night_in_the_sky_of_Hyderabad.jpg",
   "水调歌头·明月几时有": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/The_moon_at_night_in_the_sky_of_Hyderabad.jpg/400px-The_moon_at_night_in_the_sky_of_Hyderabad.jpg",
   "将进酒·李白": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/LiBai.jpg/400px-LiBai.jpg",
   
-  // 典籍 - 使用分类级别的通用图片
+  // 典籍 - 只保留《论语》
   "《论语》：半部治天下": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Commentaries_of_the_Analects_of_Confucius.jpg/400px-Commentaries_of_the_Analects_of_Confucius.jpg",
   
-  // 非遗 - 使用分类级别的通用图片
+  // 非遗 - 只保留昆曲
   "昆曲：百戏之祖": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Pekinguniversitykunqu5.jpg/400px-Pekinguniversitykunqu5.jpg",
   
-  // 人物 - 使用分类级别的通用图片
+  // 人物 - 只保留李白
   "李白：诗仙醉月": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/LiBai.jpg/400px-LiBai.jpg",
 };
 
-// 分类级别的通用图片（用于没有专门图片的条目）
-export const CATEGORY_IMAGES: Record<string, string> = {
-  "节气": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Cherry_blossom_buds_1.jpg/400px-Cherry_blossom_buds_1.jpg",
-  "节日": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/VM_3852_Singapore_-_Qu_Yuan_in_a_dragon_boat.jpg/400px-VM_3852_Singapore_-_Qu_Yuan_in_a_dragon_boat.jpg",
-  "诗词": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/The_moon_at_night_in_the_sky_of_Hyderabad.jpg/400px-The_moon_at_night_in_the_sky_of_Hyderabad.jpg",
-  "典籍": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Commentaries_of_the_Analects_of_Confucius.jpg/400px-Commentaries_of_the_Analects_of_Confucius.jpg",
-  "非遗": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Pekinguniversitykunqu5.jpg/400px-Pekinguniversitykunqu5.jpg",
-  "民俗": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Commentaries_of_the_Analects_of_Confucius.jpg/400px-Commentaries_of_the_Analects_of_Confucius.jpg",
-  "人物": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/LiBai.jpg/400px-LiBai.jpg",
+// 分类级别的渐变色配置（用于没有专门图片的条目）
+export const CATEGORY_GRADIENTS: Record<string, { from: string; via?: string; to: string }> = {
+  "节气": { from: "from-green-400", via: "via-emerald-300", to: "to-teal-400" },
+  "节日": { from: "from-red-400", via: "via-orange-300", to: "to-yellow-400" },
+  "诗词": { from: "from-blue-400", via: "via-indigo-300", to: "to-purple-400" },
+  "典籍": { from: "from-amber-400", via: "via-yellow-300", to: "to-orange-400" },
+  "非遗": { from: "from-pink-400", via: "via-rose-300", to: "to-red-400" },
+  "民俗": { from: "from-purple-400", via: "via-fuchsia-300", to: "to-pink-400" },
+  "人物": { from: "from-cyan-400", via: "via-sky-300", to: "to-blue-400" },
 };
