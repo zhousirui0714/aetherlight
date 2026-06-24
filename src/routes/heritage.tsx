@@ -1,14 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { heritageCategories, featuredPractitioners, type Practitioner, type HeritageCategory } from "@/lib/heritage-data";
 import { MapPin, Award, Briefcase, Star, ChevronRight, Users } from "lucide-react";
 
 export const Route = createFileRoute("/heritage")({
-  head: () => ({ meta: [{ title: "非遗传承人 · 溯光" }] }),
-  component: HeritagePage,
+  head: () => ({ meta: [{ title: "知识长廊 · 溯光" }] }),
+  component: HeritageRedirect,
 });
 
+/**
+ * /heritage 已并入知识长廊 (gallery) 的"非遗艺术"分类
+ * 访问此路径直接跳转 gallery
+ */
+function HeritageRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate({ to: "/gallery", replace: true });
+  }, [navigate]);
+  return (
+    <AppShell>
+      <div className="flex flex-col items-center justify-center min-h-[40vh] text-muted-foreground">
+        <p className="font-serif text-sm">正在前往知识长廊…</p>
+      </div>
+    </AppShell>
+  );
+}
+
+// 保留原页面组件 (供未来引用, 当前不挂载)
 function HeritagePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(null);

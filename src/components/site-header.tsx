@@ -1,25 +1,38 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Search, Moon, Sun } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { GlobalSearch } from "./global-search";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
-const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/create" | "/community" | "/heritage" | "/challenge" | "/qa-square"; label: string; exact?: boolean }[] = [
+const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/create"; label: string; exact?: boolean }[] = [
   { to: "/", label: "首页", exact: true },
   { to: "/gallery", label: "知识长廊" },
-  { to: "/heritage", label: "非遗传承" },
   { to: "/chat", label: "问答助手" },
-  { to: "/qa-square", label: "问答广场" },
-  { to: "/dialogue", label: "对话" },
-  { to: "/create", label: "创作" },
-  { to: "/challenge", label: "打卡" },
-  { to: "/community", label: "社区" },
+  { to: "/dialogue", label: "对话名家" },
+  { to: "/create", label: "艺创工坊" },
+];
+
+const COMMUNITY_ITEMS: { to: "/community" | "/qa-square" | "/challenge"; label: string; icon: typeof MessageSquare; desc: string }[] = [
+  { to: "/community", label: "社区", icon: Users, desc: "用户分享与讨论" },
+  { to: "/qa-square", label: "问答广场", icon: MessageSquare, desc: "提问与答题" },
+  { to: "/challenge", label: "打卡", icon: Calendar, desc: "诗词打卡挑战" },
 ];
 
 export function SiteHeader() {
   const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isCommunityActive =
+    pathname.startsWith("/community") ||
+    pathname.startsWith("/qa-square") ||
+    pathname.startsWith("/challenge");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -78,6 +91,42 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+
+            {/* 社区 Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={`relative inline-flex items-center gap-1 font-serif px-3 py-2 text-sm tracking-[0.2em] transition-colors outline-none ${
+                  isCommunityActive
+                    ? "text-primary"
+                    : "text-foreground/70 hover:text-foreground"
+                }`}
+              >
+                社区
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" strokeWidth={1.6} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-[240px] p-1.5">
+                {COMMUNITY_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname === item.to;
+                  return (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link
+                        to={item.to}
+                        className={`flex items-start gap-3 rounded-md px-3 py-2.5 cursor-pointer outline-none ${
+                          active ? "bg-secondary text-primary" : ""
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 mt-0.5 shrink-0" strokeWidth={1.6} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-serif text-sm tracking-wider">{item.label}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</div>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           <div className="ml-auto flex items-center gap-1">
