@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users } from "lucide-react";
+import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users, Menu, X, Heart, Sparkles } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { GlobalSearch } from "./global-search";
 import {
@@ -275,6 +275,15 @@ export function SiteHeader() {
           <div className="mt-5 px-3 pb-2 font-serif text-[10px] tracking-[0.4em] text-muted-foreground">
             个 人
           </div>
+          <Link
+            to="/dashboard"
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+              pathname === "/dashboard" ? "bg-secondary text-primary" : "text-foreground/85 hover:bg-secondary"
+            }`}
+          >
+            <Sparkles className="h-4 w-4" strokeWidth={1.6} />
+            <span className="font-serif text-sm tracking-wider">学习仪表盘</span>
+          </Link>
           <Link
             to="/favorites"
             className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${

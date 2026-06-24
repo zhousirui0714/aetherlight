@@ -18,6 +18,7 @@ import { Route as HeritageRouteImport } from './routes/heritage'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as DialogueRouteImport } from './routes/dialogue'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -86,6 +87,11 @@ const FavoritesRoute = FavoritesRouteImport.update({
 const DialogueRoute = DialogueRouteImport.update({
   id: '/dialogue',
   path: '/dialogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
+  '/dashboard': typeof DashboardRoute
   '/dialogue': typeof DialogueRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
   '/heritage': typeof HeritageRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
+  '/dashboard': typeof DashboardRoute
   '/dialogue': typeof DialogueRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/gallery': typeof GalleryRoute
@@ -322,6 +331,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/create'
+    | '/dashboard'
     | '/dialogue'
     | '/favorites'
     | '/gallery'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/create'
+    | '/dashboard'
     | '/favorites'
     | '/gallery'
     | '/heritage'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/create'
+    | '/dashboard'
     | '/dialogue'
     | '/favorites'
     | '/gallery'
@@ -427,6 +439,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   CreateRoute: typeof CreateRoute
+  DashboardRoute: typeof DashboardRoute
   DialogueRoute: typeof DialogueRouteWithChildren
   FavoritesRoute: typeof FavoritesRoute
   GalleryRoute: typeof GalleryRoute
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/dialogue'
       fullPath: '/dialogue'
       preLoaderRoute: typeof DialogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -747,6 +767,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   CreateRoute: CreateRoute,
+  DashboardRoute: DashboardRoute,
   DialogueRoute: DialogueRouteWithChildren,
   FavoritesRoute: FavoritesRoute,
   GalleryRoute: GalleryRoute,
