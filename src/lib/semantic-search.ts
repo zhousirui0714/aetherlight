@@ -9,7 +9,7 @@ import { knowledgeApi } from "@/lib/knowledge-api";
 // ============================================================
 // 同义词 / 联想字典
 // ============================================================
-const SYNONYM_GROUPS: Record<string, string[]> = {
+export const SYNONYM_GROUPS: Record<string, string[]> = {
   // 节气
   "立春": ["立春", "打春", "春节", "迎春", "节气", "春天", "春季", "万物生发"],
   "春分": ["春分", "昼夜平分", "仲春", "春天", "春季"],
@@ -59,7 +59,7 @@ const SYNONYM_GROUPS: Record<string, string[]> = {
 };
 
 // 拼音首字母映射（高频文化词）
-const PINYIN_MAP: Record<string, string> = {
+export const PINYIN_MAP: Record<string, string> = {
   "李白": "libai",
   "杜甫": "dufu",
   "苏轼": "sushi",
