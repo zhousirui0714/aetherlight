@@ -251,6 +251,11 @@ function translateQuery(query: string): string {
 
 // 从标题中提取核心关键词（去掉副标题、作者等）
 function extractKeyword(title: string): string {
+  // 先处理带书名号的标题，如"《论语》：半部治天下" -> "论语"
+  if (title.includes("《") && title.includes("》")) {
+    const match = title.match(/《([^》]+)》/);
+    if (match) return match[1];
+  }
   // 处理带冒号的标题，如"立春：东风解冻" -> "立春"
   if (title.includes("：")) {
     return title.split("：")[0];
@@ -258,11 +263,6 @@ function extractKeyword(title: string): string {
   // 处理带点的标题，如"静夜思·李白" -> "静夜思"
   if (title.includes("·")) {
     return title.split("·")[0];
-  }
-  // 处理带书名号的标题，如"《论语》：半部治天下" -> "论语"
-  if (title.includes("《") && title.includes("》")) {
-    const match = title.match(/《([^》]+)》/);
-    if (match) return match[1];
   }
   return title;
 }
@@ -416,16 +416,60 @@ async function searchChineseWikipediaImage(query: string): Promise<string | null
 // 方法4：通过精确的中文 Wikipedia 页面映射获取图片
 async function getWikipediaPageImage(pageTitle: string): Promise<string | null> {
   try {
+    // 优先尝试 pageimages（页面首图）
     const imageUrl = `https://zh.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=400&origin=*`;
     const imageResponse = await fetchWithTimeout(imageUrl);
     const imageData = await imageResponse.json();
 
-    if (!imageData.query || !imageData.query.pages) return null;
+    if (imageData.query && imageData.query.pages) {
+      const pages = Object.values(imageData.query.pages) as any[];
+      for (const page of pages) {
+        if (page.thumbnail && page.thumbnail.source) {
+          return page.thumbnail.source;
+        }
+      }
+    }
 
-    const pages = Object.values(imageData.query.pages) as any[];
-    for (const page of pages) {
-      if (page.thumbnail && page.thumbnail.source) {
-        return page.thumbnail.source;
+    // Fallback: 获取页面内的第一张图片
+    const pageImagesUrl = `https://zh.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=images&format=json&imlimit=10&origin=*`;
+    const pageImagesResponse = await fetchWithTimeout(pageImagesUrl);
+    const pageImagesData = await pageImagesResponse.json();
+
+    if (pageImagesData.query && pageImagesData.query.pages) {
+      const pages = Object.values(pageImagesData.query.pages) as any[];
+      for (const page of pages) {
+        if (page.images && page.images.length > 0) {
+          // 过滤掉常见的图标/徽章图片
+          const validImage = page.images.find((img: any) => {
+            const title = img.title.toLowerCase();
+            return !title.includes("icon") &&
+                   !title.includes("logo") &&
+                   !title.includes("symbol") &&
+                   !title.includes("commons-logo") &&
+                   !title.includes("wiki") &&
+                   !title.includes("disambig") &&
+                   !title.includes("edit") &&
+                   !title.includes("question") &&
+                   !title.includes("information");
+          });
+
+          if (validImage) {
+            // 获取图片的实际 URL
+            const fileName = validImage.title.replace("File:", "").replace(" ", "_");
+            const thumbUrl = `https://zh.wikipedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(fileName)}&prop=imageinfo&format=json&iiprop=url&iiurlwidth=400&origin=*`;
+            const thumbResponse = await fetchWithTimeout(thumbUrl);
+            const thumbData = await thumbResponse.json();
+
+            if (thumbData.query && thumbData.query.pages) {
+              const filePages = Object.values(thumbData.query.pages) as any[];
+              for (const filePage of filePages) {
+                if (filePage.imageinfo && filePage.imageinfo[0] && filePage.imageinfo[0].thumburl) {
+                  return filePage.imageinfo[0].thumburl;
+                }
+              }
+            }
+          }
+        }
       }
     }
     return null;
