@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as QaSquareRouteImport } from './routes/qa-square'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -42,6 +43,11 @@ import { Route as ApiArticlesCategoriesRouteImport } from './routes/api/articles
 import { Route as ApiArticlesIdRouteImport } from './routes/api/articles/$id'
 import { Route as ApiArticlesIdRelationsRouteImport } from './routes/api/articles/$id/relations'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QaSquareRoute = QaSquareRouteImport.update({
   id: '/qa-square',
   path: '/qa-square',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
+  '/search': typeof SearchRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
+  '/search': typeof SearchRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
@@ -287,6 +295,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
+  '/search': typeof SearchRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
@@ -323,6 +332,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/qa-square'
+    | '/search'
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
@@ -356,6 +366,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/qa-square'
+    | '/search'
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/qa-square'
+    | '/search'
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
@@ -425,6 +437,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   QaSquareRoute: typeof QaSquareRoute
+  SearchRoute: typeof SearchRoute
   ApiAncientBooksRoute: typeof ApiAncientBooksRoute
   ApiArticlesRoute: typeof ApiArticlesRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
@@ -437,6 +450,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/qa-square': {
       id: '/qa-square'
       path: '/qa-square'
@@ -738,6 +758,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   QaSquareRoute: QaSquareRoute,
+  SearchRoute: SearchRoute,
   ApiAncientBooksRoute: ApiAncientBooksRoute,
   ApiArticlesRoute: ApiArticlesRouteWithChildren,
   ApiChatRoute: ApiChatRoute,

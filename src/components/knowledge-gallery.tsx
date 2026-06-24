@@ -254,6 +254,7 @@ export function KnowledgeGallery() {
                       category={normalizeCategory(item.category) || item.category}
                       title={item.title}
                       emoji={emoji}
+                      coverUrl={isDb ? (item as DbArticle).cover_url : undefined}
                     />
                   );
                 })()}

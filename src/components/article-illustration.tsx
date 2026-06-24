@@ -774,13 +774,29 @@ const CATEGORY_THEMES: Record<string, {
   },
 };
 
-export function ArticleIllustration({ category, title, emoji }: ArticleIllustrationProps) {
+export function ArticleIllustration({ category, title, emoji, coverUrl }: ArticleIllustrationProps) {
+  // 优先用 AI 生成的真实水墨风插图
+  if (coverUrl) {
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-[#F5F0E8]">
+        <img
+          src={coverUrl}
+          alt={title}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        {/* 轻微宣纸纹理覆盖 + 朱砂边框强化中国风 */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-transparent" />
+      </div>
+    );
+  }
+
   const theme = CATEGORY_THEMES[category] || CATEGORY_THEMES["经典典籍"];
-  
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* 主背景渐变 */}
-      <div 
+      <div
         className="absolute inset-0 transition-transform duration-500 group-hover:scale-110"
         style={{ background: theme.bgGradient }}
       />
