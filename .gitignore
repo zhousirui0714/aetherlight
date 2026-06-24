@@ -50,3 +50,11 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# 知识库 v3 同步数据（已导入到 Supabase）
+backend/data/knowledge_articles_v3.json
+backend/data/knowledge_relations_v3.json
+backend/data/knowledge_articles_v2.json
+
+# 临时输出
+*.out

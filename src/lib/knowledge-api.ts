@@ -128,3 +128,85 @@ export async function getStats(): Promise<ArticleStats | null> {
     return null;
   }
 }
+
+// ---------- v3 新增 ----------
+
+export type CategoryInfo = {
+  id: string;
+  name_cn: string;
+  total: number;
+  sub_categories: { name: string; count: number }[];
+};
+
+export type TagInfo = { tag: string; count: number };
+
+export type GraphNode = {
+  id: string;
+  title: string;
+  category?: string;
+  excerpt?: string;
+  cover?: string;
+  coverUrl?: string;
+};
+
+export type GraphEdge = {
+  source: string;
+  target: string;
+  type: string;
+  weight?: number;
+  description?: string;
+};
+
+export type KnowledgeGraph = {
+  center?: GraphNode;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+};
+
+/**
+ * 分类树 (10 顶级 + 子类 + 条目数)
+ */
+export async function getCategories(): Promise<CategoryInfo[]> {
+  try {
+    return await jsonFetch<CategoryInfo[]>(`${API_BASE}/articles/categories`);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 标签列表
+ */
+export async function getTags(category?: string): Promise<TagInfo[]> {
+  const search = category ? `?category=${encodeURIComponent(category)}` : "";
+  try {
+    return await jsonFetch<TagInfo[]>(`${API_BASE}/articles/tags${search}`);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 知识图谱 (某条目的关联)
+ */
+export async function getRelations(articleId: string): Promise<KnowledgeGraph> {
+  try {
+    return await jsonFetch<KnowledgeGraph>(
+      `${API_BASE}/articles/${encodeURIComponent(articleId)}/relations`
+    );
+  } catch (err) {
+    console.warn(`[knowledge-api] getRelations(${articleId}) failed:`, err);
+    return { nodes: [], edges: [] };
+  }
+}
+
+// 单例导出 (供 React 组件使用)
+export const knowledgeApi = {
+  getArticle,
+  aiFillArticle,
+  listArticles,
+  getStats,
+  getCategories,
+  getTags,
+  getRelations,
+};

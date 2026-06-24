@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles } from "lucide-react";
+import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles, Network } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import type { Article } from "@/lib/knowledge-data";
 import { getExpandedContent } from "@/lib/expanded-content";
@@ -10,6 +10,8 @@ import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-s
 import { trackEvent } from "@/lib/journey-storage";
 import { AnnotationPanel } from "@/components/annotation-panel";
 import { AIInsightsPanel } from "@/components/ai-insights-panel";
+import { ArticleRelatedGraph } from "@/components/article-related-graph";
+import { FullTextPanel } from "@/components/full-text-panel";
 import { aiFillArticle, type ArticleDetail } from "@/lib/knowledge-api";
 import { toast } from "sonner";
 
@@ -338,6 +340,32 @@ function ArticlePage() {
           </div>
 
           {/* AI 深度内容面板 - 包含：出处、历史背景、相关人物/典籍/事件/诗词/推荐、知识图谱、时间线、现代解读、常见问题 */}
+          {/* v3 全文/翻译/注释面板 (诗词/典籍专用) */}
+          {(article.category === "poems" || article.category === "classics" || article.category === "诗词文章" || article.category === "典籍经典") && (
+            <div className="mt-10">
+              <FullTextPanel
+                articleId={article.id}
+                title={article.title}
+                category={String(article.category)}
+                body={(article as any).content || (article as any).body}
+                fullText={(article as any).fullText || (article as any).full_text}
+              />
+            </div>
+          )}
+
+          {/* v3 知识图谱 (跨分类关联) */}
+          <div className="mt-10 rounded-2xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Network className="h-5 w-5 text-primary" />
+              <h3 className="font-serif text-lg font-semibold text-foreground">知识图谱</h3>
+              <span className="ml-auto text-xs text-muted-foreground">跨分类关联</span>
+            </div>
+            <ArticleRelatedGraph
+              articleId={article.id}
+              articleTitle={article.title}
+            />
+          </div>
+
           <AIInsightsPanel article={article} />
 
           {/* 底部操作 */}
