@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 插图试点 - 9 张评估</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #faf7f0; color: #2c2c2c; margin: 0; padding: 16px; }
+  h1 { font-size: 20px; color: #8b4513; border-bottom: 2px solid #c0392b; padding-bottom: 6px; margin: 0 0 12px 0; }
+  h2 { color: #8b4513; margin: 24px 0 10px 0; font-size: 16px; }
+  .meta { background: #fff; padding: 10px 12px; border-left: 3px solid #c0392b; margin: 10px 0; font-size: 12px; line-height: 1.7; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 12px 0; }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .card img { width: 100%; height: auto; display: block; background: #f0e6d2; }
+  .card-body { padding: 12px 14px; }
+  .card-title { font-size: 15px; font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+  .card-sub { color: #7f8c8d; font-size: 11px; margin-bottom: 6px; }
+  .prompt { background: #f8f4ed; padding: 6px 8px; border-radius: 4px; font-size: 10px; font-family: "Consolas", monospace; color: #5d2914; word-break: break-word; line-height: 1.4; max-height: 80px; overflow-y: auto; }
+  .stat { display: inline-block; padding: 1px 6px; background: #27ae60; color: #fff; border-radius: 3px; font-size: 10px; margin-right: 4px; }
+  .stat.qa { background: #c0392b; }
+  .verdict { background: #fff3cd; border: 1px solid #ffe69c; padding: 10px 12px; border-radius: 8px; margin: 16px 0; font-size: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h1>AI 插图试点 - 9 张评估</h1>
+<div class="meta">
+  <strong>源</strong>: pollinations.ai · 2026-06-24<br>
+  <strong>成功率</strong>: 9/9 · <strong>平均</strong>: 26s/张 · <strong>分辨率</strong>: 1024×576<br>
+  <strong>前情</strong>: TRAE API 实测是空壳, 已修复 text-to-image.ts
+</div>
+
+<div class="verdict">
+  <strong>请评估</strong>: 满意 → 推广到 342 张 · 部分行 → 重写 prompt · 不行 → 回退
+</div>
+
+<h2>figures (人物)</h2>
+<div class="grid">
+  <div class="card">
+    <img src="cover-figures-libai.jpg" alt="李白" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">李白 <span class="stat">figures</span></div>
+      <div class="card-sub">libai · 唐 · 诗仙</div>
+    </div>
+  </div>
+  <div class="card">
+    <img src="cover-figures-qinshihuang.jpg" alt="秦始皇" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">秦始皇 <span class="stat">figures</span></div>
+      <div class="card-sub">qinshihuang · 秦 · 始皇帝</div>
+    </div>
+  </div>
+  <div class="card">
+    <img src="cover-figures-kongzi.jpg" alt="孔子" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">孔子 <span class="stat">figures</span></div>
+      <div class="card-sub">kongzi · 周 · 至圣先师</div>
+    </div>
+  </div>
+</div>
+
+<h2>artifacts (建筑器物)</h2>
+<div class="grid">
+  <div class="card">
+    <img src="cover-artifacts-gugong.jpg" alt="故宫" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">故宫 <span class="stat">artifacts</span></div>
+      <div class="card-sub">gugong · 明清 · 紫禁城</div>
+    </div>
+  </div>
+  <div class="card">
+    <img src="cover-artifacts-qin-shihuang-ling.jpg" alt="秦始皇陵" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">秦始皇陵 <span class="stat">artifacts</span></div>
+      <div class="card-sub">qin-shihuang-ling · 秦 · 兵马俑</div>
+    </div>
+  </div>
+  <div class="card">
+    <img src="cover-artifacts-dujiangyan.jpg" alt="都江堰" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">都江堰 <span class="stat">artifacts</span></div>
+      <div class="card-sub">dujiangyan · 战国 · 水利</div>
+    </div>
+  </div>
+</div>
+
+<h2>intangible (非遗艺术)</h2>
+<div class="grid">
+  <div class="card">
+    <img src="cover-intangible-jingju.jpg" alt="京剧" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">京剧 <span class="stat">intangible</span></div>
+      <div class="card-sub">jingju · 国粹 · 生旦净末丑</div>
+    </div>
+  </div>
+  <div class="card">
+    <img src="cover-intangible-guqin.jpg" alt="古琴" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">古琴 <span class="stat">intangible</span></div>
+      <div class="card-sub">guqin · 文人四艺 · 减字谱</div>
+    </div>
+  </div>
+  <div class="card">
+    <img src="cover-intangible-kunqu.jpg" alt="昆曲" loading="lazy">
+    <div class="card-body">
+      <div class="card-title">昆曲 <span class="stat">intangible</span></div>
+      <div class="card-sub">kunqu · 百戏之祖 · 牡丹亭</div>
+    </div>
+  </div>
+</div>
+
+<div class="verdict" style="margin-top: 30px;">
+  <strong>说明</strong>: 9 张由 pollinations.ai 生成。手机端看图可能略慢 (pollinations CDN)。
+  质量如不满意, 可选我重写 prompt 重跑, 或整体回退到现有 fallback。
+</div>
+
+</body>
+</html>
