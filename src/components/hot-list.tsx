@@ -37,7 +37,7 @@ export function HotList() {
             </p>
           </div>
           <button
-            onClick={() => navigate({ to: "/qa-square" })}
+            onClick={() => navigate({ to: "/tongyou/community" })}
             className="hidden font-serif text-sm tracking-[0.2em] text-foreground/70 transition hover:text-primary md:inline-flex md:items-center md:gap-1"
           >
             全部问题
