@@ -30,10 +30,19 @@ class ArticleListResponse(BaseModel):
     items: List[ArticleListItem]
 
 
-class RelatedArticle(BaseModel):
+class RelatedItem(BaseModel):
     id: str
     title: str
-    category: str
+    category: Optional[str] = None
+    brief: Optional[str] = None
+    external: bool = False
+    externalUrl: Optional[str] = None
+
+
+class FAQItem(BaseModel):
+    question: str
+    answer: str
+    link: Optional[str] = None
 
 
 class ArticleDetailResponse(BaseModel):
@@ -41,13 +50,35 @@ class ArticleDetailResponse(BaseModel):
     title: str
     category: str
     cover: Optional[str] = None
+    excerpt: str
     body: str
+    body_extended: str = ""
     source: str = ""
+    history: str = ""
+    influence: str = ""
     author: str
+    era: str = ""
+    dynasty: str = ""
+    region: str = ""
     tags: List[str] = Field(default_factory=list)
     favorites: int
-    related: List[RelatedArticle] = Field(default_factory=list)
+    related_people: List[RelatedItem] = Field(default_factory=list)
+    related_books: List[RelatedItem] = Field(default_factory=list)
+    related_events: List[RelatedItem] = Field(default_factory=list)
+    related_poems: List[RelatedItem] = Field(default_factory=list)
+    related_articles: List[RelatedItem] = Field(default_factory=list)
+    faq: List[FAQItem] = Field(default_factory=list)
+    related: List["RelatedArticle"] = Field(default_factory=list)
     created_at: str
+
+
+class RelatedArticle(BaseModel):
+    id: str
+    title: str
+    category: str
+
+
+ArticleDetailResponse.model_rebuild()
 
 
 class FavoriteResponse(BaseModel):
@@ -56,7 +87,40 @@ class FavoriteResponse(BaseModel):
     favorites_count: int
 
 
-# ---------- 2-1：列表 ----------
+# ---------- AI 补全 ----------
+
+class AIFillRequest(BaseModel):
+    fields: List[str] = Field(..., description="要补全的字段: history / influence / faq")
+
+
+class AIFillResponse(BaseModel):
+    article_id: str
+    filled: dict
+    status: dict
+    cached: bool = False
+    tokens_used: int = 0
+
+
+class ArticleStatsResponse(BaseModel):
+    total: int
+    by_category: dict
+    by_dynasty: dict = Field(default_factory=dict)
+
+
+# ---------- 路由 ----------
+
+@router.get(
+    "/articles/stats",
+    response_model=ArticleStatsResponse,
+    summary="知识条目统计",
+)
+async def article_stats():
+    try:
+        return await service.stats()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @router.get(
     "/articles",
     response_model=ArticleListResponse,
@@ -66,7 +130,7 @@ class FavoriteResponse(BaseModel):
 async def list_articles(
     category: Optional[str] = Query(
         None,
-        description="分类：节气 / 节日 / 诗词 / 典籍 / 非遗 / 民俗 / 人物",
+        description="分类：节气 / 节日 / 诗词 / 典籍 / 非遗 / 民俗 / 人物 / 建筑 / 神话 / 艺术 / 哲学 / 医学 / 科技 / 饮食 / 服饰",
     ),
     keyword: Optional[str] = Query(None, description="关键词（搜索标题和摘要）"),
     limit: int = Query(12, ge=1, le=50),
@@ -87,7 +151,6 @@ async def list_articles(
     return ArticleListResponse(total=total, limit=limit, offset=offset, items=items)
 
 
-# ---------- 2-2：详情 ----------
 @router.get(
     "/articles/{article_id}",
     response_model=ArticleDetailResponse,
@@ -107,7 +170,27 @@ async def get_article(article_id: str):
     return article
 
 
-# ---------- 2-3：收藏 / 取消收藏 ----------
+@router.post(
+    "/articles/{article_id}/ai-fill",
+    response_model=AIFillResponse,
+    summary="AI 懒加载补全 history/influence/faq 字段",
+)
+async def ai_fill_article(article_id: str, body: AIFillRequest):
+    try:
+        return await service.ai_fill(article_id=article_id, fields=body.fields)
+    except ArticleServiceError as exc:
+        code = exc.code
+        if code == "ARTICLE_NOT_FOUND":
+            raise HTTPException(status_code=404, detail=exc.message)
+        if code == "INVALID_FIELD":
+            raise HTTPException(status_code=400, detail=exc.message)
+        if code == "LLM_UNAVAILABLE":
+            raise HTTPException(status_code=503, detail=exc.message)
+        raise HTTPException(status_code=400, detail=exc.message)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @router.post(
     "/articles/{article_id}/favorite",
     response_model=FavoriteResponse,
