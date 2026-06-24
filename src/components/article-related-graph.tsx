@@ -256,6 +256,23 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
   const TIME_MAX = 2100;
   const [timeRange, setTimeRange] = useState<[number, number]>([TIME_MIN, TIME_MAX]);
 
+  // 关系类型筛选（默认全选）
+  const [edgeTypeFilter, setEdgeTypeFilter] = useState<Set<EdgeType>>(
+    new Set(["temporal", "influence", "cultural", "imagery"])
+  );
+  const toggleEdgeType = (t: EdgeType) => {
+    setEdgeTypeFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) {
+        // 至少保留 1 个
+        if (next.size > 1) next.delete(t);
+      } else {
+        next.add(t);
+      }
+      return next;
+    });
+  };
+
   // 钻取状态：当前图谱中心 id + 历史栈
   const [centerId, setCenterId] = useState<string>(articleId);
   const [centerTitle, setCenterTitle] = useState<string>(articleTitle || "");
@@ -355,7 +372,7 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
       visible: visibleNodes.length,
     };
     return { nodes: visibleNodes, edges: visibleEdges, center: p.center, positions, centerPos, allNodeIds, timeStats };
-  }, [graph, centerId, size, timeRange]);
+  }, [graph, centerId, size, timeRange, edgeTypeFilter]);
 
   // 当 timeRange 改变, 关闭溯光选中（避免暗化所有）
   useEffect(() => {
@@ -550,11 +567,39 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
           );
         })()}
 
-        {/* 图例 */}
-        <div className="absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 text-[10px] text-amber-900/70">
-          <LegendDot color="#2C2C2C" label="核心" />
-          <LegendDot color="#5C4A3A" label="内容" />
-          <LegendDot color="#8B7355" label="概念" />
+        {/* 图例：节点类型 */}
+        <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-1.5 text-[10px] text-amber-900/70">
+          <div className="flex flex-wrap gap-2">
+            <LegendDot color="#2C2C2C" label="核心" />
+            <LegendDot color="#5C4A3A" label="内容" />
+            <LegendDot color="#8B7355" label="概念" />
+          </div>
+          {/* 关系类型筛选（可点击） */}
+          <div className="flex flex-wrap gap-1.5">
+            <span className="self-center text-[9px] uppercase tracking-widest text-amber-900/50">关系</span>
+            {(["temporal", "influence", "cultural", "imagery"] as EdgeType[]).map((t) => {
+              const s = EDGE_STYLES[t];
+              const active = edgeTypeFilter.has(t);
+              return (
+                <button
+                  key={t}
+                  onClick={(e) => { e.stopPropagation(); toggleEdgeType(t); }}
+                  className={`flex items-center gap-1 rounded-full px-2 py-0.5 transition ${
+                    active
+                      ? "bg-amber-100/80 text-amber-900 ring-1 ring-amber-300/60"
+                      : "bg-paper/40 text-amber-900/40 line-through"
+                  }`}
+                  title={active ? `隐藏「${s.label}」关系` : `显示「${s.label}」关系`}
+                >
+                  <span
+                    className="h-1.5 w-3 rounded-full"
+                    style={{ backgroundColor: s.color, opacity: active ? s.opacity : 0.3 }}
+                  />
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="absolute bottom-3 right-3 z-10 text-[10px] tracking-widest text-amber-900/40">
