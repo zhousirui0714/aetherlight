@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, Network, Info, X } from "lucide-react";
+import { Loader2, Network, Info, X, Clock } from "lucide-react";
 import { knowledgeApi } from "@/lib/knowledge-api";
 import type { KnowledgeGraph, GraphNode, GraphEdge } from "@/lib/knowledge-types";
 
@@ -73,11 +73,69 @@ function classifyEdge(edge: GraphEdge, articleId: string): EdgeType {
 interface ProcessedNode extends GraphNode {
   type: NodeType;
   strength: number;     // 0-1，影响布局距离
+  year: number;         // 估算公元年（用于时间滑块）
 }
 
 interface ProcessedEdge extends GraphEdge {
   edgeType: EdgeType;
   style: EdgeStyle;
+}
+
+// ============================================================
+// 朝代推断（标题/描述 → 公元年）
+// ============================================================
+const DYNASTY_RANGES: { name: string; start: number; end: number; aliases: string[] }[] = [
+  { name: "上古",  start: -3000, end: -1600, aliases: ["上古", "远古", "三皇", "五帝"] },
+  { name: "夏",    start: -2070, end: -1600, aliases: ["夏"] },
+  { name: "商",    start: -1600, end: -1046, aliases: ["商", "殷"] },
+  { name: "周",    start: -1046, end: -256,  aliases: ["西周", "东周", "春秋", "战国"] },
+  { name: "秦",    start: -221,  end: -206,  aliases: ["秦"] },
+  { name: "汉",    start: -202,  end: 220,   aliases: ["西汉", "东汉", "汉"] },
+  { name: "三国",  start: 220,   end: 280,   aliases: ["三国", "魏晋"] },
+  { name: "晋",    start: 265,   end: 420,   aliases: ["西晋", "东晋", "晋"] },
+  { name: "南北朝", start: 420,  end: 589,   aliases: ["南北朝", "南朝", "北朝"] },
+  { name: "隋",    start: 581,   end: 618,   aliases: ["隋"] },
+  { name: "唐",    start: 618,   end: 907,   aliases: ["唐", "盛唐", "中唐", "晚唐"] },
+  { name: "五代",  start: 907,   end: 960,   aliases: ["五代", "十国"] },
+  { name: "宋",    start: 960,   end: 1279,  aliases: ["北宋", "南宋", "宋"] },
+  { name: "元",    start: 1271,  end: 1368,  aliases: ["元"] },
+  { name: "明",    start: 1368,  end: 1644,  aliases: ["明"] },
+  { name: "清",    start: 1644,  end: 1912,  aliases: ["清"] },
+  { name: "近代",  start: 1840,  end: 1949,  aliases: ["近代", "民国"] },
+  { name: "现代",  start: 1949,  end: 2100,  aliases: ["现代", "当代", "共和国"] },
+];
+
+// 时代兜底：category 推断
+const CATEGORY_DEFAULT_YEAR: Record<string, number> = {
+  figures: 1000, classics: 0, poems: 800, festivals: 0,
+  solarTerms: 0, intangible: 1500, artifacts: 0, lifestyle: 0,
+  technology: 1500, architecture: 0, mythology: -2000, art: 1000,
+  philosophy: -500, medicine: 1000, food: 0, clothing: 0,
+};
+
+function inferYear(node: GraphNode, fallback?: number): number {
+  const text = `${node.title || ""} ${node.excerpt || ""}`.slice(0, 60);
+  // 1. 优先匹配朝代名
+  for (const d of DYNASTY_RANGES) {
+    for (const alias of d.aliases) {
+      if (text.includes(alias)) {
+        // 取朝代中点
+        return Math.round((d.start + d.end) / 2);
+      }
+    }
+  }
+  // 2. 匹配四字年份（如"公元前 300 年"、"贞观三年"）
+  const m = text.match(/(-?\d{2,4})\s*年/);
+  if (m) {
+    let y = parseInt(m[1], 10);
+    if (text.includes("公元前") || text.includes("BC")) y = -y;
+    return y;
+  }
+  // 3. 兜底按 category
+  if (node.category && CATEGORY_DEFAULT_YEAR[node.category] !== undefined) {
+    return CATEGORY_DEFAULT_YEAR[node.category];
+  }
+  return fallback ?? 1000;
 }
 
 function classifyNode(node: GraphNode, isCenter: boolean): NodeType {
@@ -94,6 +152,8 @@ function classifyNode(node: GraphNode, isCenter: boolean): NodeType {
 
 function preprocessGraph(graph: KnowledgeGraph, articleId: string) {
   const center = graph.center || { id: articleId, title: "", category: "" };
+  // 中心节点年份作为兜底
+  const centerYear = inferYear(center);
   const processedNodes: ProcessedNode[] = graph.nodes
     .filter(n => n.id !== articleId)
     .map(n => {
@@ -101,6 +161,7 @@ function preprocessGraph(graph: KnowledgeGraph, articleId: string) {
       return {
         ...n,
         type,
+        year: inferYear(n, centerYear),
         // 内容节点弱化、概念节点最弱、核心最强
         strength: type === "core" ? 1.0 : type === "content" ? 0.7 : 0.4,
       };
@@ -190,6 +251,11 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // 时间维度状态：[起始年, 结束年]；-3000 ~ 2100
+  const TIME_MIN = -3000;
+  const TIME_MAX = 2100;
+  const [timeRange, setTimeRange] = useState<[number, number]>([TIME_MIN, TIME_MAX]);
+
   // 容器尺寸
   const [size, setSize] = useState({ w: 800, h: 520 });
   useEffect(() => {
@@ -213,15 +279,36 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
     return () => { alive = false; };
   }, [articleId]);
 
-  // 数据预处理 + 布局
-  const { nodes, edges, center, positions, centerPos, allNodeIds } = useMemo(() => {
-    if (!graph) return { nodes: [], edges: [], center: null, positions: new Map(), centerPos: { x: 0, y: 0 }, allNodeIds: new Set() };
+  // 数据预处理 + 布局（应用时间过滤）
+  const { nodes, edges, center, positions, centerPos, allNodeIds, timeStats } = useMemo(() => {
+    if (!graph) return { nodes: [], edges: [], center: null, positions: new Map(), centerPos: { x: 0, y: 0 }, allNodeIds: new Set(), timeStats: null };
     const p = preprocessGraph(graph, articleId);
-    const positions = layoutNodes(p.nodes, p.edges, p.center?.id || articleId, articleId, size.w, size.h);
+    // 时间窗内的节点
+    const [t0, t1] = timeRange;
+    const visibleNodes = p.nodes.filter(n => n.year >= t0 && n.year <= t1);
+    const visibleIds = new Set(visibleNodes.map(n => n.id));
+    // 边：两端节点都可见才显示
+    const visibleEdges = p.edges.filter(e =>
+      visibleIds.has(e.source) || visibleIds.has(e.target)
+    );
+    const positions = layoutNodes(visibleNodes, visibleEdges, p.center?.id || articleId, articleId, size.w, size.h);
     const centerPos = positions.get(p.center?.id || articleId) || { x: size.w / 2, y: size.h / 2 };
-    const allNodeIds = new Set<string>([p.center?.id || articleId, ...p.nodes.map(n => n.id)]);
-    return { nodes: p.nodes, edges: p.edges, center: p.center, positions, centerPos, allNodeIds };
-  }, [graph, articleId, size]);
+    const allNodeIds = new Set<string>([p.center?.id || articleId, ...visibleNodes.map(n => n.id)]);
+    // 时间统计
+    const allYears = p.nodes.map(n => n.year).concat([inferYear(p.center || { id: articleId, title: "" })]);
+    const timeStats = {
+      min: Math.min(...allYears),
+      max: Math.max(...allYears),
+      total: p.nodes.length,
+      visible: visibleNodes.length,
+    };
+    return { nodes: visibleNodes, edges: visibleEdges, center: p.center, positions, centerPos, allNodeIds, timeStats };
+  }, [graph, articleId, size, timeRange]);
+
+  // 当 timeRange 改变, 关闭溯光选中（避免暗化所有）
+  useEffect(() => {
+    setSelectedId(null);
+  }, [timeRange]);
 
   // 溯光路径：计算 selected → center 的主路径
   const tracePath = useMemo(() => {
@@ -310,6 +397,20 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
           <Info className="h-3 w-3" /> hover · click · 墨为结构 · 光为路径
         </span>
       </div>
+
+      {/* 时间维度滑块 */}
+      {timeStats && timeStats.max - timeStats.min > 0 && (
+        <TimeSlider
+          value={timeRange}
+          min={TIME_MIN}
+          max={TIME_MAX}
+          dataMin={timeStats.min}
+          dataMax={timeStats.max}
+          visibleCount={timeStats.visible}
+          totalCount={timeStats.total}
+          onChange={setTimeRange}
+        />
+      )}
 
       {/* SVG 宇宙 */}
       <div className="relative overflow-hidden rounded-2xl border border-amber-200/30 bg-[#F5F0E8]"
@@ -591,6 +692,137 @@ function LegendDot({ color, label }: { color: string; label: string }) {
     <div className="inline-flex items-center gap-1">
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
       <span>{label}</span>
+    </div>
+  );
+}
+
+// ============================================================
+// 时间维度滑块（双滑块 + 朝代 tick）
+// ============================================================
+function TimeSlider({
+  value,
+  min,
+  max,
+  dataMin,
+  dataMax,
+  visibleCount,
+  totalCount,
+  onChange,
+}: {
+  value: [number, number];
+  min: number;
+  max: number;
+  dataMin: number;
+  dataMax: number;
+  visibleCount: number;
+  totalCount: number;
+  onChange: (v: [number, number]) => void;
+}) {
+  const [t0, t1] = value;
+  const span = max - min;
+  const t0Pct = ((t0 - min) / span) * 100;
+  const t1Pct = ((t1 - min) / span) * 100;
+  const dataMinPct = ((dataMin - min) / span) * 100;
+  const dataMaxPct = ((dataMax - min) / span) * 100;
+
+  // 找出当前选区覆盖的朝代
+  const coveredDynasties = DYNASTY_RANGES.filter(
+    d => d.end >= t0 && d.start <= t1
+  );
+
+  const yearLabel = (y: number) => {
+    if (y < 0) return `公元前${-y}`;
+    return `公元${y}`;
+  };
+
+  return (
+    <div className="rounded-lg border border-amber-200/40 bg-[#FAF6EC]/80 px-4 py-3">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-amber-900/80">
+        <Clock className="h-3.5 w-3.5 text-accent" />
+        <span className="font-serif tracking-widest">时间维度</span>
+        <span className="text-amber-900/50">·</span>
+        <span>
+          {yearLabel(t0)} — {yearLabel(t1)}
+        </span>
+        <span className="ml-auto text-[10px] tracking-widest text-amber-900/60">
+          可见 {visibleCount} / {totalCount} 节点
+        </span>
+        {(t0 !== min || t1 !== max) && (
+          <button
+            onClick={() => onChange([min, max])}
+            className="rounded border border-amber-200/60 bg-amber-50/60 px-2 py-0.5 text-[10px] text-amber-900/70 hover:bg-amber-100/60 transition"
+          >
+            重置
+          </button>
+        )}
+      </div>
+
+      {/* 双滑块轨道 */}
+      <div className="relative h-7 select-none">
+        {/* 底轨 */}
+        <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-amber-200/40" />
+        {/* 数据范围高亮 */}
+        <div
+          className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-amber-300/30"
+          style={{ left: `${dataMinPct}%`, width: `${dataMaxPct - dataMinPct}%` }}
+        />
+        {/* 选中范围 */}
+        <div
+          className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-700/60 via-amber-600/70 to-amber-700/60"
+          style={{ left: `${t0Pct}%`, width: `${t1Pct - t0Pct}%` }}
+        />
+        {/* 起点滑块 */}
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={10}
+          value={t0}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            onChange([Math.min(v, t1 - 50), t1]);
+          }}
+          className="time-range-input pointer-events-auto absolute inset-0 h-full w-full appearance-none bg-transparent"
+          style={{ zIndex: t0 > max - 50 ? 5 : 4 }}
+        />
+        {/* 终点滑块 */}
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={10}
+          value={t1}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            onChange([t0, Math.max(v, t0 + 50)]);
+          }}
+          className="time-range-input pointer-events-auto absolute inset-0 h-full w-full appearance-none bg-transparent"
+          style={{ zIndex: 5 }}
+        />
+      </div>
+
+      {/* 朝代 tick 行 */}
+      <div className="mt-2 flex flex-wrap items-center gap-1 text-[9px] text-amber-900/60">
+        {coveredDynasties.length === 0 ? (
+          <span className="italic">当前选区无朝代覆盖</span>
+        ) : (
+          coveredDynasties.map((d) => {
+            const isActive = d.end >= t0 && d.start <= t1;
+            return (
+              <span
+                key={d.name}
+                className={`rounded px-1.5 py-0.5 transition ${
+                  isActive
+                    ? "bg-amber-700/15 font-serif text-amber-900"
+                    : "bg-transparent text-amber-900/40"
+                }`}
+              >
+                {d.name}
+              </span>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
