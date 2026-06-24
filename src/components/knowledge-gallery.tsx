@@ -171,14 +171,14 @@ export function KnowledgeGallery() {
   // 动态获取图片URL
   const fetchImageUrl = async (articleId: string, title: string, category: string) => {
     if (imageUrls[articleId] || imageErrors.has(articleId)) return;
-    
+
     setImageLoading(prev => new Set([...prev, articleId]));
-    
+
     try {
-      const query = getSearchQuery(title, category);
-      const response = await fetch(`/api/search-image?q=${encodeURIComponent(query)}`);
+      // 传递中文标题，让 API 端做精确映射
+      const response = await fetch(`/api/search-image?q=${encodeURIComponent(title)}`);
       const data = await response.json();
-      
+
       if (data.url) {
         setImageUrls(prev => ({ ...prev, [articleId]: data.url }));
       }
