@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Heart, Search, Loader2 } from "lucide-react";
 import { ARTICLES, CATEGORIES, type Article } from "@/lib/knowledge-data";
 import { supabase } from "@/integrations/supabase/client";
+import { STATIC_IMAGE_MAP } from "@/lib/static-images";
 
 type DbArticle = {
   id: string;
@@ -16,111 +17,6 @@ type DbArticle = {
   created_at: string;
 };
 
-// 根据主题生成搜索关键词
-function getSearchQuery(title: string, category: string): string {
-  const queries: Record<string, Record<string, string>> = {
-    "节气": {
-      "立春": "spring beginning nature",
-      "雨水": "rain spring weather",
-      "惊蛰": "insects awaken spring",
-      "春分": "spring equinox sunrise",
-      "清明": "qingming festival tomb sweeping",
-      "谷雨": "grain rain agriculture",
-      "立夏": "summer beginning nature",
-      "小满": "grain buds wheat",
-      "芒种": "grain in ear harvest",
-      "夏至": "summer solstice sunlight",
-      "小暑": "minor heat summer",
-      "大暑": "major heat summer",
-      "立秋": "autumn beginning fall",
-      "处暑": "end of heat autumn",
-      "白露": "white dew autumn",
-      "秋分": "autumn equinox",
-      "寒露": "cold dew autumn",
-      "霜降": "frost descent autumn",
-      "立冬": "winter beginning snow",
-      "小雪": "light snow winter",
-      "大雪": "heavy snow winter",
-      "冬至": "winter solstice",
-      "小寒": "minor cold winter",
-      "大寒": "major cold winter",
-    },
-    "节日": {
-      "春节": "Chinese New Year red lanterns celebration",
-      "元宵": "Lantern Festival lanterns",
-      "清明": "Qingming Festival tomb sweeping",
-      "端午": "Dragon Boat Festival rice dumpling zongzi",
-      "中秋": "Mid-Autumn Festival moon mooncake",
-      "重阳": "Double Ninth Festival chrysanthemum",
-      "七夕": "Qixi Festival Chinese Valentine",
-      "腊八": "Laba Festival congee",
-    },
-    "诗词": {
-      "静夜思": "moon night sky moonlight poetry",
-      "水调歌头": "full moon night Chinese poetry",
-      "将进酒": "Chinese wine ancient poetry",
-      "出师表": "ancient Chinese scroll calligraphy",
-      "春晓": "spring morning flowers birds",
-      "登鹳雀楼": "ancient Chinese tower landscape",
-      "悯农": "farming agriculture field rice",
-      "咏鹅": "white goose water pond",
-      "望庐山瀑布": "waterfall mountain landscape",
-      "早发白帝城": "river landscape ancient China",
-    },
-    "典籍": {
-      "论语": "Confucius ancient Chinese book",
-      "诗经": "Book of Songs ancient Chinese poetry",
-      "道德经": "Tao Te Ching ancient philosophy",
-      "黄帝内经": "Chinese medicine ancient book",
-      "周易": "I Ching ancient divination",
-      "楚辞": "Chu Ci ancient poetry",
-    },
-    "非遗": {
-      "昆曲": "Kunqu opera Chinese traditional",
-      "青花瓷": "blue and white porcelain China",
-      "景泰蓝": "cloisonne enamel art",
-      "剪纸": "Chinese paper cutting art",
-      "刺绣": "Chinese embroidery silk",
-      "皮影戏": "Chinese shadow puppetry",
-    },
-    "民俗": {
-      "茶事": "Chinese tea ceremony teapot",
-      "中国礼": "Chinese etiquette ceremony",
-      "对联": "Chinese couplets calligraphy",
-      "风水": "feng shui traditional Chinese",
-      "书法": "Chinese calligraphy brush",
-      "国画": "Chinese painting landscape",
-      "围棋": "Go game Weiqi board",
-    },
-    "人物": {
-      "李白": "ancient Chinese poet Li Bai",
-      "杜甫": "ancient Chinese poet Du Fu",
-      "苏轼": "ancient Chinese scholar Su Shi",
-      "李清照": "ancient Chinese poetess",
-      "孔子": "Confucius Chinese philosopher",
-      "庄子": "Zhuangzi Chinese philosophy",
-      "王羲之": "Chinese calligrapher",
-      "唐寅": "Tang Yin ancient painter",
-    },
-  };
-
-  if (queries[category] && queries[category][title]) {
-    return queries[category][title];
-  }
-
-  const categoryDefaults: Record<string, string> = {
-    "节气": "Chinese solar term",
-    "节日": "Chinese traditional festival",
-    "诗词": "Chinese poetry",
-    "典籍": "ancient Chinese book",
-    "非遗": "Chinese intangible cultural heritage",
-    "民俗": "Chinese folk custom",
-    "人物": "ancient Chinese scholar",
-  };
-
-  return categoryDefaults[category] || `Chinese culture ${title}`;
-}
-
 export function KnowledgeGallery() {
   const [cat, setCat] = useState<"全部" | string>("全部");
   const [q, setQ] = useState("");
@@ -128,8 +24,15 @@ export function KnowledgeGallery() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
-  const [imageLoading, setImageLoading] = useState<Set<string>>(new Set());
+
+  // 获取文章对应的静态图片URL
+  const getStaticImageUrl = (title: string): string | null => {
+    return STATIC_IMAGE_MAP[title] || null;
+  };
+
+  const handleImageError = (articleId: string) => {
+    setImageErrors(prev => new Set([...prev, articleId]));
+  };
 
   // Fetch articles from Supabase
   useEffect(() => {
@@ -162,48 +65,6 @@ export function KnowledgeGallery() {
     };
     fetchArticles();
   }, []);
-
-  const handleImageError = (articleId: string) => {
-    setImageErrors(prev => new Set([...prev, articleId]));
-    setImageLoading(prev => new Set([...prev].filter(id => id !== articleId)));
-  };
-
-  // 动态获取图片URL
-  const fetchImageUrl = async (articleId: string, title: string, category: string) => {
-    if (imageUrls[articleId] || imageErrors.has(articleId)) return;
-
-    setImageLoading(prev => new Set([...prev, articleId]));
-
-    try {
-      // 传递中文标题，让 API 端做精确映射
-      const response = await fetch(`/api/search-image?q=${encodeURIComponent(title)}`);
-      const data = await response.json();
-
-      if (data.url && data.url.trim() !== "") {
-        setImageUrls(prev => ({ ...prev, [articleId]: data.url }));
-      } else {
-        // API 返回空 URL，标记为错误以显示 emoji fallback
-        setImageErrors(prev => new Set([...prev, articleId]));
-      }
-    } catch (error) {
-      console.error(`Failed to fetch image for ${title}:`, error);
-      // 请求失败也标记为错误
-      setImageErrors(prev => new Set([...prev, articleId]));
-    } finally {
-      setImageLoading(prev => new Set([...prev].filter(id => id !== articleId)));
-    }
-  };
-
-  // 在文章加载完成后批量获取图片
-  useEffect(() => {
-    if (!loading && items.length > 0) {
-      items.forEach(item => {
-        if (!imageUrls[item.id] && !imageErrors.has(item.id) && !imageLoading.has(item.id)) {
-          fetchImageUrl(item.id, item.title, item.category);
-        }
-      });
-    }
-  }, [loading, items, imageUrls, imageErrors, imageLoading]);
 
   // Use Supabase data if available, otherwise fallback to static data
   const displayArticles = useMemo(() => {
@@ -331,36 +192,41 @@ export function KnowledgeGallery() {
                   }}
                 />
                 
-                {/* 动态获取图片 */}
-                {!imageErrors.has(item.id) ? (
-                  <>
-                    {imageUrls[item.id] ? (
-                      <img
-                        src={imageUrls[item.id]}
-                        alt={item.title}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={() => handleImageError(item.id)}
-                        loading="lazy"
-                      />
-                    ) : (
+                {/* 静态图片 + emoji fallback */}
+                {(() => {
+                  const staticUrl = getStaticImageUrl(item.title);
+                  const hasError = imageErrors.has(item.id);
+                  const emoji = isDb ? (item.cover || "📜") : (item as Article).cover;
+                  
+                  if (staticUrl && !hasError) {
+                    return (
+                      <>
+                        <img
+                          src={staticUrl}
+                          alt={item.title}
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={() => handleImageError(item.id)}
+                          loading="lazy"
+                        />
+                        <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
+                          {item.category}
+                        </span>
+                      </>
+                    );
+                  }
+                  
+                  // 没有静态图片或加载失败，显示 emoji
+                  return (
+                    <>
                       <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
-                        {imageLoading.has(item.id) ? (
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        ) : (
-                          isDb ? (item.cover || "📜") : (item as Article).cover
-                        )}
+                        {emoji}
                       </div>
-                    )}
-
-                    <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
-                      {item.category}
-                    </span>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-7xl">
-                    {isDb ? (item.cover || "📜") : (item as Article).cover}
-                  </div>
-                )}
+                      <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
+                        {item.category}
+                      </span>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* content */}
