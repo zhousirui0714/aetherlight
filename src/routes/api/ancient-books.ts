@@ -1,11 +1,11 @@
 /**
  * 古籍查询 API
- * 
+ *
  * 使用中国哲学书电子化计划 (ctext.org) 的数据
  * 提供古籍原文、翻译、注释查询
  */
 
-import { books } from "@/lib/cultural-knowledge";
+import { createFileRoute } from "@tanstack/react-router";
 
 interface BookContent {
   title: string;
@@ -241,68 +241,74 @@ const ancientBooks: Record<string, BookContent> = {
 // 搜索古籍
 function searchBooks(query: string): BookContent | null {
   const normalizedQuery = query.toLowerCase().replace(/[《》]/g, "");
-  
+
   // 精确匹配
   for (const [key, book] of Object.entries(ancientBooks)) {
     if (key.includes(normalizedQuery) || book.title.includes(normalizedQuery)) {
       return book;
     }
   }
-  
+
   // 模糊匹配
   for (const [key, book] of Object.entries(ancientBooks)) {
-    if (key.includes(normalizedQuery) || 
+    if (key.includes(normalizedQuery) ||
         book.title.includes(normalizedQuery) ||
         (book.author && book.author.includes(normalizedQuery))) {
       return book;
     }
   }
-  
+
   return null;
 }
 
-export async function GET(request: Request): Promise<Response> {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q") || searchParams.get("query") || searchParams.get("title");
-  
-  if (!query) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: "请提供查询参数：q, query 或 title"
-    } as QueryResult), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  
-  try {
-    const result = searchBooks(query);
-    
-    if (result) {
-      return new Response(JSON.stringify({
-        success: true,
-        data: result
-      } as QueryResult), {
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: `未找到古籍：${query}`
-    } as QueryResult), {
-      status: 404,
-      headers: { "Content-Type": "application/json" }
-    });
-    
-  } catch (error) {
-    console.error("古籍查询错误:", error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: "服务器内部错误"
-    } as QueryResult), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-}
+export const Route = createFileRoute("/api/ancient-books")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        const { searchParams } = new URL(request.url);
+        const query = searchParams.get("q") || searchParams.get("query") || searchParams.get("title");
+
+        if (!query) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: "请提供查询参数：q, query 或 title"
+          } as QueryResult), {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        try {
+          const result = searchBooks(query);
+
+          if (result) {
+            return new Response(JSON.stringify({
+              success: true,
+              data: result
+            } as QueryResult), {
+              headers: { "Content-Type": "application/json" }
+            });
+          }
+
+          return new Response(JSON.stringify({
+            success: false,
+            error: `未找到古籍：${query}`
+          } as QueryResult), {
+            status: 404,
+            headers: { "Content-Type": "application/json" }
+          });
+
+        } catch (error) {
+          console.error("古籍查询错误:", error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: "服务器内部错误"
+          } as QueryResult), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+      },
+    },
+  },
+});

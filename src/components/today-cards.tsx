@@ -769,17 +769,17 @@ export function TodayCards() {
     
     switch (item.category) {
       case "节气":
-        return `${cleanTitle} 节气 中国传统文化`;
+        return `${cleanTitle}`;
       case "诗词":
-        return `${cleanTitle} 古诗 书法`;
+        return `${cleanTitle}`;
       case "人物":
-        return `${cleanTitle} 古代人物 画像`;
+        return `${cleanTitle}`;
       case "非遗":
-        return `${cleanTitle} 传统文化 非遗`;
+        return `${cleanTitle}`;
       case "典故":
-        return `${cleanTitle} 中国典故 传统`;
+        return `${cleanTitle}`;
       default:
-        return `${cleanTitle} 中国传统文化`;
+        return `${cleanTitle}`;
     }
   };
 
