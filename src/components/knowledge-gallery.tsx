@@ -179,15 +179,31 @@ export function KnowledgeGallery() {
       const response = await fetch(`/api/search-image?q=${encodeURIComponent(title)}`);
       const data = await response.json();
 
-      if (data.url) {
+      if (data.url && data.url.trim() !== "") {
         setImageUrls(prev => ({ ...prev, [articleId]: data.url }));
+      } else {
+        // API 返回空 URL，标记为错误以显示 emoji fallback
+        setImageErrors(prev => new Set([...prev, articleId]));
       }
     } catch (error) {
       console.error(`Failed to fetch image for ${title}:`, error);
+      // 请求失败也标记为错误
+      setImageErrors(prev => new Set([...prev, articleId]));
     } finally {
       setImageLoading(prev => new Set([...prev].filter(id => id !== articleId)));
     }
   };
+
+  // 在文章加载完成后批量获取图片
+  useEffect(() => {
+    if (!loading && items.length > 0) {
+      items.forEach(item => {
+        if (!imageUrls[item.id] && !imageErrors.has(item.id) && !imageLoading.has(item.id)) {
+          fetchImageUrl(item.id, item.title, item.category);
+        }
+      });
+    }
+  }, [loading, items, imageUrls, imageErrors, imageLoading]);
 
   // Use Supabase data if available, otherwise fallback to static data
   const displayArticles = useMemo(() => {
@@ -327,21 +343,15 @@ export function KnowledgeGallery() {
                         loading="lazy"
                       />
                     ) : (
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110"
-                        onLoad={() => fetchImageUrl(item.id, item.title, item.category)}
-                      >
+                      <div className="absolute inset-0 flex items-center justify-center text-7xl transition-transform duration-500 group-hover:scale-110">
                         {imageLoading.has(item.id) ? (
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         ) : (
-                          <>
-                            {fetchImageUrl(item.id, item.title, item.category)}
-                            {isDb ? (item.cover || "📜") : (item as Article).cover}
-                          </>
+                          isDb ? (item.cover || "📜") : (item as Article).cover
                         )}
                       </div>
                     )}
-                    
+
                     <span className="absolute left-3 top-3 rounded-full bg-background/80 px-2.5 py-0.5 text-[10px] font-serif tracking-widest text-accent backdrop-blur">
                       {item.category}
                     </span>

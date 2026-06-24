@@ -8,114 +8,114 @@ interface CacheEntry {
 const imageCache = new Map<string, CacheEntry>();
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24小时缓存
 
-// 精确的 Wikipedia 页面映射（标题 -> Wikipedia 页面标题）
+// 精确的中文 Wikipedia 页面映射（标题 -> 中文 Wikipedia 页面标题）
 const wikipediaPageMap: Record<string, string> = {
   // 节气
-  "立春：东风解冻": "Beginning_of_Spring",
-  "雨水：润物细无声": "Rain_Water",
-  "惊蛰：春雷初响": "Awakening_of_Insects",
-  "春分：昼夜平分": "Vernal_Equinox",
-  "清明：踏青扫墓": "Qingming_Festival",
-  "谷雨：雨生百谷": "Grain_Rain",
-  "立夏": "Beginning_of_Summer",
-  "小满": "Lesser_Fullness_of_Grain",
-  "芒种": "Grain_in_Ear",
-  "夏至": "Summer_Solstice",
-  "小暑": "Lesser_Heat",
-  "大暑": "Greater_Heat",
-  "立秋": "Beginning_of_Autumn",
-  "处暑": "End_of_Heat",
-  "白露": "White_Dew",
-  "寒露": "Cold_Dew",
-  "霜降": "Frost's_Descent",
-  "立冬": "Beginning_of_Winter",
-  "小雪": "Lesser_Snow",
-  "大雪": "Greater_Snow",
-  "冬至": "Winter_Solstice",
-  "小寒": "Lesser_Cold",
-  "大寒": "Greater_Cold",
+  "立春：东风解冻": "立春",
+  "雨水：润物细无声": "雨水",
+  "惊蛰：春雷初响": "惊蛰",
+  "春分：昼夜平分": "春分",
+  "清明：踏青扫墓": "清明节",
+  "谷雨：雨生百谷": "谷雨",
+  "立夏": "立夏",
+  "小满": "小满",
+  "芒种": "芒种",
+  "夏至": "夏至",
+  "小暑": "小暑",
+  "大暑": "大暑",
+  "立秋": "立秋",
+  "处暑": "处暑",
+  "白露": "白露",
+  "寒露": "寒露",
+  "霜降": "霜降",
+  "立冬": "立冬",
+  "小雪": "小雪",
+  "大雪": "大雪",
+  "冬至": "冬至",
+  "小寒": "小寒",
+  "大寒": "大寒",
   // 节日
-  "端午：汨罗江畔的千年追思": "Dragon_Boat_Festival",
-  "中秋：月圆人团圆": "Mid-Autumn_Festival",
-  "重阳：登高望远": "Double_Ninth_Festival",
-  "春节：辞旧迎新": "Chinese_New_Year",
-  "清明：慎终追远": "Qingming_Festival",
-  "端午": "Dragon_Boat_Festival",
-  "中秋": "Mid-Autumn_Festival",
-  "重阳": "Double_Ninth_Festival",
-  "春节": "Chinese_New_Year",
-  "元宵": "Lantern_Festival",
-  "七夕": "Qixi_Festival",
-  "腊八": "Laba_Festival",
+  "端午：汨罗江畔的千年追思": "端午节",
+  "中秋：月圆人团圆": "中秋节",
+  "重阳：登高望远": "重阳节",
+  "春节：辞旧迎新": "春节",
+  "清明：慎终追远": "清明节",
+  "端午": "端午节",
+  "中秋": "中秋节",
+  "重阳": "重阳节",
+  "春节": "春节",
+  "元宵": "元宵节",
+  "七夕": "七夕节",
+  "腊八": "腊八节",
   // 诗词
-  "静夜思·李白": "Quiet_Night_Thoughts",
-  "水调歌头·明月几时有": "Shuidiao_Getou",
-  "将进酒·李白": "Qiang_Jin_Jiu",
-  "出师表·诸葛亮": "Chu_Shi_Biao",
-  "静夜思": "Quiet_Night_Thoughts",
-  "水调歌头": "Shuidiao_Getou",
-  "将进酒": "Qiang_Jin_Jiu",
-  "出师表": "Chu_Shi_Biao",
-  "春晓": "Spring_Dawn",
-  "登鹳雀楼": "Climbing_Stork_Tower",
-  "悯农": "Pity_the_Peasants",
-  "咏鹅": "Ode_to_the_Goose",
-  "望庐山瀑布": "Viewing_the_Waterfall_at_Mount_Lu",
-  "早发白帝城": "Departing_from_Baidi_Town_at_Dawn",
+  "静夜思·李白": "静夜思",
+  "水调歌头·明月几时有": "水调歌头·明月几时有",
+  "将进酒·李白": "将进酒",
+  "出师表·诸葛亮": "出师表",
+  "静夜思": "静夜思",
+  "水调歌头": "水调歌头·明月几时有",
+  "将进酒": "将进酒",
+  "出师表": "出师表",
+  "春晓": "春晓",
+  "登鹳雀楼": "登鹳雀楼",
+  "悯农": "悯农",
+  "咏鹅": "咏鹅",
+  "望庐山瀑布": "望庐山瀑布",
+  "早发白帝城": "早发白帝城",
   // 典籍
-  "《论语》：半部治天下": "Analerta",
-  "《诗经》：风雅颂的源头": "Classic_of_Poetry",
-  "《道德经》：道法自然": "Tao_Te_Ching",
-  "《黄帝内经》：中医之祖": "Huangdi_Nejing",
-  "论语": "Analerta",
-  "诗经": "Classic_of_Poetry",
-  "道德经": "Tao_Te_Ching",
-  "黄帝内经": "Huangdi_Nejing",
-  "周易": "I_Ching",
-  "楚辞": "Chu_Ci",
+  "《论语》：半部治天下": "论语",
+  "《诗经》：风雅颂的源头": "诗经",
+  "《道德经》：道法自然": "道德经",
+  "《黄帝内经》：中医之祖": "黄帝内经",
+  "论语": "论语",
+  "诗经": "诗经",
+  "道德经": "道德经",
+  "黄帝内经": "黄帝内经",
+  "周易": "周易",
+  "楚辞": "楚辞",
   // 非遗
-  "昆曲：百戏之祖": "Kunqu",
-  "青花瓷：景德镇的蓝白韵律": "Blue_and_white_porcelain",
-  "景泰蓝：皇家工艺": "Cloisonné",
-  "剪纸：纸上生花": "Chinese_paper_cutting",
-  "昆曲": "Kunqu",
-  "青花瓷": "Blue_and_white_porcelain",
-  "景泰蓝": "Cloisonné",
-  "剪纸": "Chinese_paper_cutting",
-  "刺绣": "Chinese_embroidery",
-  "皮影戏": "Shadow_play",
+  "昆曲：百戏之祖": "昆曲",
+  "青花瓷：景德镇的蓝白韵律": "青花瓷",
+  "景泰蓝：皇家工艺": "景泰蓝",
+  "剪纸：纸上生花": "剪纸",
+  "昆曲": "昆曲",
+  "青花瓷": "青花瓷",
+  "景泰蓝": "景泰蓝",
+  "剪纸": "剪纸",
+  "刺绣": "刺绣",
+  "皮影戏": "皮影戏",
   // 民俗
-  "茶事：一盏清欢": "Chinese_tea_culture",
-  "中国礼：礼仪之邦": "Chinese_etiquette",
-  "对联：楹联艺术": "Chinese_couplet",
-  "风水：天人合一": "Feng_shui",
-  "茶事": "Chinese_tea_culture",
-  "中国礼": "Chinese_etiquette",
-  "对联": "Chinese_couplet",
-  "风水": "Feng_shui",
-  "书法": "Chinese_calligraphy",
-  "国画": "Chinese_painting",
-  "围棋": "Go_(game)",
+  "茶事：一盏清欢": "中国茶文化",
+  "中国礼：礼仪之邦": "中国礼仪",
+  "对联：楹联艺术": "对联",
+  "风水：天人合一": "风水",
+  "茶事": "中国茶文化",
+  "中国礼": "中国礼仪",
+  "对联": "对联",
+  "风水": "风水",
+  "书法": "中国书法",
+  "国画": "中国画",
+  "围棋": "围棋",
   // 人物
-  "苏东坡：也无风雨也无晴": "Su_Shi",
-  "李白：诗仙醉月": "Li_Bai",
-  "孔子：万世师表": "Confucius",
-  "庄子：逍遥游": "Zhuang_Zhou",
-  "王羲之：书圣": "Wang_Xizhi",
-  "李清照：千古第一才女": "Li_Qingzhao",
-  "苏东坡": "Su_Shi",
-  "李白": "Li_Bai",
-  "杜甫": "Du_Fu",
-  "白居易": "Bai_Juyi",
-  "苏轼": "Su_Shi",
-  "王维": "Wang_Wei",
-  "屈原": "Qu_Yuan",
-  "陆游": "Lu_You",
-  "孔子": "Confucius",
-  "庄子": "Zhuang_Zhou",
-  "王羲之": "Wang_Xizhi",
-  "李清照": "Li_Qingzhao",
-  "唐寅": "Tang_Yin",
+  "苏东坡：也无风雨也无晴": "苏轼",
+  "李白：诗仙醉月": "李白",
+  "孔子：万世师表": "孔子",
+  "庄子：逍遥游": "庄子",
+  "王羲之：书圣": "王羲之",
+  "李清照：千古第一才女": "李清照",
+  "苏东坡": "苏轼",
+  "李白": "李白",
+  "杜甫": "杜甫",
+  "白居易": "白居易",
+  "苏轼": "苏轼",
+  "王维": "王维",
+  "屈原": "屈原",
+  "陆游": "陆游",
+  "孔子": "孔子",
+  "庄子": "庄子",
+  "王羲之": "王羲之",
+  "李清照": "李清照",
+  "唐寅": "唐寅",
 };
 
 // 中文关键词到英文的映射，提高 Wikimedia 搜索命中率
@@ -249,6 +249,24 @@ function translateQuery(query: string): string {
   return query;
 }
 
+// 从标题中提取核心关键词（去掉副标题、作者等）
+function extractKeyword(title: string): string {
+  // 处理带冒号的标题，如"立春：东风解冻" -> "立春"
+  if (title.includes("：")) {
+    return title.split("：")[0];
+  }
+  // 处理带点的标题，如"静夜思·李白" -> "静夜思"
+  if (title.includes("·")) {
+    return title.split("·")[0];
+  }
+  // 处理带书名号的标题，如"《论语》：半部治天下" -> "论语"
+  if (title.includes("《") && title.includes("》")) {
+    const match = title.match(/《([^》]+)》/);
+    if (match) return match[1];
+  }
+  return title;
+}
+
 // 带超时的 fetch
 async function fetchWithTimeout(url: string, timeoutMs = 10000): Promise<Response> {
   const controller = new AbortController();
@@ -358,10 +376,10 @@ async function searchChineseWikipediaImage(query: string): Promise<string | null
   }
 }
 
-// 方法4：通过精确的 Wikipedia 页面映射获取图片
+// 方法4：通过精确的中文 Wikipedia 页面映射获取图片
 async function getWikipediaPageImage(pageTitle: string): Promise<string | null> {
   try {
-    const imageUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=400&origin=*`;
+    const imageUrl = `https://zh.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=400&origin=*`;
     const imageResponse = await fetchWithTimeout(imageUrl);
     const imageData = await imageResponse.json();
 
@@ -375,7 +393,7 @@ async function getWikipediaPageImage(pageTitle: string): Promise<string | null> 
     }
     return null;
   } catch (error) {
-    console.error("Wikipedia page image error:", error);
+    console.error("Chinese Wikipedia page image error:", error);
     return null;
   }
 }
@@ -421,15 +439,16 @@ export const Route = createFileRoute("/api/search-image")({
           }
         }
 
-        // 如果没有精确映射，使用关键词翻译和搜索
-        const translatedQuery = translateQuery(query);
-
-        // 依次尝试多种图片源
+        // 如果没有精确映射或精确映射失败，优先使用中文关键词搜索
+        // 先提取核心关键词（去掉副标题、作者等）
+        const keyword = extractKeyword(query);
+        
         const imageSources = [
-          () => searchWikimediaCommons(translatedQuery),
-          () => searchWikipediaImage(translatedQuery),
-          () => searchChineseWikipediaImage(query),
-          () => searchWikimediaCommons(query),
+          () => searchChineseWikipediaImage(keyword),  // 优先用关键词在中文 Wikipedia 搜索
+          () => searchWikimediaCommons(keyword),        // 然后用关键词在 Wikimedia 搜索
+          () => searchChineseWikipediaImage(query),     // 再用完整标题搜索
+          () => searchWikimediaCommons(translateQuery(keyword)),  // 最后翻译后英文搜索
+          () => searchWikipediaImage(translateQuery(keyword)),
         ];
 
         for (const searchFn of imageSources) {
