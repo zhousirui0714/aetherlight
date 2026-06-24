@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, ArrowLeft, Calendar, Loader2, Share2 } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
+import { getExpandedContent } from "@/lib/expanded-content";
 import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { trackEvent } from "@/lib/journey-storage";
 import { AnnotationPanel } from "@/components/annotation-panel";
@@ -203,20 +204,49 @@ function ArticlePage() {
             </p>
           </div>
 
-          {/* 正文概述 */}
+          {/* 正文概述 - 优先用百炼 LLM 扩写的深度内容 */}
           <div className="prose prose-lg max-w-none font-serif leading-loose text-foreground/85">
-            {article.body ? (
-              <div className="whitespace-pre-wrap">{article.body}</div>
-            ) : (
-              <div className="space-y-6">
-                <p>
-                  <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
-                    {article.excerpt?.charAt(0) || "溯"}
-                  </span>
-                  {article.content || article.excerpt}
-                </p>
-              </div>
-            )}
+            {(() => {
+              const expanded = getExpandedContent(article.id);
+              if (article.body) {
+                return <div className="whitespace-pre-wrap">{article.body}</div>;
+              }
+              if (expanded) {
+                // 渲染扩写正文：按 \n\n 分段
+                const paragraphs = expanded.content.split(/\n\n+/);
+                return (
+                  <div className="space-y-5">
+                    {paragraphs.map((para, idx) => {
+                      // 提取小标题（【xxx】）
+                      const match = para.match(/^(【[^】]+】)\s*([\s\S]*)$/);
+                      if (match) {
+                        return (
+                          <div key={idx}>
+                            <h3 className="mb-2 mt-6 font-serif text-xl font-semibold text-foreground/90 first:mt-0">
+                              {match[1].replace(/[【】]/g, "")}
+                            </h3>
+                            <p className="leading-loose text-foreground/85">
+                              {match[2].trim()}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return <p key={idx} className="leading-loose text-foreground/85">{para.trim()}</p>;
+                    })}
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-6">
+                  <p>
+                    <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
+                      {article.excerpt?.charAt(0) || "溯"}
+                    </span>
+                    {article.content || article.excerpt}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
 
           {/* AI 深度内容面板 - 包含：出处、历史背景、相关人物/典籍/事件/诗词/推荐、知识图谱、时间线、现代解读、常见问题 */}

@@ -19,6 +19,7 @@ import {
 import type { Article, RelatedItem } from "@/lib/knowledge-data";
 import type { AIInsights, KnowledgeGraph, TimelineEvent, FAQ } from "@/lib/ai-insights-types";
 import { generateAIInsights } from "@/lib/ai-insights-generator";
+import { getExpandedContent } from "@/lib/expanded-content";
 
 interface AIInsightsPanelProps {
   article: Article;
@@ -371,7 +372,7 @@ export function AIInsightsPanel({ article }: AIInsightsPanelProps) {
       )}
 
       {/* 历史背景 */}
-      {article.history && (
+      {displayHistory && (
         <section className="rounded-2xl border border-border bg-card/30 p-6">
           <div className="mb-3 flex items-center gap-2">
             <ScrollTextIcon />
@@ -379,8 +380,8 @@ export function AIInsightsPanel({ article }: AIInsightsPanelProps) {
               历史背景
             </h3>
           </div>
-          <p className="font-serif leading-loose text-foreground/80">
-            {article.history}
+          <p className="font-serif leading-loose text-foreground/80 whitespace-pre-wrap">
+            {displayHistory}
           </p>
         </section>
       )}
@@ -472,6 +473,11 @@ export function AIInsightsPanel({ article }: AIInsightsPanelProps) {
             <p className="font-serif leading-loose text-foreground/85">
               {insights.modernInterpretation.summary}
             </p>
+            {displayInfluence && (
+              <p className="mt-3 font-serif leading-loose text-foreground/85 whitespace-pre-wrap">
+                {displayInfluence}
+              </p>
+            )}
           </div>
           <div>
             <h3 className="mb-2 font-serif text-sm font-semibold tracking-widest text-foreground/70">
