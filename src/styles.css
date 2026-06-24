@@ -7,8 +7,6 @@
 @import "@fontsource/noto-sans-sc/400.css";
 @import "@fontsource/noto-sans-sc/500.css";
 @import "@fontsource/noto-sans-sc/700.css";
-/* zcool-xiaowei 只提供 400 权重 */
-@import "@fontsource/zcool-xiaowei/400.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -123,15 +121,6 @@
   background-image:
     radial-gradient(circle at 20% 30%, color-mix(in oklab, var(--color-bronze) 6%, transparent), transparent 40%),
     radial-gradient(circle at 80% 70%, color-mix(in oklab, var(--color-cinnabar) 4%, transparent), transparent 50%);
-}
-
-/* 瘦金体 logo 书法样式 */
-@utility shoujin {
-  font-family: var(--font-shoujin);
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  color: var(--color-cinnabar);
-  text-shadow: 0.5px 0 0 color-mix(in oklab, var(--color-cinnabar) 80%, transparent);
 }
 
 /* 红印章 */

@@ -66,10 +66,10 @@ export function SiteHeader() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-8 px-6">
-          <Link to="/" className="flex items-baseline gap-2.5 shrink-0">
-            <span className="shoujin text-2xl leading-none">溯光</span>
-            <span className="font-sans text-[10px] tracking-[0.25em] uppercase text-muted-foreground/80 hidden sm:inline">
-              Aetherlight
+          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+            <span className="seal text-sm">溯光</span>
+            <span className="font-serif text-lg tracking-[0.25em] text-foreground/90 hidden sm:inline">
+              溯 · 光
             </span>
           </Link>
 
