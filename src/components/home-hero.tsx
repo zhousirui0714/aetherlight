@@ -11,11 +11,12 @@ function chineseDate(d: Date) {
 }
 
 const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1545569310-29e9e95e2c63?w=1920&q=80",  // 山
-  "https://images.unsplash.com/photo-1565967511849-76a60a516170?w=1920&q=80", // 园林
-  "https://images.unsplash.com/photo-1601124193866-345f0b8b9b85?w=1920&q=80", // 古建筑
-  "https://images.unsplash.com/photo-1606293459339-aa5d34a7b0e1?w=1920&q=80", // 古寺
+  "https://picsum.photos/seed/aetherlight-hero-1/1920/1080", // 山
+  "https://picsum.photos/seed/aetherlight-hero-2/1920/1080", // 园林
+  "https://picsum.photos/seed/aetherlight-hero-3/1920/1080", // 古建筑
+  "https://picsum.photos/seed/aetherlight-hero-4/1920/1080", // 古寺
 ];
+const FALLBACK_IMG = FALLBACK_IMAGES[0];
 
 export function HomeHero() {
   const navigate = useNavigate();
