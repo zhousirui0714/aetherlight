@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 生图水墨风测试 · 溯光 Aetherlight</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Noto Serif SC", "Songti SC", serif;
+      background: #F5F0E8;
+      margin: 0;
+      padding: 40px 20px 60px;
+      color: #2C2C2C;
+    }
+    h1 { text-align: center; font-size: 28px; letter-spacing: 0.3em; margin: 0 0 8px; }
+    .sub { text-align: center; color: #8B7355; font-size: 12px; letter-spacing: 0.4em; margin-bottom: 32px; }
+    .info {
+      max-width: 1200px; margin: 0 auto 32px; padding: 16px 20px;
+      background: rgba(196, 58, 48, 0.06); border-left: 3px solid #C43A30;
+      font-size: 13px; line-height: 1.8; color: #5C4A3A;
+    }
+    .info code { background: rgba(0,0,0,0.05); padding: 1px 6px; border-radius: 3px; font-family: monospace; }
+    .grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: #FFFCF5; border-radius: 12px; overflow: hidden;
+      border: 1px solid #E8DDC8; box-shadow: 0 4px 20px rgba(60, 40, 20, 0.08);
+    }
+    .card .head {
+      padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;
+      background: #F5F0E8; border-bottom: 1px solid #E0D5C0;
+    }
+    .card .head .t { font-weight: 700; letter-spacing: 0.2em; }
+    .card .head .s { font-size: 11px; color: #8B7355; letter-spacing: 0.1em; }
+    .card .img-wrap {
+      aspect-ratio: 4 / 3; background: #F5F0E8; position: relative; overflow: hidden;
+    }
+    .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card .loading {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #8B7355; font-size: 13px; letter-spacing: 0.2em;
+    }
+    .card .prompt {
+      padding: 14px 18px; font-size: 11px; line-height: 1.7; color: #5C4A3A;
+      background: #FFFCF5; border-top: 1px solid #E8DDC8;
+      max-height: 160px; overflow-y: auto;
+    }
+    .card .prompt b { color: #C43A30; }
+    .actions { text-align: center; margin-top: 36px; font-size: 12px; color: #8B7355; }
+  </style>
+</head>
+<body>
+  <h1>AI 生图 · 水墨风测试</h1>
+  <div class="sub">SHU GUANG · INK WASH AI TEST</div>
+
+  <div class="info">
+    <b>说明：</b>使用 <code>pollinations.ai</code>（免费、Flux 模型）测试 4 个不同主题。生成需要 <b>10-30 秒</b>，首次加载可能慢一些。提示词（英文）已写在卡片底部，可点击图片全屏查看。
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="head"><span class="t">静夜思</span><span class="s">SEED 42</span></div>
+      <div class="img-wrap">
+        <div class="loading">生成中…</div>
+        <img loading="eager" alt="静夜思水墨" src="/ai-test/jingyesi.jpg">
+      </div>
+      <div class="prompt">
+        <b>主题：</b>李白《静夜思》<br>
+        <b>画面：</b>留白天空 + 一轮明月 + 右下小茅屋 + 诗人望月 + 远山淡墨<br>
+        <b>风格：</b>宋元山水 + 禅意水墨 + 5-7 灰阶 + 唯一朱砂印章
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><span class="t">山水</span><span class="s">SEED 7</span></div>
+      <div class="img-wrap">
+        <div class="loading">生成中…</div>
+        <img loading="eager" alt="山水水墨" src="/ai-test/landscape.jpg">
+      </div>
+      <div class="prompt">
+        <b>主题：</b>宋元山水<br>
+        <b>画面：</b>层峦叠嶂 + 渔船 + 古松 + 云雾<br>
+        <b>风格：</b>宋元山水 + 水墨晕染 + 5-7 灰阶 + 唯一朱砂印章
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><span class="t">孔子</span><span class="s">SEED 88</span></div>
+      <div class="img-wrap">
+        <div class="loading">生成中…</div>
+        <img loading="eager" alt="孔子水墨"
+             src="https://image.pollinations.ai/prompt/A%20traditional%20Chinese%20ink%20wash%20portrait%20of%20Confucius%20(Kongzi).%20The%20philosopher%20in%20flowing%20Han%20Dynasty%20robes%2C%20gentle%20wise%20expression%2C%20holding%20a%20bamboo%20scroll.%20Painted%20in%20sumi-e%20style%20with%20varying%20ink%20gradients%20from%20light%20to%20dark%2C%20no%20outlines%2C%20rice%20paper%20texture%20background.%20Subtle%20suggestion%20of%20bamboo%20or%20pine%20trees%20in%20background.%20Monochrome%20black%20ink%20with%20one%20small%20vermillion%20red%20seal%20at%20bottom.%20No%20text%2C%20no%20frame%2C%20no%20color.%204%3A3%2C%20ultra%20high%20detail%2C%20museum%20quality%2C%20masterpiece.?width=1024&height=768&seed=88&nologo=true&model=flux"
+             onload="this.previousElementSibling.remove()">
+      </div>
+      <div class="prompt">
+        <b>主题：</b>孔子像<br>
+        <b>画面：</b>汉服长袍 + 持竹简 + 智慧神情 + 背景松竹<br>
+        <b>风格：</b>sumi-e + 墨色渐变 + 朱砂印章
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><span class="t">竹简</span><span class="s">SEED 21</span></div>
+      <div class="img-wrap">
+        <div class="loading">生成中…</div>
+        <img loading="eager" alt="竹简水墨" src="/ai-test/zhujian.jpg">
+      </div>
+      <div class="prompt">
+        <b>主题：</b>古竹简<br>
+        <b>画面：</b>半展竹简 + 古文字墨迹 + 飞鸟停栖<br>
+        <b>风格：</b>极简留白 + 5-7 灰阶 + 朱砂印章
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    ⏳ 图片首次生成需要 10-30 秒 · pollinations.ai 免费 · Flux 模型
+  </div>
+</body>
+</html>
