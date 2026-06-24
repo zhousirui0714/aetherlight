@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>水墨风格插图预览 · 溯光 Aetherlight</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Noto Serif SC", "Songti SC", "STSong", serif;
+      background: #F5F0E8;
+      margin: 0;
+      padding: 40px 20px 60px;
+      color: #2C2C2C;
+    }
+    .header { text-align: center; margin-bottom: 16px; }
+    .header h1 {
+      font-size: 28px; font-weight: 700; letter-spacing: 0.3em; margin: 0;
+    }
+    .header .sub {
+      color: #8B7355; font-size: 12px; letter-spacing: 0.4em;
+      margin-top: 8px;
+    }
+    .colors {
+      display: flex; justify-content: center; gap: 16px; margin: 24px auto 36px;
+      font-size: 11px; color: #8B7355; letter-spacing: 0.1em;
+    }
+    .colors span { display: inline-flex; align-items: center; gap: 6px; }
+    .colors i { width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }
+    .compare {
+      max-width: 980px; margin: 0 auto 16px; padding: 0 8px;
+      text-align: center; font-size: 12px; color: #8B7355; letter-spacing: 0.15em;
+    }
+    .grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+      max-width: 980px; margin: 0 auto;
+    }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      border-radius: 12px; overflow: hidden;
+      background: #FFFCF5;
+      box-shadow: 0 4px 20px rgba(60, 40, 20, 0.08);
+      border: 1px solid #E8DDC8;
+    }
+    .card .label {
+      padding: 10px 16px; font-size: 11px; letter-spacing: 0.3em;
+      background: #EFE7D7; color: #8B7355; text-align: center;
+      border-bottom: 1px solid #E0D5C0;
+    }
+    .card .art { aspect-ratio: 4 / 3; position: relative; overflow: hidden; }
+    .card .title-row {
+      padding: 14px 18px; display: flex; justify-content: space-between; align-items: baseline;
+      border-top: 1px solid #E8DDC8;
+    }
+    .card .title-row .t { font-size: 18px; font-weight: 700; letter-spacing: 0.1em; }
+    .card .title-row .m { font-size: 12px; color: #8B7355; letter-spacing: 0.1em; }
+    /* 旧风格：彩色渐变+emoji */
+    .old-art { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
+    .old-art .glow {
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.2) 0%, transparent 40%);
+    }
+    .old-art .moon { position: absolute; top: 16px; right: 16px; opacity: 0.5; }
+    .old-art .center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .old-art .center span { font-size: 110px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+    .old-art .chip {
+      position: absolute; left: 12px; top: 12px; padding: 2px 10px; border-radius: 99px;
+      background: rgba(255,255,255,0.85); color: #2c3e50; font-size: 11px; letter-spacing: 0.1em;
+      backdrop-filter: blur(4px);
+    }
+    .old-art .mask {
+      position: absolute; inset-inline: 0; bottom: 0; height: 64px;
+      background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>溯光 · 配图风格对比</h1>
+    <div class="sub">SHU GUANG · ILLUSTRATION STYLE PROPOSAL</div>
+    <div class="colors">
+      <span><i style="background:#F5F0E8"></i>宣纸</span>
+      <span><i style="background:#2C2C2C"></i>墨色</span>
+      <span><i style="background:#C43A30"></i>朱砂</span>
+      <span><i style="background:#B8860B"></i>铜金</span>
+    </div>
+    <div class="compare">左：当前 ArticleIllustration（彩色渐变+emoji） / 右：新方案（水墨+题字+印章）</div>
+  </div>
+
+  <div class="grid">
+    <!-- 旧风格 -->
+    <div class="card">
+      <div class="label">CURRENT · 当前风格</div>
+      <div class="art old-art">
+        <div class="glow"></div>
+        <div class="chip">诗词文学</div>
+        <svg class="moon" width="64" height="64" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="30" fill="#f1c40f" />
+          <circle cx="60" cy="45" r="28" fill="rgba(255,255,255,0.3)" />
+        </svg>
+        <div class="center"><span>🌙</span></div>
+        <div class="mask"></div>
+      </div>
+      <div class="title-row">
+        <div class="t">静夜思</div>
+        <div class="m">唐 · 李白</div>
+      </div>
+    </div>
+
+    <!-- 新水墨风格 -->
+    <div class="card">
+      <div class="label" style="background:#F5F0E8; color:#C43A30; border-color:#C43A30;">PROPOSAL · 新中式水墨</div>
+      <div class="art" style="background:#F5F0E8;">
+        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; display:block;">
+          <defs>
+            <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F5F0E8" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#F5F0E8" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="rough">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" />
+              <feDisplacementMap in="SourceGraphic" scale="2" />
+            </filter>
+          </defs>
+
+          <!-- 雾气 -->
+          <rect x="0" y="100" width="400" height="80" fill="url(#mist)"/>
+
+          <!-- 远山：极淡墨 -->
+          <path d="M 0 175 Q 60 135 120 150 T 220 145 Q 280 135 340 152 T 400 148 L 400 220 L 0 220 Z"
+                fill="#2C2C2C" opacity="0.12"/>
+          <!-- 中山：淡墨 -->
+          <path d="M 0 205 Q 80 175 160 195 Q 230 210 290 198 Q 350 188 400 210 L 400 240 L 0 240 Z"
+                fill="#2C2C2C" opacity="0.28"/>
+          <!-- 近山：墨色 -->
+          <path d="M 0 235 Q 100 222 200 232 Q 300 245 400 240 L 400 300 L 0 300 Z"
+                fill="#2C2C2C" opacity="0.5"/>
+
+          <!-- 月亮 - 朱砂圆 -->
+          <circle cx="315" cy="70" r="34" fill="#C43A30" opacity="0.88"/>
+          <circle cx="324" cy="65" r="29" fill="#F5F0E8" opacity="0.25"/>
+
+          <!-- 水面波纹 -->
+          <path d="M 30 270 Q 50 265 70 270 T 110 270" stroke="#2C2C2C" stroke-width="0.8" fill="none" opacity="0.35"/>
+          <path d="M 140 280 Q 160 275 180 280 T 220 280" stroke="#2C2C2C" stroke-width="0.8" fill="none" opacity="0.3"/>
+          <path d="M 250 268 Q 270 263 290 268 T 330 268" stroke="#2C2C2C" stroke-width="0.8" fill="none" opacity="0.35"/>
+          <path d="M 50 285 Q 70 280 90 285 T 130 285" stroke="#2C2C2C" stroke-width="0.6" fill="none" opacity="0.25"/>
+
+          <!-- 飞鸟 -->
+          <path d="M 90 95 Q 95 90 100 95 M 100 95 Q 105 90 110 95" stroke="#2C2C2C" stroke-width="1.3" fill="none" opacity="0.55" stroke-linecap="round"/>
+          <path d="M 130 115 Q 135 110 140 115 M 140 115 Q 145 110 150 115" stroke="#2C2C2C" stroke-width="1.1" fill="none" opacity="0.45" stroke-linecap="round"/>
+          <path d="M 60 130 Q 64 126 68 130 M 68 130 Q 72 126 76 130" stroke="#2C2C2C" stroke-width="1" fill="none" opacity="0.4" stroke-linecap="round"/>
+
+          <!-- 题字 - 朱砂竖排 -->
+          <text x="32" y="48" font-family="'Noto Serif SC','Songti SC',serif" font-size="34" font-weight="900" fill="#C43A30" letter-spacing="6">静夜思</text>
+          <!-- 副标题 -->
+          <text x="32" y="68" font-family="'Noto Serif SC',serif" font-size="10" fill="#8B7355" letter-spacing="3">唐 · 李白</text>
+
+          <!-- 印章 - 朱砂方块 -->
+          <rect x="338" y="238" width="34" height="34" fill="#C43A30"/>
+          <text x="355" y="262" text-anchor="middle" font-family="'Noto Serif SC',serif" font-size="20" font-weight="900" fill="#F5F0E8">诗</text>
+
+          <!-- 分类 chip -->
+          <rect x="14" y="14" width="58" height="20" rx="10" fill="none" stroke="#C43A30" stroke-width="0.6" opacity="0.7"/>
+          <text x="43" y="28" text-anchor="middle" font-family="'Noto Serif SC',serif" font-size="10" fill="#C43A30" letter-spacing="2">诗词</text>
+        </svg>
+      </div>
+      <div class="title-row">
+        <div class="t">静夜思</div>
+        <div class="m">唐 · 李白</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:980px; margin:36px auto 0; padding:0 8px; font-size:12px; color:#8B7355; line-height:1.9; text-align:center;">
+    <p>设计要点：宣纸底（#F5F0E8）· 三层墨色远山（0.12 / 0.28 / 0.5 透明度）· 朱砂月（#C43A30）· 题字「静夜思」 · 朱砂方印「诗」 · 飞鸟 + 水波留白</p>
+  </div>
+</body>
+</html>
