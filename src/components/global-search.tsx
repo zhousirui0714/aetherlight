@@ -5,6 +5,7 @@ import { persons, type Person } from "@/lib/cultural-knowledge";
 import { supabase } from "@/integrations/supabase/client";
 import { listCreations, type CreationItem } from "@/lib/creation-storage";
 import { ARTICLES } from "@/lib/knowledge-data";
+import { semanticSearch } from "@/lib/semantic-search";
 
 export interface SearchResult {
   id: string;
@@ -25,9 +26,9 @@ const CACHE_TTL = 60000;
 
 export async function searchAll(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return [];
-  
+
   const lowerQuery = query.toLowerCase();
-  
+
   // 检查缓存
   const cached = cache.get(lowerQuery);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -36,68 +37,67 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
 
   const results: SearchResult[] = [];
 
-  // 搜索人物
-  Object.entries(persons).forEach(([key, person]) => {
-    if (
-      person.name.includes(query) ||
-      person.description.toLowerCase().includes(lowerQuery) ||
-      person.works?.some((w: string) => w.includes(query)) ||
-      key.toLowerCase().includes(lowerQuery)
-    ) {
-      results.push({
-        id: key,
-        type: "person",
-        title: person.name,
-        subtitle: person.dynasty,
-        description: person.description.slice(0, 100) + "...",
-      });
-    }
+  // ========== 1. 人物语义搜索 ==========
+  const personEntries = Object.entries(persons);
+  const personCandidates = personEntries.map(([key, person]) => {
+    const text = `${person.name} ${person.dynasty} ${person.description} ${(person.works || []).join(" ")} ${key}`;
+    return { key, person, text };
+  });
+  const personHits = await semanticSearch(query, personCandidates, ["text"], { useAI: true, topK: 6, threshold: 0.18 });
+  personHits.forEach(({ item, score }) => {
+    results.push({
+      id: item.key,
+      type: "person",
+      title: item.person.name,
+      subtitle: `${item.person.dynasty} · 匹配度 ${(score * 100).toFixed(0)}%`,
+      description: item.person.description.slice(0, 100) + "...",
+    });
   });
 
-  // 搜索知识文章
-  ARTICLES.forEach((article) => {
-    if (
-      article.title.toLowerCase().includes(lowerQuery) ||
-      article.excerpt.toLowerCase().includes(lowerQuery) ||
-      article.category.toLowerCase().includes(lowerQuery)
-    ) {
-      results.push({
-        id: article.id,
-        type: "article",
-        title: article.title,
-        subtitle: article.category,
-        description: article.excerpt.slice(0, 100) + "...",
-      });
-    }
+  // ========== 2. 知识文章语义搜索 ==========
+  const articleHits = await semanticSearch(
+    query,
+    ARTICLES,
+    ["title", "excerpt", "category"],
+    { useAI: true, topK: 10, threshold: 0.18 }
+  );
+  articleHits.forEach(({ item, score }) => {
+    results.push({
+      id: item.id,
+      type: "article",
+      title: item.title,
+      subtitle: `${item.category} · 匹配度 ${(score * 100).toFixed(0)}%`,
+      description: item.excerpt.slice(0, 100) + "...",
+    });
   });
 
-  // 搜索概念/知识
+  // ========== 3. 概念/知识 ==========
   const concepts = [
     { id: "fengyasa", title: "风雅颂", description: "《诗经》的三种体制分类" },
     { id: "liuyi", title: "六义", description: "《诗经》的六种表现手法" },
     { id: "kunqu", title: "昆曲", description: "百戏之祖，中国最古老的戏曲剧种" },
     { id: "chinese-culture", title: "中华传统文化", description: "诗词歌赋、琴棋书画、传统节日等" },
   ];
-  
-  concepts.forEach((c) => {
-    if (c.title.includes(query) || c.description.includes(query)) {
-      results.push({
-        id: c.id,
-        type: "knowledge",
-        title: c.title,
-        description: c.description,
-      });
-    }
+
+  const conceptHits = await semanticSearch(query, concepts, ["title", "description"], { useAI: true, topK: 4, threshold: 0.2 });
+  conceptHits.forEach(({ item, score }) => {
+    results.push({
+      id: item.id,
+      type: "knowledge",
+      title: item.title,
+      subtitle: `匹配度 ${(score * 100).toFixed(0)}%`,
+      description: item.description,
+    });
   });
 
-  // 搜索社区帖子（异步）
+  // ========== 4. 社区帖子（DB，仍用 ILIKE） ==========
   try {
     const { data: posts } = await supabase
       .from("community_posts")
       .select("id, title, content, category")
       .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
       .limit(5);
-    
+
     if (posts) {
       posts.forEach((post: any) => {
         results.push({
