@@ -45,13 +45,13 @@ function FavoritesPage() {
   };
 
   const handleItemClick = (item: FavoriteItem) => {
-    if (item.item_type === "person") {
-      navigate({ to: "/chat", search: { q: item.title } });
-    } else if (item.item_type === "knowledge") {
-      navigate({ to: "/chat", search: { q: item.title } });
-    } else if (item.item_type === "poetry") {
-      navigate({ to: "/chat", search: { q: item.title } });
+    // 知识/诗词 → 详情页（诗词也归在 knowledge 收藏里）
+    if (item.item_type === "knowledge" || item.item_type === "poetry") {
+      navigate({ to: "/article/$id", params: { id: item.item_id } });
+    } else if (item.item_type === "person") {
+      navigate({ to: "/dialogue" });
     } else {
+      // quote 等其他类型 → 跳到 AI 问答
       navigate({ to: "/chat", search: { q: item.title } });
     }
   };

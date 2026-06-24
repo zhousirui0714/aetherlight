@@ -18,10 +18,9 @@ const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/create"; label: st
   { to: "/create", label: "艺创工坊" },
 ];
 
-const COMMUNITY_ITEMS: { to: "/community" | "/qa-square" | "/challenge"; label: string; icon: typeof MessageSquare; desc: string }[] = [
-  { to: "/community", label: "社区", icon: Users, desc: "用户分享与讨论" },
-  { to: "/qa-square", label: "问答广场", icon: MessageSquare, desc: "提问与答题" },
-  { to: "/challenge", label: "打卡", icon: Calendar, desc: "诗词打卡挑战" },
+const COMMUNITY_ITEMS: { to: "/tongyou/community" | "/tongyou/challenge"; label: string; icon: typeof MessageSquare; desc: string }[] = [
+  { to: "/tongyou/community", label: "社区", icon: Users, desc: "用户分享与讨论" },
+  { to: "/tongyou/challenge", label: "打卡", icon: Calendar, desc: "诗词打卡挑战" },
 ];
 
 export function SiteHeader() {
@@ -29,10 +28,7 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isCommunityActive =
-    pathname.startsWith("/community") ||
-    pathname.startsWith("/qa-square") ||
-    pathname.startsWith("/challenge");
+  const isCommunityActive = pathname.startsWith("/tongyou");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);

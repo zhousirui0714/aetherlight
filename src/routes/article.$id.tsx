@@ -12,6 +12,7 @@ import { AnnotationPanel } from "@/components/annotation-panel";
 import { AIInsightsPanel } from "@/components/ai-insights-panel";
 import { ArticleRelatedGraph } from "@/components/article-related-graph";
 import { FullTextPanel } from "@/components/full-text-panel";
+import { ShareCardButton } from "@/components/share-card-button";
 import { aiFillArticle, type ArticleDetail } from "@/lib/knowledge-api";
 import { toast } from "sonner";
 
@@ -402,8 +403,19 @@ function ArticlePage() {
                 }}
                 className="flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
               >
-                <Share2 className="h-4 w-4" /> 分享
+                <Share2 className="h-4 w-4" /> 分享链接
               </button>
+              <ShareCardButton
+                data={{
+                  title: article.title,
+                  category: String(article.category || "知识"),
+                  dynasty: (article as any).dynasty || (article as any).era || undefined,
+                  excerpt: article.excerpt || "",
+                  author: article.author || undefined,
+                  articleUrl: typeof window !== "undefined" ? window.location.href : "",
+                  coverEmoji: article.cover,
+                }}
+              />
             </div>
             <button
               onClick={() => navigate({ to: "/chat", search: { q: article.title } })}

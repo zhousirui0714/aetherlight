@@ -50,6 +50,7 @@ export function KnowledgeGallery() {
   const [q, setQ] = useState("");
   const [articles, setArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
   // Fetch articles from Supabase
   useEffect(() => {
@@ -78,6 +79,21 @@ export function KnowledgeGallery() {
   useEffect(() => {
     setSubCat("");
   }, [cat]);
+
+  // 加载收藏 ID 集合（用于角标显示）
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      const list = await loadAllFavorites();
+      setFavoritedIds(new Set(list.map(f => f.item_id)));
+    };
+    fetchFavorites();
+    // 监听跨 tab 的收藏变化
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "suguang:favorites") fetchFavorites();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const displayArticles = useMemo(() => {
     const k = q.trim().toLowerCase();
