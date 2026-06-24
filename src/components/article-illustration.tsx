@@ -38,7 +38,7 @@ const CATEGORY_THEMES: Record<string, {
   accentColor: string;
   decorativeElements: (title: string) => React.ReactNode;
 }> = {
-  "节气": {
+  "节日节气": {
     bgGradient: "linear-gradient(135deg, #a8e6cf 0%, #dcedc1 50%, #ffd3b6 100%)",
     pattern: "radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 40%)",
     accentColor: "#4a7c59",
@@ -120,7 +120,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "节日": {
+  "节日节气": {
     bgGradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fec428 100%)",
     pattern: "radial-gradient(circle at 70% 20%, rgba(255,255,255,0.4) 0%, transparent 50%)",
     accentColor: "#c0392b",
@@ -177,7 +177,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "诗词": {
+  "诗词文学": {
     bgGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
     pattern: "radial-gradient(circle at 30% 70%, rgba(255,255,255,0.2) 0%, transparent 40%)",
     accentColor: "#2c3e50",
@@ -225,7 +225,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "典籍": {
+  "经典典籍": {
     bgGradient: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ff9a9e 100%)",
     pattern: "radial-gradient(circle at 60% 40%, rgba(255,255,255,0.3) 0%, transparent 45%)",
     accentColor: "#8b4513",
@@ -301,7 +301,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "非遗": {
+  "传统艺术": {
     bgGradient: "linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 50%, #fcb69f 100%)",
     pattern: "radial-gradient(circle at 40% 60%, rgba(255,255,255,0.25) 0%, transparent 40%)",
     accentColor: "#e74c3c",
@@ -352,7 +352,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "民俗": {
+  "民俗文化": {
     bgGradient: "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #fbc2eb 100%)",
     pattern: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.3) 0%, transparent 45%)",
     accentColor: "#34495e",
@@ -404,7 +404,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "人物": {
+  "历史人物": {
     bgGradient: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 50%, #f093fb 100%)",
     pattern: "radial-gradient(circle at 35% 65%, rgba(255,255,255,0.25) 0%, transparent 40%)",
     accentColor: "#2c3e50",
@@ -452,7 +452,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "戏曲": {
+  "传统艺术": {
     bgGradient: "linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f093fb 100%)",
     pattern: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0%, transparent 45%)",
     accentColor: "#8b4513",
@@ -517,7 +517,7 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
-  "工艺": {
+  "传统技艺": {
     bgGradient: "linear-gradient(135deg, #d4fc79 0%, #96e6a1 50%, #84fab0 100%)",
     pattern: "radial-gradient(circle at 30% 50%, rgba(255,255,255,0.3) 0%, transparent 40%)",
     accentColor: "#2d6a4f",
@@ -598,10 +598,184 @@ const CATEGORY_THEMES: Record<string, {
       );
     },
   },
+  "建筑古迹": {
+    bgGradient: "linear-gradient(135deg, #c79081 0%, #dfa579 50%, #f5b486 100%)",
+    pattern: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.25) 0%, transparent 40%)",
+    accentColor: "#8b4513",
+    decorativeElements: (title: string) => {
+      const keywords = extractKeywords(title);
+      const hasPalace = keywords.some(k => ["故宫", "紫禁城", "宫殿"].includes(k));
+      const hasWall = keywords.some(k => ["长城", "关", "城"].includes(k));
+      const hasCave = keywords.some(k => ["莫高窟", "窟", "佛"].includes(k));
+      const hasGarden = keywords.some(k => ["园林", "园", "亭", "苏州"].includes(k));
+      
+      return (
+        <>
+          {hasPalace && (
+            <>
+              <svg className="absolute top-4 right-4 w-20 h-16 opacity-50" viewBox="0 0 120 80">
+                <rect x="10" y="40" width="100" height="40" fill="#8b4513" opacity="0.6" />
+                <path d="M5 40 L20 25 L40 40 Z" fill="#c0392b" opacity="0.7" />
+                <path d="M30 40 L50 20 L70 40 Z" fill="#c0392b" opacity="0.7" />
+                <path d="M60 40 L90 15 L115 40 Z" fill="#c0392b" opacity="0.7" />
+                <rect x="15" y="50" width="20" height="25" fill="#5d2914" opacity="0.6" />
+                <rect x="50" y="50" width="20" height="25" fill="#5d2914" opacity="0.6" />
+                <rect x="85" y="50" width="20" height="25" fill="#5d2914" opacity="0.6" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-10 h-10 opacity-40" viewBox="0 0 60 60">
+                <circle cx="30" cy="30" r="25" fill="#c0392b" />
+                <text x="30" y="38" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">宫</text>
+              </svg>
+            </>
+          )}
+          {hasWall && (
+            <>
+              <svg className="absolute bottom-0 left-0 w-full h-24 opacity-50" viewBox="0 0 200 80">
+                <path d="M0 60 Q50 30 100 40 T200 35 L200 80 L0 80 Z" fill="#5d2914" opacity="0.4" />
+                <path d="M10 50 L20 50 L20 60 L10 60 Z M30 50 L40 50 L40 60 L30 60 Z M50 50 L60 50 L60 60 L50 60 Z M70 50 L80 50 L80 60 L70 60 Z M90 50 L100 50 L100 60 L90 60 Z M110 50 L120 50 L120 60 L110 60 Z M130 50 L140 50 L140 60 L130 60 Z M150 50 L160 50 L160 60 L150 60 Z M170 50 L180 50 L180 60 L170 60 Z" fill="#5d2914" opacity="0.7" />
+              </svg>
+              <svg className="absolute top-4 right-4 w-14 h-14 opacity-40" viewBox="0 0 100 100">
+                <path d="M30 80 L30 50 L50 30 L70 50 L70 80 Z" fill="none" stroke="#5d2914" strokeWidth="2" />
+                <rect x="40" y="60" width="20" height="20" fill="#5d2914" opacity="0.5" />
+              </svg>
+            </>
+          )}
+          {hasCave && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-50" viewBox="0 0 100 100">
+                <path d="M20 80 Q20 30 50 20 Q80 30 80 80 Z" fill="#8b4513" opacity="0.4" />
+                <circle cx="50" cy="55" r="10" fill="#f1c40f" opacity="0.5" />
+                <path d="M35 75 L50 60 L65 75" fill="none" stroke="#f1c40f" strokeWidth="1" opacity="0.6" />
+                <circle cx="50" cy="40" r="3" fill="#fff" opacity="0.7" />
+              </svg>
+              <svg className="absolute bottom-3 left-0 w-full h-8 opacity-30" viewBox="0 0 200 30">
+                <path d="M0 15 Q25 5 50 15 T100 15 T150 15 T200 15" fill="none" stroke="#8b4513" strokeWidth="2" />
+              </svg>
+            </>
+          )}
+          {hasGarden && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <ellipse cx="50" cy="50" rx="25" ry="20" fill="#2d6a4f" opacity="0.6" />
+                <ellipse cx="50" cy="40" rx="15" ry="15" fill="#2d6a4f" opacity="0.5" />
+                <ellipse cx="40" cy="55" rx="12" ry="10" fill="#2d6a4f" opacity="0.5" />
+                <ellipse cx="60" cy="55" rx="12" ry="10" fill="#2d6a4f" opacity="0.5" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-14 h-14 opacity-50" viewBox="0 0 100 100">
+                <path d="M30 80 L30 50 Q30 35 50 35 Q70 35 70 50 L70 80 Z" fill="none" stroke="#5d2914" strokeWidth="2" />
+                <path d="M40 50 L40 30 L50 25 L60 30 L60 50" fill="none" stroke="#5d2914" strokeWidth="1" />
+                <circle cx="50" cy="50" r="3" fill="#c0392b" opacity="0.6" />
+              </svg>
+            </>
+          )}
+          {/* 默认装饰 */}
+          {!hasPalace && !hasWall && !hasCave && !hasGarden && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <path d="M20 80 L20 40 L50 20 L80 40 L80 80 Z" fill="#8b4513" opacity="0.5" />
+                <rect x="40" y="55" width="20" height="25" fill="#5d2914" opacity="0.6" />
+              </svg>
+              <svg className="absolute bottom-0 left-0 w-full h-20 opacity-30" viewBox="0 0 200 80">
+                <path d="M0 60 Q50 30 100 50 T200 40 L200 80 L0 80 Z" fill="#5d2914" opacity="0.4" />
+              </svg>
+            </>
+          )}
+        </>
+      );
+    },
+  },
+  "神话传说": {
+    bgGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #c471ed 100%)",
+    pattern: "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%)",
+    accentColor: "#4a2080",
+    decorativeElements: (title: string) => {
+      const keywords = extractKeywords(title);
+      const hasMoon = keywords.some(k => ["嫦娥", "月", "奔月"].includes(k));
+      const hasButterfly = keywords.some(k => ["梁祝", "蝶", "化蝶"].includes(k));
+      const hasSnake = keywords.some(k => ["白蛇", "蛇"].includes(k));
+      const hasUniverse = keywords.some(k => ["盘古", "开天", "混沌"].includes(k));
+      const hasNezha = keywords.some(k => ["哪吒", "三太子"].includes(k));
+      
+      return (
+        <>
+          {/* 星辰背景 */}
+          <svg className="absolute inset-0 opacity-30" viewBox="0 0 200 100">
+            <circle cx="20" cy="20" r="1" fill="#fff" />
+            <circle cx="50" cy="35" r="0.8" fill="#fff" />
+            <circle cx="80" cy="15" r="1.2" fill="#fff" />
+            <circle cx="120" cy="40" r="0.9" fill="#fff" />
+            <circle cx="160" cy="25" r="1" fill="#fff" />
+            <circle cx="180" cy="55" r="0.8" fill="#fff" />
+            <circle cx="30" cy="70" r="1" fill="#fff" />
+            <circle cx="100" cy="80" r="0.9" fill="#fff" />
+            <circle cx="150" cy="75" r="1.1" fill="#fff" />
+          </svg>
+          
+          {hasMoon && (
+            <svg className="absolute top-4 right-4 w-20 h-20 opacity-50" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="30" fill="#f1c40f" opacity="0.7" />
+              <circle cx="60" cy="45" r="28" fill="rgba(255,255,255,0.3)" />
+              <circle cx="40" cy="60" r="3" fill="#f1c40f" />
+            </svg>
+          )}
+          {hasButterfly && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-12 opacity-50" viewBox="0 0 100 70">
+                <path d="M50 35 Q20 10 15 35 Q20 55 50 35 Z" fill="#e74c3c" opacity="0.6" />
+                <path d="M50 35 Q80 10 85 35 Q80 55 50 35 Z" fill="#e74c3c" opacity="0.6" />
+                <line x1="50" y1="35" x2="50" y2="20" stroke="#5d2914" strokeWidth="2" />
+                <circle cx="20" cy="25" r="3" fill="#fff" opacity="0.6" />
+                <circle cx="80" cy="25" r="3" fill="#fff" opacity="0.6" />
+              </svg>
+              <svg className="absolute bottom-4 left-4 w-14 h-10 opacity-40" viewBox="0 0 100 60">
+                <path d="M50 30 Q25 15 20 35 Q25 50 50 30 Z" fill="#9b59b6" opacity="0.5" />
+                <path d="M50 30 Q75 15 80 35 Q75 50 50 30 Z" fill="#9b59b6" opacity="0.5" />
+              </svg>
+            </>
+          )}
+          {hasSnake && (
+            <svg className="absolute top-4 right-4 w-16 h-16 opacity-50" viewBox="0 0 100 100">
+              <path d="M20 80 Q40 60 30 40 Q20 20 50 25 Q70 30 60 50 Q50 60 70 50" fill="none" stroke="#27ae60" strokeWidth="3" />
+              <circle cx="60" cy="50" r="2" fill="#27ae60" />
+            </svg>
+          )}
+          {hasUniverse && (
+            <>
+              <svg className="absolute top-4 right-4 w-20 h-20 opacity-50" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="35" fill="none" stroke="#f1c40f" strokeWidth="2" opacity="0.5" />
+                <circle cx="50" cy="50" r="20" fill="none" stroke="#f1c40f" strokeWidth="1" opacity="0.6" />
+                <circle cx="50" cy="50" r="5" fill="#f1c40f" />
+                <circle cx="50" cy="20" r="3" fill="#e74c3c" />
+                <circle cx="80" cy="50" r="2" fill="#3498db" />
+                <circle cx="50" cy="80" r="2.5" fill="#27ae60" />
+                <circle cx="20" cy="50" r="2" fill="#9b59b6" />
+              </svg>
+            </>
+          )}
+          {hasNezha && (
+            <svg className="absolute top-4 right-4 w-16 h-16 opacity-50" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="20" fill="none" stroke="#e74c3c" strokeWidth="2" />
+              <circle cx="50" cy="50" r="5" fill="#e74c3c" />
+              <path d="M50 30 L50 10 M50 70 L50 90 M30 50 L10 50 M70 50 L90 50" stroke="#e74c3c" strokeWidth="2" />
+            </svg>
+          )}
+          {/* 默认装饰 */}
+          {!hasMoon && !hasButterfly && !hasSnake && !hasUniverse && !hasNezha && (
+            <>
+              <svg className="absolute top-4 right-4 w-16 h-16 opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="30" fill="#f1c40f" opacity="0.5" />
+                <circle cx="60" cy="45" r="28" fill="rgba(255,255,255,0.3)" />
+              </svg>
+            </>
+          )}
+        </>
+      );
+    },
+  },
 };
 
 export function ArticleIllustration({ category, title, emoji }: ArticleIllustrationProps) {
-  const theme = CATEGORY_THEMES[category] || CATEGORY_THEMES["典籍"];
+  const theme = CATEGORY_THEMES[category] || CATEGORY_THEMES["经典典籍"];
   
   return (
     <div className="absolute inset-0 overflow-hidden">
