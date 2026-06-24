@@ -312,6 +312,43 @@ async function searchWikimediaCommons(query: string): Promise<string | null> {
   }
 }
 
+// 方法1.1：严格模式的 Wikimedia Commons 搜索（只返回高度相关的图片）
+async function searchWikimediaCommonsStrict(query: string): Promise<string | null> {
+  try {
+    const encodedQuery = encodeURIComponent(query);
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodedQuery}&gsrnamespace=6&gsrlimit=5&format=json&prop=imageinfo&iiprop=url&iiurlwidth=400`;
+
+    const response = await fetchWithTimeout(url);
+    const data = await response.json();
+
+    if (!data.query || !data.query.pages) return null;
+
+    const pages = Object.values(data.query.pages) as any[];
+    pages.sort((a, b) => (a.index || 0) - (b.index || 0));
+
+    // 严格筛选：只返回标题中明确包含关键词的图片
+    for (const page of pages) {
+      if (page.title) {
+        const title = page.title.toLowerCase();
+        const queryLower = query.toLowerCase();
+        
+        // 检查标题是否包含关键词（中文或英文）
+        if (title.includes(queryLower) || title.includes(query)) {
+          if (page.imageinfo && page.imageinfo[0] && page.imageinfo[0].thumburl) {
+            return page.imageinfo[0].thumburl;
+          }
+          const fileName = page.title.replace(/ /g, "_");
+          return `https://commons.wikimedia.org/wiki/Special:FilePath/${fileName}?width=400`;
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Wikimedia Commons strict search error:", error);
+    return null;
+  }
+}
+
 // 方法2：通过 Wikipedia REST API 获取页面首图
 async function searchWikipediaImage(query: string): Promise<string | null> {
   try {
@@ -437,18 +474,22 @@ export const Route = createFileRoute("/api/search-image")({
               },
             });
           }
+          // 精确映射存在但没有配图，直接返回空 URL，避免返回不相关的图片
+          return new Response(JSON.stringify({ url: "", message: "No image found for exact page" }), {
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "public, max-age=1800",
+            },
+          });
         }
 
-        // 如果没有精确映射或精确映射失败，优先使用中文关键词搜索
-        // 先提取核心关键词（去掉副标题、作者等）
+        // 如果没有精确映射，尝试提取关键词搜索
         const keyword = extractKeyword(query);
         
+        // 对于中国传统文化主题，优先使用中文 Wikipedia，避免返回不相关的图片
         const imageSources = [
           () => searchChineseWikipediaImage(keyword),  // 优先用关键词在中文 Wikipedia 搜索
-          () => searchWikimediaCommons(keyword),        // 然后用关键词在 Wikimedia 搜索
           () => searchChineseWikipediaImage(query),     // 再用完整标题搜索
-          () => searchWikimediaCommons(translateQuery(keyword)),  // 最后翻译后英文搜索
-          () => searchWikipediaImage(translateQuery(keyword)),
         ];
 
         for (const searchFn of imageSources) {
