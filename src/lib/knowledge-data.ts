@@ -9,6 +9,16 @@ export type Category =
   | "建筑古迹"
   | "神话传说";
 
+// 关联条目（可点击跳转到详情）
+export interface RelatedItem {
+  id: string;             // 跳转目标 ID（文章 id 或外部链接）
+  title: string;          // 显示标题
+  category?: string;      // 分类（用于展示彩色标签）
+  brief?: string;         // 一句话简介
+  external?: boolean;     // 是否外部链接（如典籍原文）
+  externalUrl?: string;   // 外部链接
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -17,12 +27,20 @@ export interface Article {
   content: string;
   favorites: number;
   cover: string; // emoji or symbol
-  // 深度内容字段（活化传统文化）
-  history?: string;          // 历史背景
-  influence?: string;        // 文化影响
-  tutorial?: string[];       // 体验教程/入门步骤
-  classics?: string[];       // 经典作品/代表人物
-  tips?: string;             // 欣赏指南/小贴士
+  // ===== 静态结构化字段 =====
+  source?: string;                  // 出处/文献来源
+  history?: string;                 // 历史背景
+  // 关联条目（可点击跳转）
+  relatedPeople?: RelatedItem[];    // 相关人物
+  relatedBooks?: RelatedItem[];     // 相关典籍
+  relatedEvents?: RelatedItem[];    // 相关历史事件
+  relatedPoems?: RelatedItem[];     // 相关诗词
+  relatedArticles?: RelatedItem[];  // 相关文章推荐
+  // 保留原有字段
+  influence?: string;               // 文化影响
+  tutorial?: string[];              // 体验教程/入门步骤
+  classics?: string[];              // 经典作品/代表人物
+  tips?: string;                    // 欣赏指南/小贴士
 }
 
 export const CATEGORIES: ("全部" | Category)[] = [
@@ -47,6 +65,24 @@ export const ARTICLES: Article[] = [
     content: "立春，是二十四节气中的第一个节气。'立'是'开始'之意，'春'代表着温暖、生长。古时人们在立春这天有'迎春'、'咬春'（吃春饼春卷）、'鞭春牛'（劝农耕作）等仪式。立春三候：东风解冻、蛰虫始振、鱼陟负冰。",
     favorites: 1256,
     cover: "🌱",
+    source: "《月令七十二候集解》·《礼记·月令》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，《礼记·月令》传其思想" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，立春之礼多有体现", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "收录春日祭祀农事之诗篇", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "lichun_evt", title: "鞭春牛", brief: "立春劝农仪式，源远流长" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼春夜望月寄怀", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有" }
+    ],
+    relatedArticles: [
+      { id: "yushui", title: "雨水：润物细无声", category: "节日节气", brief: "立春后的第二个节气" },
+      { id: "chunjie", title: "春节：辞旧迎新", category: "节日节气", brief: "立春常与春节相邻" }
+    ]
   },
   {
     id: "yushui",
@@ -56,6 +92,25 @@ export const ARTICLES: Article[] = [
     content: "雨水是二十四节气中的第二个节气。此时气温回升、冰雪融化、降水增多。雨水三候：獭祭鱼、鸿雁来、草木萌动。杜甫诗云：'好雨知时节，当春乃发生。随风潜入夜，润物细无声。'",
     favorites: 987,
     cover: "💧",
+    source: "《月令七十二候集解》·《礼记·月令》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，多有春雨诗作" },
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，写有'一蓑烟雨任平生'" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "收录众多春雨农事诗篇", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "yushui_evt", title: "獭祭鱼", brief: "雨水三候之首，水獭捕鱼陈于岸" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放代表诗作" },
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀人名作", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有" }
+    ],
+    relatedArticles: [
+      { id: "lichun", title: "立春：东风解冻", category: "节日节气", brief: "雨水前的节气" },
+      { id: "jingzhe", title: "惊蛰：春雷初响", category: "节日节气", brief: "雨水后的节气" }
+    ]
   },
   {
     id: "jingzhe",
@@ -65,6 +120,23 @@ export const ARTICLES: Article[] = [
     content: "惊蛰，古称'启蛰'，是二十四节气中的第三个节气。春雷初响，惊醒了蛰伏在土中冬眠的动物。惊蛰三候：桃始华、仓庚鸣、鹰化为鸠。",
     favorites: 1123,
     cover: "🌩",
+    source: "《月令七十二候集解》·《夏小正》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，惊蛰多有诗作" }
+    ],
+    relatedBooks: [
+      { id: "huangdi", title: "《黄帝内经》", category: "经典典籍", brief: "中医经典，惊蛰养生多有论述", external: true, externalUrl: "https://baike.baidu.com/item/黄帝内经" }
+    ],
+    relatedEvents: [
+      { id: "jingzhe_evt", title: "祭白虎打小人", brief: "惊蛰传统民俗，驱邪避灾" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" }
+    ],
+    relatedArticles: [
+      { id: "yushui", title: "雨水：润物细无声", category: "节日节气", brief: "惊蛰前的节气" },
+      { id: "chunfen", title: "春分：昼夜平分", category: "节日节气", brief: "惊蛰后的节气" }
+    ]
   },
   {
     id: "chunfen",
@@ -74,6 +146,24 @@ export const ARTICLES: Article[] = [
     content: "春分是春季九十天的中分点，此时太阳直射地球赤道，全球昼夜几乎等长。春分三候：玄鸟至、雷乃发声、始电。民间有'春分竖蛋'的习俗。",
     favorites: 876,
     cover: "⚖️",
+    source: "《月令七十二候集解》·《春秋繁露》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，春分有'祭日'之礼" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "记载孔子春分之礼", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "huangdi", title: "《黄帝内经》", category: "经典典籍", brief: "中医经典，春分养生之纲", external: true, externalUrl: "https://baike.baidu.com/item/黄帝内经" }
+    ],
+    relatedEvents: [
+      { id: "chunfen_evt", title: "春祭日", brief: "帝王春分祭日之礼，源远流长" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀人名作", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有" }
+    ],
+    relatedArticles: [
+      { id: "jingzhe", title: "惊蛰：春雷初响", category: "节日节气", brief: "春分前的节气" },
+      { id: "qingming", title: "清明：踏青扫墓", category: "节日节气", brief: "春分后的节气" }
+    ]
   },
   {
     id: "qingming",
@@ -83,6 +173,25 @@ export const ARTICLES: Article[] = [
     content: "清明既是节气也是节日。此时气候清爽温暖，草木始发新枝芽。清明节习俗包括扫墓祭祖、踏青郊游、植树、放风筝等。杜牧诗云：'清明时节雨纷纷，路上行人欲断魂。'",
     favorites: 1567,
     cover: "🌸",
+    source: "《月令七十二候集解》·《荆楚岁时记》·《历书》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，传承清明祭祖之礼" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，记载祭祖之礼", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "收录春日祭祀诗篇", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "qingming_evt", title: "寒食节", brief: "清明前一二日，纪念介子推" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼怀人词作", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有" }
+    ],
+    relatedArticles: [
+      { id: "chunfen", title: "春分：昼夜平分", category: "节日节气", brief: "清明前的节气" },
+      { id: "guyu", title: "谷雨：雨生百谷", category: "节日节气", brief: "清明后的节气" },
+      { id: "qingmingjie", title: "清明：慎终追远", category: "节日节气", brief: "清明节另一视角" }
+    ]
   },
   {
     id: "guyu",
@@ -92,6 +201,24 @@ export const ARTICLES: Article[] = [
     content: "谷雨是春季最后一个节气，源自'雨生百谷'之说。谷雨节气的到来意味着寒潮天气基本结束，气温回升加快，大大有利于谷类农作物的生长。古人有'走谷雨'、'喝谷雨茶'、'赏牡丹'等习俗。",
     favorites: 1284,
     cover: "🌧",
+    source: "《月令七十二候集解》·《群芳谱》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，多有春雨诗作" }
+    ],
+    relatedBooks: [
+      { id: "huangdi", title: "《黄帝内经》", category: "经典典籍", brief: "中医经典，谷雨养生之纲", external: true, externalUrl: "https://baike.baidu.com/item/黄帝内经" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，'道法自然'契合谷雨精神", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "guyu_evt", title: "祭仓颉", brief: "谷雨祭祀文字始祖仓颉的传统" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放代表诗作" }
+    ],
+    relatedArticles: [
+      { id: "qingming", title: "清明：踏青扫墓", category: "节日节气", brief: "谷雨前的节气" },
+      { id: "chayi", title: "茶事：一盏清欢", category: "民俗文化", brief: "谷雨时节采茶品茶" }
+    ]
   },
   {
     id: "duanwu",
@@ -101,6 +228,24 @@ export const ARTICLES: Article[] = [
     content: "端午节，为每年农历五月初五。据《史记·屈原贾生列传》记载，屈原忠贞不渝却遭谗去职，流放至沅、湘流域。在写下绝笔《怀沙》后，抱石投汨罗江身死。后人为纪念这位伟大的爱国诗人，便有了赛龙舟、吃粽子、悬艾草等习俗。",
     favorites: 2391,
     cover: "🐉",
+    source: "《史记·屈原贾生列传》·《荆楚岁时记》·《风土记》",
+    relatedPeople: [
+      { id: "quyuan", title: "屈原", category: "历史人物", brief: "战国楚国诗人，端午纪念对象", external: true, externalUrl: "https://baike.baidu.com/item/屈原" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "屈原《离骚》受其影响", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "duanwu_evt", title: "屈原投江", brief: "公元前278年，屈原于汨罗江投江" }
+    ],
+    relatedPoems: [
+      { id: "chuibi", title: "出师表", category: "诗词文学", brief: "诸葛亮前出师表，与屈原同为忠臣典范" }
+    ],
+    relatedArticles: [
+      { id: "qingming", title: "清明：踏青扫墓", category: "节日节气", brief: "同为祭祀传统节日" },
+      { id: "zhongqiu", title: "中秋：月圆人团圆", category: "节日节气", brief: "同为传统三大节日" },
+      { id: "kite", title: "风筝：纸鸢乘风", category: "传统技艺", brief: "传统手工艺" }
+    ]
   },
   {
     id: "zhongqiu",
@@ -110,6 +255,27 @@ export const ARTICLES: Article[] = [
     content: "中秋节是中国传统佳节，农历八月十五。此时月亮最圆最亮，象征团圆。中秋节习俗包括赏月、吃月饼、提灯笼、猜灯谜等。苏轼《水调歌头》写尽中秋情怀。",
     favorites: 3123,
     cover: "🥮",
+    source: "《礼记·月令》·《唐书·太宗纪》·《东京梦华录》",
+    relatedPeople: [
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，《水调歌头》写尽中秋情怀" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，多有咏月名篇" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "收录'月出皎兮'等咏月诗篇", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "change_evt", title: "嫦娥奔月", brief: "中秋神话传说，月宫仙子的故事" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀弟名篇" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" }
+    ],
+    relatedArticles: [
+      { id: "duanwu", title: "端午：汨罗江畔的千年追思", category: "节日节气", brief: "同为传统三大节日" },
+      { id: "chongyang", title: "重阳：登高望远", category: "节日节气", brief: "同为传统节日" },
+      { id: "change", title: "嫦娥奔月：月宫仙子的千年守望", category: "神话传说", brief: "中秋神话" },
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "中秋古琴雅集" }
+    ]
   },
   {
     id: "chongyang",
@@ -119,6 +285,24 @@ export const ARTICLES: Article[] = [
     content: "重阳节，农历九月初九。《易经》中将'九'定为阳数，九九两阳数相重，故名'重阳'。古人在这一天有登高赏秋、感恩敬老的习俗。王维'遥知兄弟登高处，遍插茱萸少一人'即写此节。",
     favorites: 1102,
     cover: "🍂",
+    source: "《易经》·《续齐谐记》·《荆楚岁时记》",
+    relatedPeople: [
+      { id: "wangxizhi", title: "王羲之", category: "历史人物", brief: "东晋书圣，其家族有'重阳雅集'传统" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "收录秋日登高思亲诗篇", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "chongyang_evt", title: "重阳登高", brief: "古人九九登高望远、避灾祈福的传统" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼怀人词作", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有" }
+    ],
+    relatedArticles: [
+      { id: "zhongqiu", title: "中秋：月圆人团圆", category: "节日节气", brief: "同为传统节日" },
+      { id: "qingming", title: "清明：踏青扫墓", category: "节日节气", brief: "同为祭祀传统节日" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "王羲之《兰亭集序》与重阳雅集相通" }
+    ]
   },
   {
     id: "chunjie",
@@ -128,6 +312,24 @@ export const ARTICLES: Article[] = [
     content: "春节是中华民族最重要的传统节日，农历正月初一。春节习俗包括贴春联、贴窗花、放鞭炮、吃年夜饭、守岁、拜年、发压岁钱等。是全家团圆的日子。",
     favorites: 4521,
     cover: "🧧",
+    source: "《尔雅·释天》·《荆楚岁时记》·《东京梦华录》",
+    relatedPeople: [
+      { id: "wangxizhi", title: "王羲之", category: "历史人物", brief: "东晋书圣，春联始于其题桃符" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，春节礼仪多有体现", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "chunjie_evt", title: "年兽传说", brief: "春节驱逐年兽、爆竹迎新的民间传说" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" }
+    ],
+    relatedArticles: [
+      { id: "lichun", title: "立春：东风解冻", category: "节日节气", brief: "春节常与立春相邻" },
+      { id: "honglou", title: "对联：楹联艺术", category: "民俗文化", brief: "春节传统装饰艺术" },
+      { id: "papercut", title: "剪纸：纸上生花", category: "传统技艺", brief: "春节贴窗花习俗" }
+    ]
   },
   {
     id: "qingmingjie",
@@ -137,6 +339,24 @@ export const ARTICLES: Article[] = [
     content: "清明节是重要的祭祀节日，人们扫墓祭祖，缅怀先人。同时也是踏青郊游的好时节，体现了'天人合一'的理念。",
     favorites: 1876,
     cover: "🌿",
+    source: "《礼记·祭法》·《清明节文化读本》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，对祭祀之礼有系统论述" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，详述祭祀之礼", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "qingming_evt2", title: "祭英烈", brief: "清明祭奠革命先烈的现代传统" }
+    ],
+    relatedPoems: [
+      { id: "chuibi", title: "出师表", category: "诗词文学", brief: "诸葛亮忠贞之笔，与慎终追远相通" }
+    ],
+    relatedArticles: [
+      { id: "qingming", title: "清明：踏青扫墓", category: "节日节气", brief: "清明节气另一视角" },
+      { id: "guyu", title: "谷雨：雨生百谷", category: "节日节气", brief: "清明后的节气" },
+      { id: "chongyang", title: "重阳：登高望远", category: "节日节气", brief: "同为敬亲传统节日" }
+    ]
   },
   {
     id: "jingye",
@@ -146,6 +366,24 @@ export const ARTICLES: Article[] = [
     content: "《静夜思》是唐代诗人李白所作的一首五言古诗。此诗描写了秋日夜晚，诗人于屋内抬头望月的所感。诗中运用比喻、衬托等手法，表达客居思乡之情，语言清新朴素而韵味含蓄无穷，历来广为传诵。",
     favorites: 5612,
     cover: "🌙",
+    source: "《李太白全集》·《唐诗三百首》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐浪漫主义诗人，本诗作者" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "中国最早的诗歌总集，五言诗渊源", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "jingye_evt", title: "秋夜思乡", brief: "盛唐游子客居他乡的普遍心境" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀人名篇" },
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗代表" }
+    ],
+    relatedArticles: [
+      { id: "change", title: "嫦娥奔月：月宫仙子的千年守望", category: "神话传说", brief: "月亮文化的源头" },
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "文人雅艺的代表" }
+    ]
   },
   {
     id: "shuihu",
@@ -155,6 +393,26 @@ export const ARTICLES: Article[] = [
     content: "苏轼于宋神宗熙宁九年（1076年）中秋在密州所作。词以月起兴，围绕中秋明月展开想象和思考，把人世间的悲欢离合之情纳入对宇宙人生的哲理性追寻中，反映了作者复杂而又矛盾的思想感情。",
     favorites: 4123,
     cover: "🌕",
+    source: "《东坡乐府笺》·《全宋词》",
+    relatedPeople: [
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，本词作者" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，苏轼推崇的'谪仙人'" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，'但愿人长久'与之相通", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "shuihu_evt", title: "熙宁九年中秋", brief: "苏轼时任密州知州，怀念远在济南的弟弟苏辙" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" },
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放代表诗作" }
+    ],
+    relatedArticles: [
+      { id: "zhongqiu", title: "中秋：月圆人团圆", category: "节日节气", brief: "本词创作的中秋背景" },
+      { id: "change", title: "嫦娥奔月：月宫仙子的千年守望", category: "神话传说", brief: "月亮文化的源头" },
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "中秋古琴雅集" }
+    ]
   },
   {
     id: "jiangjinjiu",
@@ -164,6 +422,26 @@ export const ARTICLES: Article[] = [
     content: "《将进酒》是唐代大诗人李白沿用乐府古题创作的一首诗。此诗思想内容非常深沉，艺术表现非常成熟，在同题作品中影响最大。诗人豪饮高歌，借酒消愁，抒发了忧愤深广的人生感慨。",
     favorites: 3876,
     cover: "🍶",
+    source: "《李太白全集》·《乐府诗集》·《唐诗三百首》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐浪漫主义诗人，本诗作者" },
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，承袭李白的豪放词风" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "乐府诗远承《诗经》传统", external: true, externalUrl: "https://baike.baidu.com/item/诗经" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，影响李白人生哲学", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "jiangjinjiu_evt", title: "天宝三载赐金放还", brief: "李白被唐玄宗赐金放还，离开长安" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" },
+      { id: "chuibi", title: "出师表", category: "诗词文学", brief: "诸葛亮前出师表，豪情相通" }
+    ],
+    relatedArticles: [
+      { id: "chayi", title: "茶事：一盏清欢", category: "民俗文化", brief: "酒与茶，文人生活的两面" },
+      { id: "duanwu", title: "端午：汨罗江畔的千年追思", category: "节日节气", brief: "同为诗人精神象征" }
+    ]
   },
   {
     id: "chuibi",
@@ -173,6 +451,23 @@ export const ARTICLES: Article[] = [
     content: "《出师表》是三国时期蜀汉丞相诸葛亮在北伐中原之前给后主刘禅上书的表文。表达了诸葛亮对先帝的知遇之恩的真挚感情和北定中原的决心，以及对后主的殷切期望。",
     favorites: 2345,
     cover: "📝",
+    source: "《三国志·蜀书·诸葛亮传》·《文选》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，忠义思想源流" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家'忠君'思想之源", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "chuibi_evt", title: "诸葛亮北伐", brief: "蜀汉建兴五年至十二年（227-234年）" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗代表" }
+    ],
+    relatedArticles: [
+      { id: "duanwu", title: "端午：汨罗江畔的千年追思", category: "节日节气", brief: "同为忠臣典范的节日纪念" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "《出师表》书法名帖众多" }
+    ]
   },
   {
     id: "lunyu",
@@ -182,6 +477,25 @@ export const ARTICLES: Article[] = [
     content: "《论语》是儒家学派的经典著作之一，由孔子的弟子及其再传弟子编撰而成。它以语录体和对话文体为主，记录了孔子及其弟子的言行，集中体现了孔子的政治主张、伦理思想、道德观念及教育原则等。",
     favorites: 1893,
     cover: "📜",
+    source: "《史记·孔子世家》·《汉书·艺文志》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，《论语》记录其思想" },
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，与《论语》形成儒道互补" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "儒家五经之一，与《论语》并称", external: true, externalUrl: "https://baike.baidu.com/item/诗经" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，与《论语》并为中华双璧", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "lunyu_evt", title: "孔子周游列国", brief: "《论语》多记录孔子周游中的言行" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀弟名作，'但愿人长久'源出《论语》'仁者寿'" }
+    ],
+    relatedArticles: [
+      { id: "zhongguoli", title: "中国礼：礼仪之邦", category: "民俗文化", brief: "《论语》核心论礼" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "《论语》是书法常书内容" }
+    ]
   },
   {
     id: "shijing",
@@ -191,6 +505,25 @@ export const ARTICLES: Article[] = [
     content: "《诗经》是中国古代诗歌的开端，最早的一部诗歌总集，收集了西周初年至春秋中叶（前11世纪至前6世纪）的诗歌，共311篇。分为《风》《雅》《颂》三部分。'关关雎鸠，在河之洲'已成为千古绝唱。",
     favorites: 2780,
     cover: "🪶",
+    source: "《史记·孔子世家》·《毛诗正义》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，编订《诗经》" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，远承《诗经》风雅" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家根本经典，与《诗经》并称", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "shijing_evt", title: "孔子删《诗》", brief: "传说孔子从三千余首诗中删定为三百零五篇" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" },
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀弟名作" }
+    ],
+    relatedArticles: [
+      { id: "lichun", title: "立春：东风解冻", category: "节日节气", brief: "《诗经》中多有立春农事诗" },
+      { id: "qingming", title: "清明：踏青扫墓", category: "节日节气", brief: "《诗经》收录春秋祭祀诗" }
+    ]
   },
   {
     id: "laozi",
@@ -200,6 +533,25 @@ export const ARTICLES: Article[] = [
     content: "《道德经》又称《老子》，是道家学派的经典著作。全书共八十一章，以'道'为核心，阐述了老子的宇宙观、人生观和政治哲学。主张'无为而治'、'道法自然'，对中国文化影响深远。",
     favorites: 2156,
     cover: "☯️",
+    source: "《史记·老子韩非列传》·《道德经》",
+    relatedPeople: [
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，承袭并发展《道德经》思想" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，深受道家思想影响" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家根本经典，与《道德经》并为中华双璧", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "huangdi", title: "《黄帝内经》", category: "经典典籍", brief: "中医经典，深受道家思想影响", external: true, externalUrl: "https://baike.baidu.com/item/黄帝内经" }
+    ],
+    relatedEvents: [
+      { id: "laozi_evt", title: "紫气东来", brief: "传说老子西出函谷关，关令尹喜请其著书" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作，蕴含道家豪情" }
+    ],
+    relatedArticles: [
+      { id: "fengshui", title: "风水：天人合一", category: "民俗文化", brief: "道家'天人合一'思想的实践" },
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "道家精神与古琴相通" }
+    ]
   },
   {
     id: "huangdi",
@@ -209,6 +561,23 @@ export const ARTICLES: Article[] = [
     content: "《黄帝内经》是中国最早的医学典籍，相传为黄帝所作。它奠定了人体生理、病理、诊断以及治疗的认识基础，是中国影响极大的一部医学著作，被称为医之始祖。",
     favorites: 1432,
     cover: "🔬",
+    source: "《黄帝内经素问》·《灵枢经》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，养生思想部分相通" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，影响中医理论", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "huangdi_evt", title: "岐黄之术", brief: "岐伯与黄帝问答，奠定中医基础" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，亦关注养生" }
+    ],
+    relatedArticles: [
+      { id: "chayi", title: "茶事：一盏清欢", category: "民俗文化", brief: "茶与中医养生密切相关" },
+      { id: "laozi", title: "《道德经》：道法自然", category: "经典典籍", brief: "道家思想与中医相通" }
+    ]
   },
   {
     id: "kunqu",
@@ -233,7 +602,29 @@ export const ARTICLES: Article[] = [
       "《桃花扇》——孔尚任，以离合之情写兴亡之感",
       "《西厢记》——王实甫，张生与崔莺莺的爱情故事"
     ],
-    tips: "初听昆曲不必急于听懂每句唱词，先感受其声腔之美。昆曲节奏舒缓，适合静心品味，建议选择一个安静的夜晚，泡一壶清茶，慢慢沉浸其中。"
+    tips: "初听昆曲不必急于听懂每句唱词，先感受其声腔之美。昆曲节奏舒缓，适合静心品味，建议选择一个安静的夜晚，泡一壶清茶，慢慢沉浸其中。",
+    source: "《辞海·艺术分册》·《昆曲大辞典》·《中国戏曲史》",
+    relatedPeople: [
+      { id: "tangxianzu", title: "汤显祖", category: "历史人物", brief: "明代戏剧家，《牡丹亭》作者", external: true, externalUrl: "https://baike.baidu.com/item/汤显祖" },
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "其词作常被昆曲传唱" }
+    ],
+    relatedBooks: [
+      { id: "mudanting", title: "《牡丹亭》", category: "经典典籍", brief: "汤显祖代表作，昆曲巅峰之作", external: true, externalUrl: "https://baike.baidu.com/item/牡丹亭" },
+      { id: "changshengdian", title: "《长生殿》", category: "经典典籍", brief: "洪昇代表作，唐明皇与杨贵妃的故事", external: true, externalUrl: "https://baike.baidu.com/item/长生殿" }
+    ],
+    relatedEvents: [
+      { id: "zhongqiu", title: "中秋戏曲雅集", category: "节日节气", brief: "中秋节传统昆曲演出" },
+      { id: "chunjie", title: "春节庙会演剧", category: "节日节气", brief: "春节期间各地昆曲表演" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，昆曲常演剧目" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白名篇" }
+    ],
+    relatedArticles: [
+      { id: "jingju", title: "京剧：国粹之光", category: "传统艺术", brief: "了解中国戏曲艺术" },
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "传统文人雅艺" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "中国传统艺术" }
+    ]
   },
   {
     id: "ciqi",
@@ -243,6 +634,24 @@ export const ARTICLES: Article[] = [
     content: "青花瓷起源于唐宋，成熟于元代景德镇。它用钴料在素胎上绘制纹饰，再罩以透明釉，经高温还原焰一次烧成。其色泽幽靓苍翠，纹饰清新明丽，是中国陶瓷艺术的代表。",
     favorites: 1432,
     cover: "🏺",
+    source: "《中国陶瓷史》·《景德镇陶录》·冯先铭《中国陶瓷》",
+    relatedPeople: [
+      { id: "wangxizhi", title: "王羲之", category: "历史人物", brief: "东晋书法家，青花瓷纹饰常取其书法意趣" }
+    ],
+    relatedBooks: [
+      { id: "taoshuo", title: "《陶说》", category: "经典典籍", brief: "清代朱琰著，陶瓷史专著", external: true, externalUrl: "https://baike.baidu.com/item/陶说" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，影响青花瓷美学" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节陶瓷展", category: "节日节气", brief: "春节期间各类陶瓷展览" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作" }
+    ],
+    relatedArticles: [
+      { id: "jingtailan", title: "景泰蓝：皇家工艺", category: "传统技艺", brief: "了解传统金属工艺" },
+      { id: "embroidery", title: "刺绣：针尖上的丹青", category: "传统技艺", brief: "传统手工艺" }
+    ]
   },
   {
     id: "jingtailan",
@@ -252,6 +661,23 @@ export const ARTICLES: Article[] = [
     content: "景泰蓝，学名铜胎掐丝珐琅，因其在明朝景泰年间盛行且多用蓝色釉料而得名。制作工艺复杂，需经过制胎、掐丝、点蓝、烧蓝、磨光、镀金等多道工序，是中国传统工艺的瑰宝。",
     favorites: 967,
     cover: "🔷",
+    source: "《中国传统工艺》·《燕京岁时记》·《故宫博物院院刊》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，景泰蓝纹饰多取其诗意" }
+    ],
+    relatedBooks: [
+      { id: "huangdi", title: "《黄帝内经》", category: "经典典籍", brief: "中医经典，景泰蓝色彩理论受其影响" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节工艺展", category: "节日节气", brief: "春节期间传统工艺展览" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白名篇" }
+    ],
+    relatedArticles: [
+      { id: "ciqi", title: "青花瓷：景德镇的蓝白韵律", category: "传统技艺", brief: "了解青花瓷工艺" },
+      { id: "tiehua", title: "铁画：铁打丹青", category: "传统技艺", brief: "另一种金属工艺" }
+    ]
   },
   {
     id: "papercut",
@@ -276,7 +702,26 @@ export const ARTICLES: Article[] = [
       "佛山剪纸——色彩绚丽，常用铜凿、银凿等金属箔",
       "蔚县剪纸——彩色点染，戏曲人物为特色"
     ],
-    tips: "初学剪纸最重要的是耐心。剪刀要锋利但动作要轻柔，不要强行扭转纸张。练习时可以先在废纸上画好图案再剪，熟练后便能脱稿创作。红色是最传统的剪纸用色，象征喜庆吉祥。"
+    tips: "初学剪纸最重要的是耐心。剪刀要锋利但动作要轻柔，不要强行扭转纸张。练习时可以先在废纸上画好图案再剪，熟练后便能脱稿创作。红色是最传统的剪纸用色，象征喜庆吉祥。",
+    source: "《中国民间剪纸艺术》·《中华民俗大全》·《辞海·艺术分册》",
+    relatedPeople: [
+      { id: "kushulan", title: "库淑兰", category: "历史人物", brief: "陕北剪纸艺术大师", external: true, externalUrl: "https://baike.baidu.com/item/库淑兰" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "古代诗歌总集，剪纸常取其意境" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节贴窗花", category: "节日节气", brief: "春节剪纸贴窗花的习俗" },
+      { id: "qingming", title: "清明节气", category: "节日节气", brief: "清明时节民间剪纸" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作" }
+    ],
+    relatedArticles: [
+      { id: "embroidery", title: "刺绣：针尖上的丹青", category: "传统技艺", brief: "剪纸与刺绣关系密切" },
+      { id: "zharian", title: "扎染：布里生花", category: "传统技艺", brief: "传统印染工艺" },
+      { id: "honglou", title: "对联：楹联艺术", category: "民俗文化", brief: "春节传统装饰" }
+    ]
   },
   {
     id: "chayi",
@@ -286,6 +731,27 @@ export const ARTICLES: Article[] = [
     content: "中国是茶的故乡。饮茶之风始于汉，盛于唐，普及于宋。唐代陆羽撰《茶经》，开创茶道。文人雅士品茶论道，演化出'茶道'文化，讲究'和、静、怡、真'四谛。",
     favorites: 1567,
     cover: "🍵",
+    source: "《茶经》·《大观茶论》·《茶疏》",
+    relatedPeople: [
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，有'从来佳茗似佳人'之名句" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，多有茶酒诗作" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，茶道精神与之相通", external: true, externalUrl: "https://baike.baidu.com/item/道德经" },
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，茶礼之本", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "chayi_evt", title: "陆羽著《茶经》", brief: "唐代陆羽著《茶经》，被尊为'茶圣'" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，多涉茶事" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" }
+    ],
+    relatedArticles: [
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "琴茶一味，文人雅集" },
+      { id: "guyu", title: "谷雨：雨生百谷", category: "节日节气", brief: "谷雨时节采茶品茶" },
+      { id: "ciqi", title: "青花瓷：景德镇的蓝白韵律", category: "传统技艺", brief: "茶具以青花瓷为代表" }
+    ]
   },
   {
     id: "zhongguoli",
@@ -295,6 +761,24 @@ export const ARTICLES: Article[] = [
     content: "中国素有'礼仪之邦'之称。礼仪文化源远流长，从周公制礼作乐开始，礼便成为社会秩序的基石。传统礼仪包括吉礼、凶礼、军礼、宾礼、嘉礼等，渗透到生活的方方面面。",
     favorites: 1678,
     cover: "🏛",
+    source: "《周礼》·《仪礼》·《礼记》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，礼学集大成者" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家核心论礼经典", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "儒家经典，多有礼乐诗篇", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "zhongguoli_evt", title: "周公制礼作乐", brief: "西周初年周公旦制礼作乐，奠定中华礼乐文明" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，体现礼乐精神" }
+    ],
+    relatedArticles: [
+      { id: "chunjie", title: "春节：辞旧迎新", category: "节日节气", brief: "春节礼俗的集中体现" },
+      { id: "honglou", title: "对联：楹联艺术", category: "民俗文化", brief: "楹联是礼仪的载体之一" }
+    ]
   },
   {
     id: "honglou",
@@ -304,6 +788,25 @@ export const ARTICLES: Article[] = [
     content: "对联又称楹联，是写在纸、布上或刻在竹子、木头、柱子上的对偶语句。对仗工整、平仄协调，是中国传统文化瑰宝。春节贴春联是最普遍的习俗。",
     favorites: 1345,
     cover: "📜",
+    source: "《楹联丛话》·《对联话》·《春联大全》",
+    relatedPeople: [
+      { id: "wangxizhi", title: "王羲之", category: "历史人物", brief: "东晋书圣，相传春联源于其题桃符" },
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，对联讲究对偶源出其名分思想" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，对联讲究'文以载道'", external: true, externalUrl: "https://baike.baidu.com/item/论语" }
+    ],
+    relatedEvents: [
+      { id: "honglou_evt", title: "春联起源", brief: "五代后蜀主孟昶题'新年纳余庆，嘉节号长春'为最早春联" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，常被改写为对联" },
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白名篇，对联常取其意" }
+    ],
+    relatedArticles: [
+      { id: "chunjie", title: "春节：辞旧迎新", category: "节日节气", brief: "春节贴春联的习俗" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "对联与书法相辅相成" }
+    ]
   },
   {
     id: "fengshui",
@@ -313,6 +816,24 @@ export const ARTICLES: Article[] = [
     content: "风水是中国传统地理学和环境学的结合，研究如何选择和布置居住环境，以达到人与自然的和谐。其核心思想是'天人合一'，注重山水形胜、方位朝向等因素。",
     favorites: 1890,
     cover: "🏔",
+    source: "《葬书》·《地理正宗》·《阳宅十书》",
+    relatedPeople: [
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，'天人合一'思想源头之一" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，'道法自然'是风水哲学根基", external: true, externalUrl: "https://baike.baidu.com/item/道德经" },
+      { id: "huangdi", title: "《黄帝内经》", category: "经典典籍", brief: "中医经典，风水讲究与中医养生相通", external: true, externalUrl: "https://baike.baidu.com/item/黄帝内经" }
+    ],
+    relatedEvents: [
+      { id: "fengshui_evt", title: "郭璞著《葬书》", brief: "东晋郭璞著《葬书》，奠定风水学基础" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，体现自然与人的和谐" }
+    ],
+    relatedArticles: [
+      { id: "suzhou", title: "苏州园林：诗意的栖居", category: "建筑古迹", brief: "园林是风水的艺术化呈现" },
+      { id: "gugong", title: "故宫：紫禁城的六百年", category: "建筑古迹", brief: "故宫建筑严格遵循风水理念" }
+    ]
   },
   {
     id: "subaixie",
@@ -322,6 +843,28 @@ export const ARTICLES: Article[] = [
     content: "苏轼（1037-1101），字子瞻，号东坡居士。北宋著名文学家、书法家、画家。一生宦海沉浮，屡遭贬谪，却始终保持豁达乐观，留下《赤壁赋》《水调歌头》等不朽名篇。",
     favorites: 3211,
     cover: "🖌",
+    source: "《宋史·苏轼传》·《东坡乐府》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，苏轼推崇的'谪仙人'" },
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，影响苏轼人格养成" },
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，苏轼深受其逍遥思想影响" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，苏轼人格根基", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，影响苏轼达观态度", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "subaixie_evt", title: "乌台诗案", brief: "1079年，苏轼因诗作被诬下狱" },
+      { id: "subaixie_evt2", title: "贬谪黄州", brief: "1080年，苏轼被贬黄州团练副使" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀弟名作" },
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗代表" }
+    ],
+    relatedArticles: [
+      { id: "chayi", title: "茶事：一盏清欢", category: "民俗文化", brief: "苏轼有'从来佳茗似佳人'之名句" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "苏轼'宋四家'之一" }
+    ]
   },
   {
     id: "libai",
@@ -331,6 +874,26 @@ export const ARTICLES: Article[] = [
     content: "李白（701-762），字太白，号青莲居士。盛唐浪漫主义诗人，被后人誉为'诗仙'。其诗豪放飘逸，想象丰富，语言流转自然，音律和谐多变。代表作有《将进酒》《蜀道难》等。",
     favorites: 4567,
     cover: "🍷",
+    source: "《新唐书·李白传》·《李太白全集》",
+    relatedPeople: [
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，承袭李白的豪放诗风" },
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，李白深受其逍遥思想影响" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "中国诗歌总集，李白诗风渊源之一", external: true, externalUrl: "https://baike.baidu.com/item/诗经" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，李白人生哲学根基", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "libai_evt", title: "赐金放还", brief: "天宝三载（744年），李白被唐玄宗赐金放还" }
+    ],
+    relatedPoems: [
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" },
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗代表" }
+    ],
+    relatedArticles: [
+      { id: "duanwu", title: "端午：汨罗江畔的千年追思", category: "节日节气", brief: "李白多有端午诗作" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "李白草书亦有可观" }
+    ]
   },
   {
     id: "kongzi",
@@ -340,6 +903,25 @@ export const ARTICLES: Article[] = [
     content: "孔子（前551-前479），名丘，字仲尼。春秋时期思想家、教育家，儒家学派创始人。被尊为'至圣先师'、'万世师表'。其思想以'仁'为核心，对中国文化影响深远。",
     favorites: 5123,
     cover: "👴",
+    source: "《史记·孔子世家》·《论语》",
+    relatedPeople: [
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，与儒家形成互补" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "记载孔子言行的语录体经典", external: true, externalUrl: "https://baike.baidu.com/item/论语" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "孔子编订，列为儒家经典", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "kongzi_evt", title: "周游列国", brief: "孔子率弟子周游列国十四载" },
+      { id: "kongzi_evt2", title: "杏坛讲学", brief: "孔子聚徒讲学于杏坛，开创私学" }
+    ],
+    relatedPoems: [
+      { id: "shijing", title: "《诗经》", category: "诗词文学", brief: "孔子编订的诗歌总集" }
+    ],
+    relatedArticles: [
+      { id: "zhongguoli", title: "中国礼：礼仪之邦", category: "民俗文化", brief: "儒家礼文化的奠基" },
+      { id: "chunjie", title: "春节：辞旧迎新", category: "节日节气", brief: "春节礼仪深受儒家影响" }
+    ]
   },
   {
     id: "zhuangzi",
@@ -349,6 +931,24 @@ export const ARTICLES: Article[] = [
     content: "庄子（约前369-前286），名周。战国时期道家学派代表人物。其思想主张顺应自然、追求精神自由。《庄子》一书想象奇特，文风汪洋恣肆，充满寓言和哲理。",
     favorites: 2345,
     cover: "🦋",
+    source: "《史记·老子韩非列传》·《庄子》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，《庄子》中多次出现" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，深受庄子逍遥思想影响" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家根本经典，与《庄子》同源", external: true, externalUrl: "https://baike.baidu.com/item/道德经" }
+    ],
+    relatedEvents: [
+      { id: "zhuangzi_evt", title: "庄周梦蝶", brief: "《齐物论》中'庄周梦为蝴蝶'的著名寓言" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，体现庄子超脱情怀" }
+    ],
+    relatedArticles: [
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "庄子在《齐物论》中论'天籁'" },
+      { id: "fengshui", title: "风水：天人合一", category: "民俗文化", brief: "道家'天人合一'思想的实践" }
+    ]
   },
   {
     id: "wangxizhi",
@@ -358,6 +958,23 @@ export const ARTICLES: Article[] = [
     content: "王羲之（303-361），字逸少。东晋著名书法家，被尊为'书圣'。其书法风格飘逸灵动，代表作《兰亭集序》被誉为'天下第一行书'。",
     favorites: 1876,
     cover: "✒️",
+    source: "《晋书·王羲之传》·《书断》",
+    relatedPeople: [
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代书法家，推崇王羲之" }
+    ],
+    relatedBooks: [
+      { id: "lantingxu", title: "《兰亭集序》", category: "经典典籍", brief: "天下第一行书，王羲之代表作", external: true, externalUrl: "https://baike.baidu.com/item/兰亭集序" }
+    ],
+    relatedEvents: [
+      { id: "wangxizhi_evt", title: "兰亭雅集", brief: "东晋永和九年（353年）王羲之与名士的修禊盛会" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，常被书法家书写" }
+    ],
+    relatedArticles: [
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "王羲之是中国书法艺术巅峰" },
+      { id: "chongyang", title: "重阳：登高望远", category: "节日节气", brief: "王氏家族有重阳雅集传统" }
+    ]
   },
   {
     id: "liqingzhao",
@@ -367,6 +984,24 @@ export const ARTICLES: Article[] = [
     content: "李清照（1084-约1155），号易安居士。宋代著名女词人，婉约词派代表。前期词作清丽明快，南渡后转为深沉哀婉。所作《声声慢》《如梦令》等词流传千古。",
     favorites: 2678,
     cover: "🌸",
+    source: "《宋史·李清照传》·《漱玉词》",
+    relatedPeople: [
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代豪放词代表，与李清照婉约词相对" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "中国诗歌总集，影响李清照词风", external: true, externalUrl: "https://baike.baidu.com/item/诗经" }
+    ],
+    relatedEvents: [
+      { id: "liqingzhao_evt", title: "靖康之变", brief: "1127年北宋灭亡，李清照南渡后词风转变" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼中秋怀弟名作" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" }
+    ],
+    relatedArticles: [
+      { id: "zhongqiu", title: "中秋：月圆人团圆", category: "节日节气", brief: "中秋诗词的传统" },
+      { id: "embroidery", title: "刺绣：针尖上的丹青", category: "传统技艺", brief: "李清照时代刺绣艺术的代表" }
+    ]
   },
   {
     id: "jingju",
@@ -392,7 +1027,26 @@ export const ARTICLES: Article[] = [
       "《三岔口》——武戏经典，黑暗中的精彩搏斗",
       "《铡美案》——净角代表，包拯铁面无私"
     ],
-    tips: "欣赏京剧不必一开始就追求听懂唱词。可以先从武戏看起（如《三岔口》《闹天宫》），视觉冲击力强，容易入门。再逐渐过渡到文戏，品味唱腔之美。看戏前了解故事背景会大大提升观赏体验。"
+    tips: "欣赏京剧不必一开始就追求听懂唱词。可以先从武戏看起（如《三岔口》《闹天宫》），视觉冲击力强，容易入门。再逐渐过渡到文戏，品味唱腔之美。看戏前了解故事背景会大大提升观赏体验。",
+    source: "《京剧史》·《中国大百科全书·戏曲卷》·《梅兰芳全集》",
+    relatedPeople: [
+      { id: "meilanfang", title: "梅兰芳", category: "历史人物", brief: "京剧四大名旦之首，旦行一代宗师", external: true, externalUrl: "https://baike.baidu.com/item/梅兰芳" },
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "京剧中有《孔子》剧目" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "京剧剧目多取《诗经》诗意" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节京剧贺岁", category: "节日节气", brief: "春节期间京剧贺岁演出" }
+    ],
+    relatedPoems: [
+      { id: "chuibi", title: "出师表", category: "诗词文学", brief: "诸葛亮前出师表，京剧《空城计》据此编演" },
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作" }
+    ],
+    relatedArticles: [
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "京剧的源头之一" },
+      { id: "piyingxi", title: "皮影戏：光影千年", category: "传统艺术", brief: "中国传统戏剧" }
+    ]
   },
   {
     id: "piyingxi",
@@ -417,7 +1071,25 @@ export const ARTICLES: Article[] = [
       "《三国演义》——战争场面在皮影中尤为精彩",
       "《闹天宫》——武戏代表，操纵技艺高超"
     ],
-    tips: "观看皮影戏最好选择现场演出，光影效果和艺人表演的魅力是视频难以完全传达的。如果有机会去陕西华县或河北唐山，一定要看一场地道的皮影戏。线上可搜索成都博物馆皮影展厅的数字资源。"
+    tips: "观看皮影戏最好选择现场演出，光影效果和艺人表演的魅力是视频难以完全传达的。如果有机会去陕西华县或河北唐山，一定要看一场地道的皮影戏。线上可搜索成都博物馆皮影展厅的数字资源。",
+    source: "《中国皮影戏史》·《辞海·艺术分册》·《陕西皮影》",
+    relatedPeople: [
+      { id: "lishaoweng", title: "李少翁", category: "历史人物", brief: "汉代方士，相传为皮影戏发明者", external: true, externalUrl: "https://baike.baidu.com/item/李少翁" }
+    ],
+    relatedBooks: [
+      { id: "dongjing", title: "《东京梦华录》", category: "经典典籍", brief: "宋代孟元老著，记载皮影戏演出盛况", external: true, externalUrl: "https://baike.baidu.com/item/东京梦华录" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节皮影演出", category: "节日节气", brief: "春节期间各地皮影戏表演" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作" }
+    ],
+    relatedArticles: [
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "中国传统戏曲" },
+      { id: "jingju", title: "京剧：国粹之光", category: "传统艺术", brief: "中国传统戏曲" },
+      { id: "papercut", title: "剪纸：纸上生花", category: "传统技艺", brief: "皮影的雕刻借鉴剪纸" }
+    ]
   },
   {
     id: "embroidery",
@@ -442,7 +1114,25 @@ export const ARTICLES: Article[] = [
       "粤绣《百鸟朝凤》——色彩绚丽，构图饱满",
       "蜀绣《芙蓉鲤鱼》——线条细腻，层次丰富"
     ],
-    tips: "初学刺绣最重要的是保持耐心和手的稳定。绣线不要拉得太紧，否则底布会皱。使用绣绷能保持底布平整。初学者建议选择针数较粗的棉线，比丝线更容易操作。每天绣半小时，坚持一个月就能完成一幅像样的作品。"
+    tips: "初学刺绣最重要的是保持耐心和手的稳定。绣线不要拉得太紧，否则底布会皱。使用绣绷能保持底布平整。初学者建议选择针数较粗的棉线，比丝线更容易操作。每天绣半小时，坚持一个月就能完成一幅像样的作品。",
+    source: "《中国刺绣史》·《苏绣技法》·《湘绣艺术》",
+    relatedPeople: [
+      { id: "liqingzhao", title: "李清照", category: "历史人物", brief: "宋代女词人，刺绣常以词意为题材" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", brief: "刺绣常取《诗经》意趣" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节刺绣展", category: "节日节气", brief: "春节期间传统刺绣展览" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作" }
+    ],
+    relatedArticles: [
+      { id: "zharian", title: "扎染：布里生花", category: "传统技艺", brief: "传统染织工艺" },
+      { id: "ciqi", title: "青花瓷：景德镇的蓝白韵律", category: "传统技艺", brief: "传统工艺" },
+      { id: "papercut", title: "剪纸：纸上生花", category: "传统技艺", brief: "传统手工艺" }
+    ]
   },
   {
     id: "zharian",
@@ -467,7 +1157,24 @@ export const ARTICLES: Article[] = [
       "南通蓝印花布——虽为印花，与扎染风格相近",
       "日本絞り染め——受中国扎染影响发展的日本工艺"
     ],
-    tips: "扎染最大的魅力在于'拆线那一刻的惊喜'——你永远不知道最终会呈现怎样的花纹。初学者建议从简单的同心圆开始练习。使用天然植物染料（如板蓝根）更环保，颜色也更有层次感。染好的布料首次清洗会有浮色脱落，属正常现象。"
+    tips: "扎染最大的魅力在于'拆线那一刻的惊喜'——你永远不知道最终会呈现怎样的花纹。初学者建议从简单的同心圆开始练习。使用天然植物染料（如板蓝根）更环保，颜色也更有层次感。染好的布料首次清洗会有浮色脱落，属正常现象。",
+    source: "《中国染织史》·《白族扎染》·《中国传统工艺》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，扎染纹样多取诗意" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，影响扎染美学" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节扎染展", category: "节日节气", brief: "春节期间传统扎染展览" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作" }
+    ],
+    relatedArticles: [
+      { id: "embroidery", title: "刺绣：针尖上的丹青", category: "传统技艺", brief: "刺绣常与扎染结合" },
+      { id: "ciqi", title: "青花瓷：景德镇的蓝白韵律", category: "传统技艺", brief: "传统工艺" }
+    ]
   },
   {
     id: "guqin",
@@ -493,7 +1200,27 @@ export const ARTICLES: Article[] = [
       "《阳关三叠》——送别名曲，'劝君更尽一杯酒'",
       "《酒狂》——阮籍所作，借酒抒怀"
     ],
-    tips: "学习古琴最好找一位老师入门，因为减字谱和指法需要面对面传授。初学不必急于弹曲，先练好基本指法。古琴的音量较小，适合独自或在小范围品赏，这正是其'雅'之所在。每天练习30分钟，三个月可弹简单小曲。"
+    tips: "学习古琴最好找一位老师入门，因为减字谱和指法需要面对面传授。初学不必急于弹曲，先练好基本指法。古琴的音量较小，适合独自或在小范围品赏，这正是其'雅'之所在。每天练习30分钟，三个月可弹简单小曲。",
+    source: "《古琴曲集》·《琴史》·《中国音乐史》",
+    relatedPeople: [
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表人物，'鼓琴'故事流传千古" },
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家'六艺'之一为琴，孔子善鼓琴" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "记载孔子学琴'曲不离口'的故事" },
+      { id: "laozi", title: "《道德经》", category: "经典典籍", brief: "道家经典，与古琴精神相通" }
+    ],
+    relatedEvents: [
+      { id: "zhongqiu", title: "中秋古琴雅集", category: "节日节气", brief: "中秋传统古琴演奏" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，中秋怀人" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡" }
+    ],
+    relatedArticles: [
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "传统文人雅艺" },
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "传统文人雅艺" }
+    ]
   },
   {
     id: "shufa",
@@ -519,7 +1246,28 @@ export const ARTICLES: Article[] = [
       "欧阳询《九成宫醴泉铭》——楷书典范，法度森严",
       "怀素《自叙帖》——草书极品，狂草如风"
     ],
-    tips: "学书法贵在坚持，每天练字半小时比一周练三小时更有效。初学一定要从楷书入手，打好基础再学行草。选一本好字帖等于找了一位好老师，不要频繁换帖。练字时注意坐姿和执笔方法，'指实掌虚'是基本要领。"
+    tips: "学书法贵在坚持，每天练字半小时比一周练三小时更有效。初学一定要从楷书入手，打好基础再学行草。选一本好字帖等于找了一位好老师，不要频繁换帖。练字时注意坐姿和执笔方法，'指实掌虚'是基本要领。",
+    source: "《中国书法史》·《书法概论》·《兰亭序》",
+    relatedPeople: [
+      { id: "wangxizhi", title: "王羲之", category: "历史人物", brief: "东晋书圣，《兰亭集序》作者" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，亦是草书大家" }
+    ],
+    relatedBooks: [
+      { id: "lantingxu", title: "《兰亭集序》", category: "经典典籍", brief: "天下第一行书", external: true, externalUrl: "https://baike.baidu.com/item/兰亭集序" },
+      { id: "lunyu", title: "《论语》", category: "经典典籍", brief: "儒家经典，书法常书内容" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节写春联", category: "节日节气", brief: "春节传统习俗，书法大显身手" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，常被书法家书写" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白名篇，书法常书" }
+    ],
+    relatedArticles: [
+      { id: "guqin", title: "古琴：太古之音", category: "传统艺术", brief: "传统文人雅艺'琴棋书画'之一" },
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "传统艺术" },
+      { id: "tiehua", title: "铁画：铁打丹青", category: "传统技艺", brief: "将书法锻于铁上" }
+    ]
   },
   {
     id: "tiehua",
@@ -544,7 +1292,24 @@ export const ARTICLES: Article[] = [
       "《奔马》——仿徐悲鸿画意，铁线流畅有力",
       "《草书》——以铁锻写书法，刚劲飘逸"
     ],
-    tips: "铁画是较为小众的传统工艺，欣赏时可以将其与国画对照，感受'以铁代墨'的妙处。如果有机会去芜湖，一定要去铁画工坊看看匠人现场锻打的过程，那种火花四溅中诞生艺术的体验非常震撼。"
+    tips: "铁画是较为小众的传统工艺，欣赏时可以将其与国画对照，感受'以铁代墨'的妙处。如果有机会去芜湖，一定要去铁画工坊看看匠人现场锻打的过程，那种火花四溅中诞生艺术的体验非常震撼。",
+    source: "《芜湖铁画》·《中国传统工艺》·《汤鹏铁画》",
+    relatedPeople: [
+      { id: "tangpeng", title: "汤鹏", category: "历史人物", brief: "清代铁匠，铁画创始人", external: true, externalUrl: "https://baike.baidu.com/item/汤鹏" }
+    ],
+    relatedBooks: [
+      { id: "changwuzhi", title: "《长物志》", category: "经典典籍", brief: "明代文震亨著，影响铁画意境", external: true, externalUrl: "https://baike.baidu.com/item/长物志" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节工艺展", category: "节日节气", brief: "春节期间铁画展览" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作" }
+    ],
+    relatedArticles: [
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "铁画借鉴书法笔意" },
+      { id: "jingtailan", title: "景泰蓝：皇家工艺", category: "传统技艺", brief: "同为传统金属工艺" }
+    ]
   },
   {
     id: "kite",
@@ -569,7 +1334,26 @@ export const ARTICLES: Article[] = [
       "南通板鹞风筝——装有哨口，放飞时声如天籁",
       "天津软翅风筝——魏记风筝，工艺精湛"
     ],
-    tips: "做风筝最关键的是骨架的对称和平衡，稍有偏差就飞不稳。初学者建议从菱形风筝开始，结构简单容易成功。放风筝要选择空旷无障碍物的场地，避开高压线。春天是放风筝的最佳季节，'草长莺飞二月天'正是好时候。"
+    tips: "做风筝最关键的是骨架的对称和平衡，稍有偏差就飞不稳。初学者建议从菱形风筝开始，结构简单容易成功。放风筝要选择空旷无障碍物的场地，避开高压线。春天是放风筝的最佳季节，'草长莺飞二月天'正是好时候。",
+    source: "《曹雪芹风筝谱》·《南鹞北鸢考工志》·《中国风筝》",
+    relatedPeople: [
+      { id: "caoxueqin", title: "曹雪芹", category: "历史人物", brief: "清代作家，著有《南鹞北鸢考工志》", external: true, externalUrl: "https://baike.baidu.com/item/曹雪芹" },
+      { id: "mozi", title: "墨子", category: "历史人物", brief: "相传最早制作风筝雏形", external: true, externalUrl: "https://baike.baidu.com/item/墨子" }
+    ],
+    relatedBooks: [
+      { id: "hongloumeng", title: "《红楼梦》", category: "经典典籍", brief: "曹雪芹著，多次写到放风筝", external: true, externalUrl: "https://baike.baidu.com/item/红楼梦" }
+    ],
+    relatedEvents: [
+      { id: "qingming", title: "清明放风筝", category: "节日节气", brief: "清明节传统放风筝习俗" },
+      { id: "chunjie", title: "春节风筝展", category: "节日节气", brief: "春节期间各地风筝展览" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作" }
+    ],
+    relatedArticles: [
+      { id: "tieba", title: "活字印刷：文明之火", category: "传统技艺", brief: "同为传统工艺" },
+      { id: "papercut", title: "剪纸：纸上生花", category: "传统技艺", brief: "传统手工艺" }
+    ]
   },
   {
     id: "tieba",
@@ -594,7 +1378,25 @@ export const ARTICLES: Article[] = [
       "明代铜活字——华燧会通馆铜字印本",
       "《古今图书集成》——清代铜活字印制的大型类书"
     ],
-    tips: "活字印刷体验最有趣的是刻反字——你需要将字反过来写、反过来刻，印出来才是正的。初学可以用橡皮章代替胶泥，更容易操作。如果有机会去福建瑞安或宁化，可以看到至今仍在使用木活字修族谱的传承人，感受活态传承的魅力。"
+    tips: "活字印刷体验最有趣的是刻反字——你需要将字反过来写、反过来刻，印出来才是正的。初学可以用橡皮章代替胶泥，更容易操作。如果有机会去福建瑞安或宁化，可以看到至今仍在使用木活字修族谱的传承人，感受活态传承的魅力。",
+    source: "《梦溪笔谈》·《中国印刷史》·《中华印刷大典》",
+    relatedPeople: [
+      { id: "bisheng", title: "毕昇", category: "历史人物", brief: "北宋发明家，活字印刷术发明者", external: true, externalUrl: "https://baike.baidu.com/item/毕昇" },
+      { id: "wangzhen", title: "王祯", category: "历史人物", brief: "元代农学家，改进木活字印刷", external: true, externalUrl: "https://baike.baidu.com/item/王祯" }
+    ],
+    relatedBooks: [
+      { id: "mengxibitan", title: "《梦溪笔谈》", category: "经典典籍", brief: "沈括著，最早记载毕昇活字印刷", external: true, externalUrl: "https://baike.baidu.com/item/梦溪笔谈" }
+    ],
+    relatedEvents: [
+      { id: "chunjie", title: "春节印刷展", category: "节日节气", brief: "春节期间传统印刷展览" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作" }
+    ],
+    relatedArticles: [
+      { id: "shufa", title: "书法：墨舞千秋", category: "传统艺术", brief: "书法与印刷关系密切" },
+      { id: "kite", title: "风筝：纸鸢乘风", category: "传统技艺", brief: "同为传统手工艺" }
+    ]
   },
   // ===== 建筑古迹 =====
   {
@@ -620,7 +1422,25 @@ export const ARTICLES: Article[] = [
       "太和殿——故宫核心，明清举行重大典礼的地方",
       "御花园——明清皇家园林典范，奇石秀木遍布"
     ],
-    tips: "故宫建议提前7天在官网实名购票。最佳参观季节是春秋两季，避开节假日高峰。进故宫一定要租借电子讲解器或在公众号上听官方讲解，了解每座建筑背后的故事。午门的'门钉九纵九横'、脊兽的数量都有讲究，处处体现着皇家的礼制。"
+    tips: "故宫建议提前7天在官网实名购票。最佳参观季节是春秋两季，避开节假日高峰。进故宫一定要租借电子讲解器或在公众号上听官方讲解，了解每座建筑背后的故事。午门的'门钉九纵九横'、脊兽的数量都有讲究，处处体现着皇家的礼制。",
+    source: "《明史·宫室志》·《清史稿·宫殿志》",
+    relatedPeople: [
+      { id: "zhudi", title: "朱棣", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/明成祖", brief: "故宫建造者，1406年下诏营建紫禁城" },
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，故宫建筑处处体现儒家礼制" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/论语", brief: "儒家经典，故宫礼制之本" }
+    ],
+    relatedEvents: [
+      { id: "gugong_evt", title: "故宫博物院成立", brief: "1925年10月10日，故宫博物院正式成立对公众开放" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有", brief: "苏轼中秋怀弟名作" }
+    ],
+    relatedArticles: [
+      { id: "badaling", title: "长城：中华民族的脊梁", category: "建筑古迹", brief: "同为明清皇家工程" },
+      { id: "fengshui", title: "风水：天人合一", category: "民俗文化", brief: "故宫严格遵循风水理念" }
+    ]
   },
   {
     id: "badaling",
@@ -645,7 +1465,25 @@ export const ARTICLES: Article[] = [
       "嘉峪关——明长城西端起点，'天下第一雄关'",
       "金山岭长城——保存最完整，被称'摄影爱好者的长城'"
     ],
-    tips: "登长城不要只看人多就止步。推荐爬到北八楼或北十二楼，人会少很多，视野也更开阔。长城台阶陡峭，务必穿防滑鞋，下雨天不要登城。注意：长城上卫生间有限，请提前做好准备。带孩子的游客推荐慕田峪，有缆车和滑道，老人小孩都适宜。"
+    tips: "登长城不要只看人多就止步。推荐爬到北八楼或北十二楼，人会少很多，视野也更开阔。长城台阶陡峭，务必穿防滑鞋，下雨天不要登城。注意：长城上卫生间有限，请提前做好准备。带孩子的游客推荐慕田峪，有缆车和滑道，老人小孩都适宜。",
+    source: "《史记·封禅书》·《淮南子·览冥训》",
+    relatedPeople: [
+      { id: "qinshihuang", title: "秦始皇", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/秦始皇", brief: "公元前221年统一六国后连缀修筑长城" },
+      { id: "mengtian", title: "蒙恬", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/蒙恬", brief: "秦朝名将，率三十万大军修筑长城" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "收录秦风《无衣》等戍边诗篇" }
+    ],
+    relatedEvents: [
+      { id: "qin_unite", title: "秦始皇修长城", brief: "公元前221年，秦始皇连缀秦赵燕三国长城，西起临洮东至辽东" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作，体现盛唐气象" }
+    ],
+    relatedArticles: [
+      { id: "gugong", title: "故宫：紫禁城的六百年", category: "建筑古迹", brief: "同为明清皇家建筑工程" },
+      { id: "mogaoku", title: "莫高窟：丝路上的艺术宝库", category: "建筑古迹", brief: "同为世界文化遗产" }
+    ]
   },
   {
     id: "mogaoku",
@@ -670,7 +1508,25 @@ export const ARTICLES: Article[] = [
       "飞天壁画——第321窟，初唐双飞天最为经典",
       "反弹琵琶——第112窟，《观无量寿经变》中的舞者"
     ],
-    tips: "莫高窟的参观与解说完全取决于讲解员。预约时如有选择，可以等有经验的讲解员。洞窟内禁止拍照和摄像，闪光灯会对千年壁画造成不可逆伤害。最好在春末或秋初前往，既避开了旺季，又避开了沙尘暴。7-8月敦煌非常炎热，最高温度可达40℃，需做好防晒。"
+    tips: "莫高窟的参观与解说完全取决于讲解员。预约时如有选择，可以等有经验的讲解员。洞窟内禁止拍照和摄像，闪光灯会对千年壁画造成不可逆伤害。最好在春末或秋初前往，既避开了旺季，又避开了沙尘暴。7-8月敦煌非常炎热，最高温度可达40℃，需做好防晒。",
+    source: "《李克让重修莫高窟佛龛碑》·《敦煌录》",
+    relatedPeople: [
+      { id: "lezun", title: "乐僔", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/乐僔", brief: "前秦僧人，公元366年首凿莫高窟第一窟" },
+      { id: "wangyuanlu", title: "王圆箓", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/王圆箓", brief: "清末道士，1900年发现藏经洞" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "儒家经典，敦煌壁画多取其诗意" }
+    ],
+    relatedEvents: [
+      { id: "mogaoku_evt", title: "藏经洞发现", brief: "1900年，王圆箓偶然发现第17窟藏经洞，内藏5万余件文献" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作" }
+    ],
+    relatedArticles: [
+      { id: "badaling", title: "长城：中华民族的脊梁", category: "建筑古迹", brief: "同为世界文化遗产" },
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "莫高窟壁画与戏曲艺术相通" }
+    ]
   },
   {
     id: "suzhou",
@@ -695,7 +1551,27 @@ export const ARTICLES: Article[] = [
       "网师园——南宋史正志万卷堂旧址，'小园极则'",
       "狮子林——元代天如禅师惟则的菩提正宗寺后花园，以假山闻名"
     ],
-    tips: "游苏州园林一定要慢。建议每个园子至少花2小时，重点欣赏'移步换景'的妙处。注意花窗漏景，'庭院深深深几许'的意境要在恰当的角度才能体会。拙政园和留园旺季人很多，建议早晨7:30前到达，或购买夜场票，体验不一样的园林。"
+    tips: "游苏州园林一定要慢。建议每个园子至少花2小时，重点欣赏'移步换景'的妙处。注意花窗漏景，'庭院深深深几许'的意境要在恰当的角度才能体会。拙政园和留园旺季人很多，建议早晨7:30前到达，或购买夜场票，体验不一样的园林。",
+    source: "《长物志》·《园冶》·《闲情偶寄》",
+    relatedPeople: [
+      { id: "wenwenzheng", title: "文震亨", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/文震亨", brief: "明代文人，著《长物志》影响造园美学" },
+      { id: "wangxianchen", title: "王献臣", category: "历史人物", external: true, externalUrl: "https://baike.baidu.com/item/王献臣", brief: "明代御史，拙政园建造者" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/论语", brief: "儒家经典，造园理念之本" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "古典诗歌，园林匾额楹联多取其意" }
+    ],
+    relatedEvents: [
+      { id: "suzhou_evt", title: "九处园林列入世遗", brief: "1997年拙政园等4处，2000年扩展为9处列入世界文化遗产" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，园林意境相通" }
+    ],
+    relatedArticles: [
+      { id: "gugong", title: "故宫：紫禁城的六百年", category: "建筑古迹", brief: "同为世界文化遗产" },
+      { id: "fengshui", title: "风水：天人合一", category: "民俗文化", brief: "园林是风水的艺术化呈现" },
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "苏州园林与昆曲同源于苏州" }
+    ]
   },
   // ===== 神话传说 =====
   {
@@ -721,7 +1597,26 @@ export const ARTICLES: Article[] = [
       "苏轼《水调歌头》——'但愿人长久，千里共婵娟'",
       "《嫦娥奔月》——敦煌壁画中的经典题材"
     ],
-    tips: "中秋节是体验嫦娥文化的最佳时机。在南方一些地区，至今保留'拜月'习俗：妇女在月下设案，摆放月饼、瓜果，焚香拜月。给孩子的睡前故事里讲讲嫦娥、玉兔、吴刚，让孩子在仰望月亮时有更丰富的想象。中秋夜的月亮是一年中最圆的，'海上生明月，天涯共此时'——不妨给远方的人打个电话，遥寄相思。"
+    tips: "中秋节是体验嫦娥文化的最佳时机。在南方一些地区，至今保留'拜月'习俗：妇女在月下设案，摆放月饼、瓜果，焚香拜月。给孩子的睡前故事里讲讲嫦娥、玉兔、吴刚，让孩子在仰望月亮时有更丰富的想象。中秋夜的月亮是一年中最圆的，'海上生明月，天涯共此时'——不妨给远方的人打个电话，遥寄相思。",
+    source: "《归藏》·《淮南子·览冥训》·《搜神记》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，多有咏月名篇" },
+      { id: "subaixie", title: "苏轼", category: "历史人物", brief: "宋代文豪，《水调歌头》写尽中秋情怀" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "收录'月出皎兮'等咏月诗篇" }
+    ],
+    relatedEvents: [
+      { id: "change_evt", title: "后羿射日", brief: "传说后羿射下九日，西王母赐其不死药，嫦娥因故偷食" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", external: true, externalUrl: "https://baike.baidu.com/item/水调歌头·明月几时有", brief: "苏轼中秋怀弟名作，'但愿人长久'" },
+      { id: "jingye", title: "静夜思", category: "诗词文学", brief: "李白月夜思乡名篇" }
+    ],
+    relatedArticles: [
+      { id: "zhongqiu", title: "中秋：月圆人团圆", category: "节日节气", brief: "嫦娥故事的中秋文化背景" },
+      { id: "pangu", title: "盘古开天：鸿蒙初辟的神话", category: "神话传说", brief: "同为创世神话" }
+    ]
   },
   {
     id: "liangzhu",
@@ -746,7 +1641,25 @@ export const ARTICLES: Article[] = [
       "电影《梁山伯与祝英台》——1963年邵氏黄梅调电影",
       "宁波梁祝文化公园——梁祝传说发源地"
     ],
-    tips: "听《梁祝》最好的版本是俞丽拿演奏的。小提琴协奏曲的'楼台会'、'哭灵'、'化蝶'三个乐章是情感高潮。建议在安静的夜晚听完全曲（约25分钟），感受从相识相知到生离死别再到化蝶双飞的完整情感。带孩子听《梁祝》时，可以先讲讲故事情节，孩子会更有共鸣。"
+    tips: "听《梁祝》最好的版本是俞丽拿演奏的。小提琴协奏曲的'楼台会'、'哭灵'、'化蝶'三个乐章是情感高潮。建议在安静的夜晚听完全曲（约25分钟），感受从相识相知到生离死别再到化蝶双飞的完整情感。带孩子听《梁祝》时，可以先讲讲故事情节，孩子会更有共鸣。",
+    source: "《十道四蕃志》·《宣室志》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，梁祝故事中常见诗意表达" },
+      { id: "liqingzhao", title: "李清照", category: "历史人物", brief: "宋代女词人，爱情诗作与梁祝精神相通" }
+    ],
+    relatedBooks: [
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "收录爱情诗篇，梁祝精神源流" }
+    ],
+    relatedEvents: [
+      { id: "liangzhu_evt", title: "梁祝同冢", brief: "东晋时期，祝英台与梁山伯合葬一处'义妇祝英台与梁山伯同冢'" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼怀人词作，与梁祝情感相通" }
+    ],
+    relatedArticles: [
+      { id: "baishe", title: "白蛇传：千年等一回的爱情", category: "神话传说", brief: "中国四大爱情传说之一" },
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "越剧《梁祝》是戏曲经典" }
+    ]
   },
   {
     id: "baishe",
@@ -771,7 +1684,25 @@ export const ARTICLES: Article[] = [
       "电视剧《新白娘子传奇》——1992年经典",
       "动画电影《白蛇：缘起》——追光动画的现代演绎"
     ],
-    tips: "去杭州西湖游玩时，断桥不要错过。建议早晨或黄昏前往，'断桥残雪'是西湖十景之一。雷峰塔是新塔，2002年重建，登塔可俯瞰西湖全景。'白蛇传'主题的文创产品很多，如丝绸、首饰等，都是很好的纪念品。带孩子看《新白娘子传奇》可以了解传统爱情观，但要注意引导孩子对'法海'角色的辩证认识。"
+    tips: "去杭州西湖游玩时，断桥不要错过。建议早晨或黄昏前往，'断桥残雪'是西湖十景之一。雷峰塔是新塔，2002年重建，登塔可俯瞰西湖全景。'白蛇传'主题的文创产品很多，如丝绸、首饰等，都是很好的纪念品。带孩子看《新白娘子传奇》可以了解传统爱情观，但要注意引导孩子对'法海'角色的辩证认识。",
+    source: "《警世通言·白娘子永镇雷峰塔》·《西湖三塔记》",
+    relatedPeople: [
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，白蛇故事广为流传" },
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，'人妖之恋'涉及儒家伦理思考" }
+    ],
+    relatedBooks: [
+      { id: "lunyu", title: "《论语》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/论语", brief: "儒家经典，'人'与'妖'的伦理思考" }
+    ],
+    relatedEvents: [
+      { id: "baishe_evt", title: "雷峰塔倒坍", brief: "1924年9月25日，杭州雷峰塔倒坍，'白蛇传'故事更广为流传" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，情感相通" }
+    ],
+    relatedArticles: [
+      { id: "liangzhu", title: "梁祝化蝶：东方的罗密欧与朱丽叶", category: "神话传说", brief: "中国四大爱情传说之一" },
+      { id: "kunqu", title: "昆曲：百戏之祖", category: "传统艺术", brief: "越剧《白蛇传》是戏曲经典" }
+    ]
   },
   {
     id: "pangu",
@@ -796,7 +1727,26 @@ export const ARTICLES: Article[] = [
       "《千字文》——'天地玄黄，宇宙洪荒'成为蒙学经典",
       "盘古开天——众多游戏、影视中的经典IP"
     ],
-    tips: "给孩子讲盘古故事时，可以配合简笔画或动画，让孩子的想象力飞扬。盘古顶天立地'日长一丈'的情景，可以让孩子表演。'垂死化身'的段落可以培养孩子对大自然的感恩意识——'我们呼吸的风，是盘古的气息；我们的眼睛，与盘古的日月同辉'。带孩子去大自然时，可以引导他们联想：山是盘古的骨骼，水是盘古的血液，草木是盘古的毛发。"
+    tips: "给孩子讲盘古故事时，可以配合简笔画或动画，让孩子的想象力飞扬。盘古顶天立地'日长一丈'的情景，可以让孩子表演。'垂死化身'的段落可以培养孩子对大自然的感恩意识——'我们呼吸的风，是盘古的气息；我们的眼睛，与盘古的日月同辉'。带孩子去大自然时，可以引导他们联想：山是盘古的骨骼，水是盘古的血液，草木是盘古的毛发。",
+    source: "《三五历纪》·《五运历年纪》·《述异记》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，整理上古神话传说" },
+      { id: "zhuangzi", title: "庄子", category: "历史人物", brief: "道家代表，'天地与我并生'的哲学与盘古精神相通" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/道德经", brief: "道家根本经典，'道生一'与盘古创世相通" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "最早诗歌总集，保留上古神话元素" }
+    ],
+    relatedEvents: [
+      { id: "pangu_evt", title: "盘古垂死化身", brief: "传说盘古死后气息为风云、声为雷霆、目为日月，化身万物" }
+    ],
+    relatedPoems: [
+      { id: "shuihu", title: "水调歌头", category: "诗词文学", brief: "苏轼词作，体现宇宙人生的思考" }
+    ],
+    relatedArticles: [
+      { id: "change", title: "嫦娥奔月：月宫仙子的千年守望", category: "神话传说", brief: "同为上古神话" },
+      { id: "nezha", title: "哪吒闹海：少年英雄的觉醒", category: "神话传说", brief: "同为经典神话传说" }
+    ]
   },
   {
     id: "nezha",
@@ -821,6 +1771,25 @@ export const ARTICLES: Article[] = [
       "《封神演义》——明代许仲琳原著",
       "哪吒——天津河西区'哪吒故里'，建有哪吒闹海主题展馆"
     ],
-    tips: "带孩子看《哪吒闹海》时，可以重点讨论'我命由我不由天'的主题——但也要注意引导孩子认识到'父母的不易'。哪吒'剔骨还父'看似决绝，实则包含着复杂的亲子关系探讨，《哪吒之魔童降世》对此有更现代的诠释。建议家长和孩子一起看这部电影，然后讨论'如果你不被父母理解，你怎么办'。"
+    tips: "带孩子看《哪吒闹海》时，可以重点讨论'我命由我不由天'的主题——但也要注意引导孩子认识到'父母的不易'。哪吒'剔骨还父'看似决绝，实则包含着复杂的亲子关系探讨，《哪吒之魔童降世》对此有更现代的诠释。建议家长和孩子一起看这部电影，然后讨论'如果你不被父母理解，你怎么办'。",
+    source: "《封神演义》·《西游记》·《三教源流搜神大全》",
+    relatedPeople: [
+      { id: "kongzi", title: "孔子", category: "历史人物", brief: "儒家始祖，'父子'关系是哪吒故事核心议题之一" },
+      { id: "libai", title: "李白", category: "历史人物", brief: "盛唐诗人，'我命由我不由天'的精神共鸣" }
+    ],
+    relatedBooks: [
+      { id: "laozi", title: "《道德经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/道德经", brief: "道家经典，太乙真人'道法自然'的精神" },
+      { id: "shijing", title: "《诗经》", category: "经典典籍", external: true, externalUrl: "https://baike.baidu.com/item/诗经", brief: "收录上古神话元素" }
+    ],
+    relatedEvents: [
+      { id: "nezha_evt", title: "哪吒闹海", brief: "传说哪吒七岁时在东海洗澡打死夜叉李艮、抽龙太子敖丙龙筋" }
+    ],
+    relatedPoems: [
+      { id: "jiangjinjiu", title: "将进酒", category: "诗词文学", brief: "李白豪放诗作，体现反叛精神" }
+    ],
+    relatedArticles: [
+      { id: "pangu", title: "盘古开天：鸿蒙初辟的神话", category: "神话传说", brief: "同为经典神话传说" },
+      { id: "change", title: "嫦娥奔月：月宫仙子的千年守望", category: "神话传说", brief: "同为上古神话" }
+    ]
   },
 ];

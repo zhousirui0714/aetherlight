@@ -2,11 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, ArrowLeft, Calendar, BookOpen, Loader2, Share2, ScrollText, Sparkles, GraduationCap, Lightbulb } from "lucide-react";
+import { Heart, ArrowLeft, Calendar, Loader2, Share2 } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { trackEvent } from "@/lib/journey-storage";
 import { AnnotationPanel } from "@/components/annotation-panel";
+import { AIInsightsPanel } from "@/components/ai-insights-panel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/article/$id")({
@@ -218,76 +219,8 @@ function ArticlePage() {
             )}
           </div>
 
-          {/* 历史背景 */}
-          {article.history && (
-            <section className="mt-10 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
-              <div className="mb-4 flex items-center gap-2">
-                <ScrollText className="h-5 w-5 text-accent" />
-                <h2 className="font-serif text-2xl text-foreground">历史背景</h2>
-              </div>
-              <p className="font-serif leading-loose text-foreground/80">{article.history}</p>
-            </section>
-          )}
-
-          {/* 文化影响 */}
-          {article.influence && (
-            <section className="mt-6 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
-              <div className="mb-4 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <h2 className="font-serif text-2xl text-foreground">文化影响</h2>
-              </div>
-              <p className="font-serif leading-loose text-foreground/80">{article.influence}</p>
-            </section>
-          )}
-
-          {/* 经典作品 */}
-          {article.classics && article.classics.length > 0 && (
-            <section className="mt-6 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
-              <div className="mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-accent" />
-                <h2 className="font-serif text-2xl text-foreground">经典作品</h2>
-              </div>
-              <ul className="space-y-3">
-                {article.classics.map((item: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-3 font-serif leading-relaxed text-foreground/80">
-                    <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent/50" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* 体验教程 */}
-          {article.tutorial && article.tutorial.length > 0 && (
-            <section className="mt-6 rounded-2xl border border-accent/20 bg-accent/5 p-6 md:p-8">
-              <div className="mb-4 flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-accent" />
-                <h2 className="font-serif text-2xl text-foreground">入门指南</h2>
-              </div>
-              <ol className="space-y-4">
-                {article.tutorial.map((step: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-4">
-                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/15 font-serif text-sm font-semibold text-accent">
-                      {idx + 1}
-                    </span>
-                    <p className="pt-0.5 font-serif leading-relaxed text-foreground/80">{step}</p>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
-
-          {/* 欣赏小贴士 */}
-          {article.tips && (
-            <section className="mt-6 rounded-2xl border border-amber-200/50 bg-amber-50/50 p-6 md:p-8 dark:border-amber-900/30 dark:bg-amber-950/10">
-              <div className="mb-4 flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-amber-500" />
-                <h2 className="font-serif text-2xl text-foreground">欣赏小贴士</h2>
-              </div>
-              <p className="font-serif leading-loose text-foreground/80">{article.tips}</p>
-            </section>
-          )}
+          {/* AI 深度内容面板 - 包含：出处、历史背景、相关人物/典籍/事件/诗词/推荐、知识图谱、时间线、现代解读、常见问题 */}
+          <AIInsightsPanel article={article} />
 
           {/* 底部操作 */}
           <div className="mt-12 flex items-center justify-between border-t border-border pt-8">
