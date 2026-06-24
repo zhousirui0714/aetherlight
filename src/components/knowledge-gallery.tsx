@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Heart, Search, Loader2 } from "lucide-react";
 import { ARTICLES, CATEGORIES, type Article } from "@/lib/knowledge-data";
 import { supabase } from "@/integrations/supabase/client";
-import { STATIC_IMAGE_MAP } from "@/lib/static-images";
+import { STATIC_IMAGE_MAP, CATEGORY_IMAGES } from "@/lib/static-images";
 
 type DbArticle = {
   id: string;
@@ -25,9 +25,17 @@ export function KnowledgeGallery() {
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
-  // 获取文章对应的静态图片URL
-  const getStaticImageUrl = (title: string): string | null => {
-    return STATIC_IMAGE_MAP[title] || null;
+  // 获取文章对应的静态图片URL，优先使用专门图片，其次使用分类通用图片
+  const getStaticImageUrl = (title: string, category: string): string | null => {
+    // 优先使用专门配置的图片
+    if (STATIC_IMAGE_MAP[title]) {
+      return STATIC_IMAGE_MAP[title];
+    }
+    // 其次使用分类级别的通用图片
+    if (CATEGORY_IMAGES[category]) {
+      return CATEGORY_IMAGES[category];
+    }
+    return null;
   };
 
   const handleImageError = (articleId: string) => {
@@ -194,7 +202,7 @@ export function KnowledgeGallery() {
                 
                 {/* 静态图片 + emoji fallback */}
                 {(() => {
-                  const staticUrl = getStaticImageUrl(item.title);
+                  const staticUrl = getStaticImageUrl(item.title, item.category);
                   const hasError = imageErrors.has(item.id);
                   const emoji = isDb ? (item.cover || "📜") : (item as Article).cover;
                   
