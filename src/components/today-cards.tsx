@@ -756,10 +756,54 @@ export function TodayCards() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadTodayItems();
   }, []);
+
+  // 根据卡片内容构建图片搜索关键词
+  const getSearchQuery = (item: TodayItem): string => {
+    // 移除书名号等特殊字符
+    const cleanTitle = item.title.replace(/[《》「」]/g, "");
+    
+    switch (item.category) {
+      case "节气":
+        return `${cleanTitle} 节气 中国传统文化`;
+      case "诗词":
+        return `${cleanTitle} 古诗 书法`;
+      case "人物":
+        return `${cleanTitle} 古代人物 画像`;
+      case "非遗":
+        return `${cleanTitle} 传统文化 非遗`;
+      case "典故":
+        return `${cleanTitle} 中国典故 传统`;
+      default:
+        return `${cleanTitle} 中国传统文化`;
+    }
+  };
+
+  // 为卡片获取真实图片
+  const fetchImageForItem = async (item: TodayItem) => {
+    if (imageUrls[item.id] || failedImages.has(item.id)) return;
+    
+    try {
+      const query = getSearchQuery(item);
+      const response = await fetch(`/api/search-image?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (data.url) {
+        setImageUrls(prev => ({ ...prev, [item.id]: data.url }));
+      }
+    } catch (error) {
+      console.error(`获取图片失败 ${item.title}:`, error);
+    }
+  };
+
+  // 为所有卡片获取图片
+  const fetchAllImages = (items: TodayItem[]) => {
+    items.forEach(item => fetchImageForItem(item));
+  };
 
   const loadTodayItems = async () => {
     try {
@@ -809,6 +853,8 @@ export function TodayCards() {
       ];
 
       setTodayItems(themeBasedItems);
+      // 为所有卡片获取真实图片
+      fetchAllImages(themeBasedItems);
     } catch (error) {
       console.error("加载今日推送内容失败:", error);
       
@@ -849,6 +895,8 @@ export function TodayCards() {
       ];
 
       setTodayItems(fallbackItems);
+      // 为所有卡片获取真实图片
+      fetchAllImages(fallbackItems);
     }
   };
 
@@ -874,19 +922,8 @@ export function TodayCards() {
           const Icon = categoryIcons[item.category] || BookOpen;
           const bgColor = categoryColors[item.category] || "bg-gray-500";
           
-          // 为每个卡片生成基于内容的图片
-          const imageSeeds: Record<string, string> = {
-            "节气": "nature-seasons",
-            "诗词": "poetry-literature",
-            "人物": "traditional-portrait",
-            "非遗": "heritage-craft",
-            "典故": "history-story",
-            "今日推荐": "culture-highlights"
-          };
-          
-          // 使用特定种子生成传统文化相关的图片
-          const categorySeed = imageSeeds[item.category] || item.category;
-          const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(categorySeed)}/400/200`;
+          // 使用从 API 获取的真实图片
+          const imageUrl = imageUrls[item.id];
             
           const isLoaded = loadedImages.has(item.id);
           const isFailed = failedImages.has(item.id);

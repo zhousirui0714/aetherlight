@@ -41,10 +41,10 @@ export async function GET(request: Request) {
     const data = await response.json();
     
     if (!data.query || !data.query.pages) {
-      const fallbackUrl = `https://picsum.photos/seed/${encodedQuery}/400/300`;
-      imageCache.set(cacheKey, { url: fallbackUrl, timestamp: Date.now() });
+      // 没有找到图片，返回空 URL，前端会显示占位图
       return new Response(JSON.stringify({ 
-        url: fallbackUrl 
+        url: "",
+        message: "No image found"
       }), {
         headers: { 
           "Content-Type": "application/json",
@@ -73,11 +73,10 @@ export async function GET(request: Request) {
       });
     }
     
-    // 回退到默认图片
-    const fallbackUrl = `https://picsum.photos/seed/${encodedQuery}/400/300`;
-    imageCache.set(cacheKey, { url: fallbackUrl, timestamp: Date.now() });
+    // 没有找到图片，返回空 URL
     return new Response(JSON.stringify({ 
-      url: fallbackUrl 
+      url: "",
+      message: "No image found"
     }), {
       headers: { 
         "Content-Type": "application/json",
@@ -87,14 +86,10 @@ export async function GET(request: Request) {
     
   } catch (error) {
     console.error('Image search error:', error);
-    const encodedQuery = encodeURIComponent(query);
-    const fallbackUrl = `https://picsum.photos/seed/${encodedQuery}/400/300`;
-    
-    // 失败也缓存，避免重复请求
-    imageCache.set(cacheKey, { url: fallbackUrl, timestamp: Date.now() });
     
     return new Response(JSON.stringify({ 
-      url: fallbackUrl 
+      url: "",
+      message: "Image search failed"
     }), {
       headers: { 
         "Content-Type": "application/json",

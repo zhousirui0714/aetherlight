@@ -27,12 +27,20 @@ export function DailyCard() {
       const res = await fetchDailyPush({ data: { date: fmtDate(d) } });
       setData(res);
 
-      // 使用 picsum.photos 获取真实图片
+      // 使用 search-image API 获取真实图片
       setImageLoading(true);
-      const seed = encodeURIComponent(res.title.replace(/\s+/g, '-'));
-      const url = `https://picsum.photos/seed/${seed}/512/768`;
-      setImageUrl(url);
-      setImageLoading(false);
+      try {
+        const query = encodeURIComponent(`${res.title} 中国传统文化`);
+        const imgResponse = await fetch(`/api/search-image?q=${query}`);
+        const imgData = await imgResponse.json();
+        if (imgData.url) {
+          setImageUrl(imgData.url);
+        }
+      } catch (imgErr) {
+        console.error("获取图片失败:", imgErr);
+      } finally {
+        setImageLoading(false);
+      }
 
       // 检查收藏状态
       const { data: session } = await supabase.auth.getSession();
@@ -50,11 +58,15 @@ export function DailyCard() {
 
   const handleImageError = () => {
     setImageError(true);
-    // 尝试使用备用图片
+    // 尝试使用备用图片搜索
     if (data) {
-      const backupSeed = encodeURIComponent(`daily-${data.date}`);
-      const backupUrl = `https://picsum.photos/seed/${backupSeed}/512/768`;
-      setImageUrl(backupUrl);
+      const backupQuery = encodeURIComponent(`传统文化 ${data.date}`);
+      fetch(`/api/search-image?q=${backupQuery}`)
+        .then(r => r.json())
+        .then(imgData => {
+          if (imgData.url) setImageUrl(imgData.url);
+        })
+        .catch(() => {});
     }
   };
 
