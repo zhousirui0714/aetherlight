@@ -1,9 +1,9 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand, Loader2, PanelRightClose, PanelRight, AlertCircle } from "lucide-react";
+import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand, Loader2, PanelRightClose, PanelRight, AlertCircle, Eraser, MessageCircle, History as HistoryIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import type { KnowledgeEntry, Person, Book, KnowledgeGraphNode } from "@/lib/cultural-knowledge";
@@ -41,6 +41,7 @@ const HOT_QUESTIONS = [
 ];
 
 const QA_HISTORY_KEY = "suguang:qa:history";
+const CHAT_SESSION_KEY = "suguang:chat:session";
 
 type HistoryItem = { id: string; question: string; answer: string; created_at: string };
 
@@ -78,7 +79,7 @@ function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
-  const { messages, sendMessage, status, error: chatError } = useChat({
+  const { messages, sendMessage, setMessages, status, error: chatError, stop } = useChat({
     transport: transport.current,
     onFinish: async ({ message }) => {
       setError(null);
@@ -113,6 +114,45 @@ function ChatPage() {
       setError("网络连接似乎有些问题，请稍后再试。");
     },
   });
+
+  // 加载/持久化当前对话
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // 启动时恢复
+    try {
+      const raw = sessionStorage.getItem(CHAT_SESSION_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as UIMessage[];
+        if (Array.isArray(saved) && saved.length > 0) {
+          setMessages(saved);
+        }
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (messages.length > 0) {
+        sessionStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(messages));
+      } else {
+        sessionStorage.removeItem(CHAT_SESSION_KEY);
+      }
+    } catch {}
+  }, [messages]);
+
+  const clearChat = useCallback(() => {
+    if (!confirm("确定要清空当前对话吗？对话历史不会被永久删除。")) return;
+    stop();
+    setMessages([]);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
+    }
+    toast("已清空当前对话");
+  }, [setMessages, stop]);
+
+  const turnCount = messages.filter(m => m.role === "user").length;
 
   // 检查登录状态
   useEffect(() => {
@@ -279,6 +319,26 @@ function ChatPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* main chat */}
         <section className="flex h-[calc(100vh-260px)] min-h-[560px] flex-col overflow-hidden rounded-3xl border border-border bg-card">
+          {/* 顶部状态条 */}
+          {messages.length > 0 && (
+            <div className="flex items-center gap-2 border-b border-border bg-secondary/30 px-5 py-2 text-xs text-muted-foreground">
+              <MessageCircle className="h-3.5 w-3.5 text-primary" />
+              <span>
+                当前对话 <b className="font-serif text-foreground">{turnCount}</b> 轮 ·{" "}
+                <b className="font-serif text-foreground">{messages.length}</b> 条消息
+              </span>
+              <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/80">
+                · 基于上下文 · 多轮问答 ·
+              </span>
+              <button
+                onClick={clearChat}
+                className="ml-2 inline-flex items-center gap-1 rounded border border-border bg-background/50 px-2 py-0.5 text-[10px] text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
+                title="清空当前对话"
+              >
+                <Eraser className="h-3 w-3" /> 清空
+              </button>
+            </div>
+          )}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 py-6">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
