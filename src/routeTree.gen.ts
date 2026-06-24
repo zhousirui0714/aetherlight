@@ -34,7 +34,13 @@ import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
 import { Route as ApiKnowledgeAiFillRouteImport } from './routes/api/knowledge-ai-fill'
 import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiArticlesRouteImport } from './routes/api/articles'
 import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
+import { Route as ApiArticlesTagsRouteImport } from './routes/api/articles/tags'
+import { Route as ApiArticlesStatsRouteImport } from './routes/api/articles/stats'
+import { Route as ApiArticlesCategoriesRouteImport } from './routes/api/articles/categories'
+import { Route as ApiArticlesIdRouteImport } from './routes/api/articles/$id'
+import { Route as ApiArticlesIdRelationsRouteImport } from './routes/api/articles/$id/relations'
 
 const QaSquareRoute = QaSquareRouteImport.update({
   id: '/qa-square',
@@ -161,10 +167,40 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiArticlesRoute = ApiArticlesRouteImport.update({
+  id: '/api/articles',
+  path: '/api/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAncientBooksRoute = ApiAncientBooksRouteImport.update({
   id: '/api/ancient-books',
   path: '/api/ancient-books',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiArticlesTagsRoute = ApiArticlesTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => ApiArticlesRoute,
+} as any)
+const ApiArticlesStatsRoute = ApiArticlesStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => ApiArticlesRoute,
+} as any)
+const ApiArticlesCategoriesRoute = ApiArticlesCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => ApiArticlesRoute,
+} as any)
+const ApiArticlesIdRoute = ApiArticlesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiArticlesRoute,
+} as any)
+const ApiArticlesIdRelationsRoute = ApiArticlesIdRelationsRouteImport.update({
+  id: '/relations',
+  path: '/relations',
+  getParentRoute: () => ApiArticlesIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -184,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
+  '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
@@ -194,6 +231,11 @@ export interface FileRoutesByFullPath {
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/dialogue/': typeof DialogueIndexRoute
+  '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
+  '/api/articles/categories': typeof ApiArticlesCategoriesRoute
+  '/api/articles/stats': typeof ApiArticlesStatsRoute
+  '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -211,6 +253,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
+  '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
@@ -221,6 +264,11 @@ export interface FileRoutesByTo {
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/dialogue': typeof DialogueIndexRoute
+  '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
+  '/api/articles/categories': typeof ApiArticlesCategoriesRoute
+  '/api/articles/stats': typeof ApiArticlesStatsRoute
+  '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -240,6 +288,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
+  '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
@@ -250,6 +299,11 @@ export interface FileRoutesById {
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/dialogue/': typeof DialogueIndexRoute
+  '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
+  '/api/articles/categories': typeof ApiArticlesCategoriesRoute
+  '/api/articles/stats': typeof ApiArticlesStatsRoute
+  '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -270,6 +324,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/qa-square'
     | '/api/ancient-books'
+    | '/api/articles'
     | '/api/chat'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
@@ -280,6 +335,11 @@ export interface FileRouteTypes {
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/dialogue/'
+    | '/api/articles/$id'
+    | '/api/articles/categories'
+    | '/api/articles/stats'
+    | '/api/articles/tags'
+    | '/api/articles/$id/relations'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -297,6 +357,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/qa-square'
     | '/api/ancient-books'
+    | '/api/articles'
     | '/api/chat'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
@@ -307,6 +368,11 @@ export interface FileRouteTypes {
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/dialogue'
+    | '/api/articles/$id'
+    | '/api/articles/categories'
+    | '/api/articles/stats'
+    | '/api/articles/tags'
+    | '/api/articles/$id/relations'
   id:
     | '__root__'
     | '/'
@@ -325,6 +391,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/qa-square'
     | '/api/ancient-books'
+    | '/api/articles'
     | '/api/chat'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
@@ -335,6 +402,11 @@ export interface FileRouteTypes {
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/dialogue/'
+    | '/api/articles/$id'
+    | '/api/articles/categories'
+    | '/api/articles/stats'
+    | '/api/articles/tags'
+    | '/api/articles/$id/relations'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -354,6 +426,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   QaSquareRoute: typeof QaSquareRoute
   ApiAncientBooksRoute: typeof ApiAncientBooksRoute
+  ApiArticlesRoute: typeof ApiArticlesRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
   ApiDialogueRoute: typeof ApiDialogueRoute
   ApiKnowledgeAiFillRoute: typeof ApiKnowledgeAiFillRoute
@@ -539,12 +612,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/articles': {
+      id: '/api/articles'
+      path: '/api/articles'
+      fullPath: '/api/articles'
+      preLoaderRoute: typeof ApiArticlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ancient-books': {
       id: '/api/ancient-books'
       path: '/api/ancient-books'
       fullPath: '/api/ancient-books'
       preLoaderRoute: typeof ApiAncientBooksRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/articles/tags': {
+      id: '/api/articles/tags'
+      path: '/tags'
+      fullPath: '/api/articles/tags'
+      preLoaderRoute: typeof ApiArticlesTagsRouteImport
+      parentRoute: typeof ApiArticlesRoute
+    }
+    '/api/articles/stats': {
+      id: '/api/articles/stats'
+      path: '/stats'
+      fullPath: '/api/articles/stats'
+      preLoaderRoute: typeof ApiArticlesStatsRouteImport
+      parentRoute: typeof ApiArticlesRoute
+    }
+    '/api/articles/categories': {
+      id: '/api/articles/categories'
+      path: '/categories'
+      fullPath: '/api/articles/categories'
+      preLoaderRoute: typeof ApiArticlesCategoriesRouteImport
+      parentRoute: typeof ApiArticlesRoute
+    }
+    '/api/articles/$id': {
+      id: '/api/articles/$id'
+      path: '/$id'
+      fullPath: '/api/articles/$id'
+      preLoaderRoute: typeof ApiArticlesIdRouteImport
+      parentRoute: typeof ApiArticlesRoute
+    }
+    '/api/articles/$id/relations': {
+      id: '/api/articles/$id/relations'
+      path: '/relations'
+      fullPath: '/api/articles/$id/relations'
+      preLoaderRoute: typeof ApiArticlesIdRelationsRouteImport
+      parentRoute: typeof ApiArticlesIdRoute
     }
   }
 }
@@ -577,6 +692,36 @@ const DialogueRouteWithChildren = DialogueRoute._addFileChildren(
   DialogueRouteChildren,
 )
 
+interface ApiArticlesIdRouteChildren {
+  ApiArticlesIdRelationsRoute: typeof ApiArticlesIdRelationsRoute
+}
+
+const ApiArticlesIdRouteChildren: ApiArticlesIdRouteChildren = {
+  ApiArticlesIdRelationsRoute: ApiArticlesIdRelationsRoute,
+}
+
+const ApiArticlesIdRouteWithChildren = ApiArticlesIdRoute._addFileChildren(
+  ApiArticlesIdRouteChildren,
+)
+
+interface ApiArticlesRouteChildren {
+  ApiArticlesIdRoute: typeof ApiArticlesIdRouteWithChildren
+  ApiArticlesCategoriesRoute: typeof ApiArticlesCategoriesRoute
+  ApiArticlesStatsRoute: typeof ApiArticlesStatsRoute
+  ApiArticlesTagsRoute: typeof ApiArticlesTagsRoute
+}
+
+const ApiArticlesRouteChildren: ApiArticlesRouteChildren = {
+  ApiArticlesIdRoute: ApiArticlesIdRouteWithChildren,
+  ApiArticlesCategoriesRoute: ApiArticlesCategoriesRoute,
+  ApiArticlesStatsRoute: ApiArticlesStatsRoute,
+  ApiArticlesTagsRoute: ApiArticlesTagsRoute,
+}
+
+const ApiArticlesRouteWithChildren = ApiArticlesRoute._addFileChildren(
+  ApiArticlesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnnotationsRoute: AnnotationsRoute,
@@ -594,6 +739,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   QaSquareRoute: QaSquareRoute,
   ApiAncientBooksRoute: ApiAncientBooksRoute,
+  ApiArticlesRoute: ApiArticlesRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
   ApiDialogueRoute: ApiDialogueRoute,
   ApiKnowledgeAiFillRoute: ApiKnowledgeAiFillRoute,

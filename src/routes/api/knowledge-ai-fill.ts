@@ -9,7 +9,7 @@ import { createAiProvider, getDefaultModel } from "@/lib/ai-gateway.server";
 import { generateText } from "ai";
 import { getCache, setCache } from "@/lib/api-cache";
 
-const ALLOWED_FIELDS = ["history", "influence", "faq"] as const;
+const ALLOWED_FIELDS = ["history", "influence", "faq", "translation", "annotation"] as const;
 type Field = (typeof ALLOWED_FIELDS)[number];
 
 const SYSTEM_PROMPT = `你是溯光 Aetherlight 的中华文化主编，受众为青少年与传统文化爱好者。要求：
@@ -32,6 +32,24 @@ const PROMPT_TEMPLATES: Record<Field, (s: ArticleSnapshot) => string> = {
     `请为「${s.title}」（${s.category}）生成 3-5 个常见问题。
 内容可参考：${s.excerpt || s.body?.slice(0, 200) || "无"}。
 严格用 JSON 返回：[{"question":"...","answer":"..."}, ...]，answer 控制在 60-120 字。`,
+
+  translation: (s) =>
+    `请为「${s.title}」（${s.category}）生成现代汉语翻译。
+原文参考：${(s.body || "").slice(0, 600) || s.excerpt || "无"}。
+要求：
+1) 若原文是诗词/典籍，按行/句逐条翻译为「现代汉语」（每行 original + modern）
+2) 末尾附 80-150 字「整体意境」（用散文概括主旨、情感、意境）
+3) 严格用 JSON 返回（不要 Markdown）：
+{"verseByVerse":[{"original":"原文 1","modern":"译文 1"},{"original":"原文 2","modern":"译文 2"}],"overall":"整体意境文字..."}
+4) 若原文为非诗词（无逐行结构），可只填 overall 字段，verseByVerse 留空数组。`,
+
+  annotation: (s) =>
+    `请为「${s.title}」（${s.category}）生成 4-8 个关键注释。
+原文参考：${(s.body || "").slice(0, 600) || s.excerpt || "无"}。
+要求：
+1) 注释应解释难字、生僻典故、人名、地名、关键意象
+2) 严格用 JSON 返回：[{"term":"词条","meaning":"解释（40-90字）","source":"出处（如《XX》·作者；无则留空）"}, ...]
+3) 不要 Markdown，不要包裹在 \`\`\` 里，直接是 JSON 数组。`,
 };
 
 type ArticleSnapshot = {
@@ -176,6 +194,17 @@ function fallbackFor(field: Field, s: ArticleSnapshot): any {
       applications: ["应用于教育普及", "在文创产业中广泛使用", "成为国际文化交流的载体"],
       perspectives: ["需结合现代价值观重新阐释", "可作为文化自信的支点之一"],
     };
+  }
+  if (field === "translation") {
+    return {
+      verseByVerse: [],
+      overall: `${s.title}的现代汉语译文正在生成中，请稍候再试。`,
+    };
+  }
+  if (field === "annotation") {
+    return [
+      { term: s.title, meaning: "暂未生成注释，请稍候重试。", source: "" },
+    ];
   }
   return `${s.title}源远流长，可上溯至先秦时期。其形成与演变深受历代政治、经济、文化之影响，至今仍具有重要价值。`;
 }

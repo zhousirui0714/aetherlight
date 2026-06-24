@@ -35,9 +35,10 @@ BEGIN
 END$$;
 
 -- 3. 新增 AI 补全缓存表
+-- 注：knowledge_articles.id 当前为 TEXT 类型（非 UUID），所以外键也用 TEXT
 CREATE TABLE IF NOT EXISTS ai_completions (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  article_id      UUID        NOT NULL REFERENCES knowledge_articles(id) ON DELETE CASCADE,
+  article_id      TEXT        NOT NULL,
   field           TEXT        NOT NULL CHECK (field IN ('history','influence','faq')),
   content         JSONB       NOT NULL,
   model           TEXT        NOT NULL DEFAULT 'qwen',

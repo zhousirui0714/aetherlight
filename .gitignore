@@ -58,3 +58,6 @@ backend/data/knowledge_articles_v2.json
 
 # 临时输出
 *.out
+
+# Trae 工作区
+.trae/
