@@ -223,3 +223,181 @@ export function getJourneyStats(events: JourneyEvent[]) {
   };
   return stats;
 }
+
+// ============================================================
+// 代表作 → 文章 ID 缓存 (work_link_cache)
+// ============================================================
+//
+// 用于「对话名家」页侧栏的代表作跳转。代表作名是「《春望》」这种文本,
+// 知识库的真实 id 是 slug 或 uuid,需要 listArticles 异步搜索。
+// 缓存搜索结果,避免每次切 sage 都重新打后端。
+//
+// TTL 7 天:超过后失效,Supabase 改 id 时自动刷新。
+// 存「null」也缓存(避免对不存在的条目反复打接口)。
+// ============================================================
+
+const WORK_LINK_CACHE_KEY = "sukou_work_link_cache";
+const WORK_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 天
+
+type WorkLinkEntry = { id: string; title: string; ts: number };
+type WorkLinkCache = Record<string, WorkLinkEntry | null>;
+
+function loadWorkLinkCache(): WorkLinkCache {
+  try {
+    const raw = localStorage.getItem(WORK_LINK_CACHE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw) as WorkLinkCache;
+      const now = Date.now();
+      // 过滤掉过期的(但保留 null,表示「已确认不存在」)
+      for (const k of Object.keys(data)) {
+        if (data[k] && now - data[k].ts > WORK_LINK_TTL_MS) {
+          delete data[k];
+        }
+      }
+      return data;
+    }
+  } catch {}
+  return {};
+}
+
+function saveWorkLinkCache(cache: WorkLinkCache) {
+  try {
+    localStorage.setItem(WORK_LINK_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
+
+/**
+ * 读缓存。返回值区分三种状态:
+ * - `undefined`  还没查过(调用方应回退到搜索)
+ * - `null`       已查过,确认不存在
+ * - `{id,title}` 已查过,文章存在
+ */
+export function getCachedWorkLink(cleanedName: string): { id: string; title: string } | null | undefined {
+  if (!cleanedName) return null;
+  const cache = loadWorkLinkCache();
+  if (!(cleanedName in cache)) return undefined;
+  const entry = cache[cleanedName];
+  return entry ? { id: entry.id, title: entry.title } : null;
+}
+
+/** 写缓存。`link` 传 null 表示「确认这条不存在」,避免下次再查。 */
+export function setCachedWorkLink(cleanedName: string, link: { id: string; title: string } | null) {
+  if (!cleanedName) return;
+  const cache = loadWorkLinkCache();
+  cache[cleanedName] = link ? { ...link, ts: Date.now() } : null;
+  saveWorkLinkCache(cache);
+}
+
+/** 调试用:清空缓存 */
+export function clearWorkLinkCache() {
+  try {
+    localStorage.removeItem(WORK_LINK_CACHE_KEY);
+  } catch {}
+}
+
+// ============================================================
+// 文言文翻译缓存 (translation_cache)
+// ============================================================
+//
+// 同一个 sage 说的同一段文言文,翻译结果高度稳定。
+// 用 sageId + 文本 hash 做 key,避免重复打 LLM。
+// 30 天 TTL,过期重译。
+// ============================================================
+
+const TRANSLATION_CACHE_KEY = "sukou_translation_cache";
+const TRANSLATION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 天
+
+type TranslationEntry = { translation: string; ts: number };
+type TranslationCache = Record<string, TranslationEntry>;
+
+/** 简单字符串 hash,32-bit → base36,用于缓存 key */
+function hashText(text: string): string {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) {
+    h = (h << 5) - h + text.charCodeAt(i);
+    h = h & h;
+  }
+  return Math.abs(h).toString(36);
+}
+
+function translationCacheKey(sageId: string, text: string): string {
+  return `${sageId}:${hashText(text)}`;
+}
+
+function loadTranslationCache(): TranslationCache {
+  try {
+    const raw = localStorage.getItem(TRANSLATION_CACHE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw) as TranslationCache;
+      const now = Date.now();
+      for (const k of Object.keys(data)) {
+        if (now - data[k].ts > TRANSLATION_TTL_MS) {
+          delete data[k];
+        }
+      }
+      return data;
+    }
+  } catch {}
+  return {};
+}
+
+function saveTranslationCache(cache: TranslationCache) {
+  try {
+    localStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
+
+export function getCachedTranslation(sageId: string, text: string): string | null {
+  const cache = loadTranslationCache();
+  const entry = cache[translationCacheKey(sageId, text)];
+  return entry ? entry.translation : null;
+}
+
+export function setCachedTranslation(sageId: string, text: string, translation: string) {
+  const cache = loadTranslationCache();
+  cache[translationCacheKey(sageId, text)] = { translation, ts: Date.now() };
+  saveTranslationCache(cache);
+}
+
+// ---- scholar mode(无 sage,用通用学者口吻)----
+
+function scholarCacheKey(text: string): string {
+  return `scholar:${hashText(text)}`;
+}
+
+export function getCachedScholarTranslation(text: string): string | null {
+  const cache = loadTranslationCache();
+  const entry = cache[scholarCacheKey(text)];
+  return entry ? entry.translation : null;
+}
+
+export function setCachedScholarTranslation(text: string, translation: string) {
+  const cache = loadTranslationCache();
+  cache[scholarCacheKey(text)] = { translation, ts: Date.now() };
+  saveTranslationCache(cache);
+}
+
+// ---- poet mode(用诗人本人口吻)----
+
+function poetCacheKey(poetName: string, text: string): string {
+  return `poet:${poetName}:${hashText(text)}`;
+}
+
+export function getCachedPoetTranslation(poetName: string, text: string): string | null {
+  const cache = loadTranslationCache();
+  const entry = cache[poetCacheKey(poetName, text)];
+  return entry ? entry.translation : null;
+}
+
+export function setCachedPoetTranslation(poetName: string, text: string, translation: string) {
+  const cache = loadTranslationCache();
+  cache[poetCacheKey(poetName, text)] = { translation, ts: Date.now() };
+  saveTranslationCache(cache);
+}
+
+/** 调试用:清空翻译缓存 */
+export function clearTranslationCache() {
+  try {
+    localStorage.removeItem(TRANSLATION_CACHE_KEY);
+  } catch {}
+}
