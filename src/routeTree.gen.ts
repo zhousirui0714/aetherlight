@@ -44,6 +44,7 @@ import { Route as ApiArticlesSearchRouteImport } from './routes/api/articles/sea
 import { Route as ApiArticlesRecommendationsRouteImport } from './routes/api/articles/recommendations'
 import { Route as ApiArticlesCategoriesRouteImport } from './routes/api/articles/categories'
 import { Route as ApiArticlesIdRouteImport } from './routes/api/articles/$id'
+import { Route as ApiAlmanacTodayRouteImport } from './routes/api/almanac/today'
 import { Route as ApiArticlesIdRelationsRouteImport } from './routes/api/articles/$id/relations'
 
 const SearchRoute = SearchRouteImport.update({
@@ -222,6 +223,11 @@ const ApiArticlesIdRoute = ApiArticlesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiArticlesRoute,
 } as any)
+const ApiAlmanacTodayRoute = ApiAlmanacTodayRouteImport.update({
+  id: '/api/almanac/today',
+  path: '/api/almanac/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiArticlesIdRelationsRoute = ApiArticlesIdRelationsRouteImport.update({
   id: '/relations',
   path: '/relations',
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/tongyou/challenge': typeof TongyouChallengeRoute
   '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/dialogue/': typeof DialogueIndexRoute
+  '/api/almanac/today': typeof ApiAlmanacTodayRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/recommendations': typeof ApiArticlesRecommendationsRoute
@@ -294,6 +301,7 @@ export interface FileRoutesByTo {
   '/tongyou/challenge': typeof TongyouChallengeRoute
   '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/dialogue': typeof DialogueIndexRoute
+  '/api/almanac/today': typeof ApiAlmanacTodayRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/recommendations': typeof ApiArticlesRecommendationsRoute
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/tongyou/challenge': typeof TongyouChallengeRoute
   '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/dialogue/': typeof DialogueIndexRoute
+  '/api/almanac/today': typeof ApiAlmanacTodayRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/recommendations': typeof ApiArticlesRecommendationsRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
     | '/tongyou/challenge'
     | '/tongyou/community'
     | '/dialogue/'
+    | '/api/almanac/today'
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/recommendations'
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/tongyou/challenge'
     | '/tongyou/community'
     | '/dialogue'
+    | '/api/almanac/today'
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/recommendations'
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/tongyou/challenge'
     | '/tongyou/community'
     | '/dialogue/'
+    | '/api/almanac/today'
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/recommendations'
@@ -484,6 +496,7 @@ export interface RootRouteChildren {
   ArticleIdRoute: typeof ArticleIdRoute
   TongyouChallengeRoute: typeof TongyouChallengeRoute
   TongyouCommunityRoute: typeof TongyouCommunityRouteWithChildren
+  ApiAlmanacTodayRoute: typeof ApiAlmanacTodayRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -733,6 +746,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiArticlesIdRouteImport
       parentRoute: typeof ApiArticlesRoute
     }
+    '/api/almanac/today': {
+      id: '/api/almanac/today'
+      path: '/api/almanac/today'
+      fullPath: '/api/almanac/today'
+      preLoaderRoute: typeof ApiAlmanacTodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/articles/$id/relations': {
       id: '/api/articles/$id/relations'
       path: '/relations'
@@ -830,6 +850,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArticleIdRoute: ArticleIdRoute,
   TongyouChallengeRoute: TongyouChallengeRoute,
   TongyouCommunityRoute: TongyouCommunityRouteWithChildren,
+  ApiAlmanacTodayRoute: ApiAlmanacTodayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
