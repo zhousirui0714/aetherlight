@@ -39,19 +39,18 @@ export function CivilizationMap() {
         </p>
       </div>
 
-      {/* 地图本体 - 横长 AI 生成古代中国山水长卷 + 9 个墨色圆 + 中央朱砂大印 */}
+      {/* 地图本体 - 古代中国地图 + 墨色方印 + 中央朱砂方印（彻底消除"红日"感） */}
       <div className="relative mx-auto mt-12 h-[60vh] min-h-[500px] w-full max-w-[1400px] overflow-hidden rounded-2xl border border-stone-300/40 shadow-[0_8px_32px_-12px_rgba(42,37,32,0.15)]">
-        {/* 背景 - AI 生成的古代中国山水长卷（本地 public 资源） */}
+        {/* 背景 - AI 生成的古代中国行政地图（舆图） */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url(/images/civilization-map.jpg)" }}
         />
         {/* 米白蒙版 - 让图变淡彩宣纸感 */}
         <div className="absolute inset-0 bg-background/30" />
-        {/* 左上→右下对角米白渐变（增加地图感） */}
         <div className="absolute inset-0 bg-gradient-to-br from-background/15 via-transparent to-background/45" />
 
-        {/* SVG 虚线网 - 从中心"溯光"到 9 个主题点 + 外圈虚线 */}
+        {/* SVG 虚线网 - 从中心到 9 个主题点 + 外圈虚线 */}
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
           {THEMES.map(theme => (
             <line
@@ -79,7 +78,7 @@ export function CivilizationMap() {
           />
         </svg>
 
-        {/* 9 个主题点 - 方案 A：墨色描边圆 + 中心朱砂点 + 米白标签 */}
+        {/* 9 个主题点 - 墨色方印 + 墨色字（默认无红色，hover 才显红） */}
         {THEMES.map(theme => {
           const isHovered = hovered === theme.key;
           return (
@@ -92,19 +91,16 @@ export function CivilizationMap() {
               style={{ left: `${theme.x}%`, top: `${theme.y}%` }}
             >
               <div className="flex flex-col items-center gap-1.5">
-                {/* 墨色描边圆 + 中心朱砂小点 */}
+                {/* 墨色方印 - 2px 方角 */}
                 <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                  className={`flex h-9 w-9 items-center justify-center border-2 font-serif text-xs transition-all duration-300 ${
                     isHovered
-                      ? "scale-125 border-foreground/70 bg-background/50 shadow-md"
-                      : "border-foreground/45 bg-background/25 backdrop-blur-sm"
+                      ? "scale-110 border-rose-800/80 bg-rose-700/85 text-[#faf5e8] shadow-[0_4px_10px_rgba(180,40,40,0.4)]"
+                      : "border-foreground/45 bg-background/30 text-foreground/85 backdrop-blur-sm"
                   }`}
+                  style={{ borderRadius: "2px" }}
                 >
-                  <div
-                    className={`h-2 w-2 rounded-full bg-rose-700/95 transition-all duration-300 ${
-                      isHovered ? "scale-150 shadow-[0_0_8px_rgba(180,40,40,0.6)]" : ""
-                    }`}
-                  />
+                  {theme.label[0]}
                 </div>
                 {/* 标签 - 米白半透底 */}
                 <span
@@ -121,10 +117,13 @@ export function CivilizationMap() {
           );
         })}
 
-        {/* 中央"溯光"朱砂大印 - 唯一红色焦点 */}
+        {/* 中央"溯光"朱砂方印 - 唯一红色焦点（不是圆形 = 不是"日之丸"） */}
         <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-rose-800 bg-rose-700 shadow-[0_6px_20px_rgba(180,40,40,0.45),inset_0_0_12px_rgba(120,20,20,0.3)] md:h-24 md:w-24">
-            <div className="text-center font-serif text-base leading-tight text-[#faf5e8] md:text-lg">
+          <div
+            className="flex h-20 w-20 items-center justify-center border-4 border-rose-800/80 bg-rose-700/70 shadow-[0_6px_20px_rgba(180,40,40,0.4),inset_0_0_12px_rgba(120,20,20,0.3)] md:h-24 md:w-24"
+            style={{ borderRadius: "3px" }}
+          >
+            <div className="text-center font-serif text-base leading-tight text-[#faf5e8]/95 md:text-lg">
               <div>溯</div>
               <div>光</div>
             </div>
@@ -161,8 +160,11 @@ export function CivilizationMap() {
             }}
           >
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-foreground/45 bg-background/30">
-                <div className="h-1.5 w-1.5 rounded-full bg-rose-700/95" />
+              <div
+                className="flex h-7 w-7 items-center justify-center border-2 border-foreground/45 bg-background/30 font-serif text-xs text-foreground/85"
+                style={{ borderRadius: "2px" }}
+              >
+                {hoveredTheme.label[0]}
               </div>
               <div>
                 <div className="font-serif text-sm text-foreground">{hoveredTheme.label}</div>
