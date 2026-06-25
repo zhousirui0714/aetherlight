@@ -62,22 +62,40 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
     });
   });
 
-  // ========== 2. 知识文章语义搜索 ==========
-  const articleHits = await semanticSearch(
-    query,
-    ARTICLES,
-    ["title", "excerpt", "category"],
-    { useAI: true, topK: 10, threshold: 0.18 }
-  );
-  articleHits.forEach(({ item, score }) => {
-    results.push({
-      id: item.id,
-      type: "article",
-      title: item.title,
-      subtitle: `${item.category} · 匹配度 ${(score * 100).toFixed(0)}%`,
-      description: item.excerpt.slice(0, 100) + "...",
+  // ========== 2. 知识文章语义搜索（走 TF-IDF 全量索引 /api/articles/search） ==========
+  try {
+    const searchRes = await fetch(`/api/articles/search?q=${encodeURIComponent(query)}&topK=10`);
+    if (searchRes.ok) {
+      const searchData = await searchRes.json();
+      (searchData.results || []).forEach((item: any) => {
+        results.push({
+          id: item.id,
+          type: "article",
+          title: item.title,
+          subtitle: `${item.category} · 匹配度 ${(item.score * 100).toFixed(0)}%`,
+          description: (item.excerpt || "").slice(0, 100) + "...",
+        });
+      });
+    }
+  } catch (err) {
+    console.warn("[search] knowledge articles API failed, fallback to static:", err);
+    // 兜底：走静态 ARTICLES
+    const articleHits = await semanticSearch(
+      query,
+      ARTICLES,
+      ["title", "excerpt", "category"],
+      { useAI: true, topK: 10, threshold: 0.18 }
+    );
+    articleHits.forEach(({ item, score }) => {
+      results.push({
+        id: item.id,
+        type: "article",
+        title: item.title,
+        subtitle: `${item.category} · 匹配度 ${(score * 100).toFixed(0)}%`,
+        description: item.excerpt.slice(0, 100) + "...",
+      });
     });
-  });
+  }
 
   // ========== 3. 概念/知识 ==========
   const concepts = [
@@ -146,9 +164,9 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
   });
 
   // 缓存结果
-  cache.set(lowerQuery, { timestamp: Date.now(), results: results.slice(0, 15) });
+  cache.set(lowerQuery, { timestamp: Date.now(), results: results.slice(0, 25) });
 
-  return results.slice(0, 15);
+  return results.slice(0, 25);
 }
 
 interface GlobalSearchProps {

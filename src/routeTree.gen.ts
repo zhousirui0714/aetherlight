@@ -40,6 +40,7 @@ import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
 import { Route as TongyouCommunityIdRouteImport } from './routes/tongyou/community.$id'
 import { Route as ApiArticlesTagsRouteImport } from './routes/api/articles/tags'
 import { Route as ApiArticlesStatsRouteImport } from './routes/api/articles/stats'
+import { Route as ApiArticlesSearchRouteImport } from './routes/api/articles/search'
 import { Route as ApiArticlesRecommendationsRouteImport } from './routes/api/articles/recommendations'
 import { Route as ApiArticlesCategoriesRouteImport } from './routes/api/articles/categories'
 import { Route as ApiArticlesIdRouteImport } from './routes/api/articles/$id'
@@ -200,6 +201,11 @@ const ApiArticlesStatsRoute = ApiArticlesStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => ApiArticlesRoute,
 } as any)
+const ApiArticlesSearchRoute = ApiArticlesSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => ApiArticlesRoute,
+} as any)
 const ApiArticlesRecommendationsRoute =
   ApiArticlesRecommendationsRouteImport.update({
     id: '/recommendations',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/recommendations': typeof ApiArticlesRecommendationsRoute
+  '/api/articles/search': typeof ApiArticlesSearchRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/recommendations': typeof ApiArticlesRecommendationsRoute
+  '/api/articles/search': typeof ApiArticlesSearchRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
   '/api/articles/recommendations': typeof ApiArticlesRecommendationsRoute
+  '/api/articles/search': typeof ApiArticlesSearchRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/recommendations'
+    | '/api/articles/search'
     | '/api/articles/stats'
     | '/api/articles/tags'
     | '/tongyou/community/$id'
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/recommendations'
+    | '/api/articles/search'
     | '/api/articles/stats'
     | '/api/articles/tags'
     | '/tongyou/community/$id'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/api/articles/$id'
     | '/api/articles/categories'
     | '/api/articles/recommendations'
+    | '/api/articles/search'
     | '/api/articles/stats'
     | '/api/articles/tags'
     | '/tongyou/community/$id'
@@ -693,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiArticlesStatsRouteImport
       parentRoute: typeof ApiArticlesRoute
     }
+    '/api/articles/search': {
+      id: '/api/articles/search'
+      path: '/search'
+      fullPath: '/api/articles/search'
+      preLoaderRoute: typeof ApiArticlesSearchRouteImport
+      parentRoute: typeof ApiArticlesRoute
+    }
     '/api/articles/recommendations': {
       id: '/api/articles/recommendations'
       path: '/recommendations'
@@ -756,6 +775,7 @@ interface ApiArticlesRouteChildren {
   ApiArticlesIdRoute: typeof ApiArticlesIdRouteWithChildren
   ApiArticlesCategoriesRoute: typeof ApiArticlesCategoriesRoute
   ApiArticlesRecommendationsRoute: typeof ApiArticlesRecommendationsRoute
+  ApiArticlesSearchRoute: typeof ApiArticlesSearchRoute
   ApiArticlesStatsRoute: typeof ApiArticlesStatsRoute
   ApiArticlesTagsRoute: typeof ApiArticlesTagsRoute
 }
@@ -764,6 +784,7 @@ const ApiArticlesRouteChildren: ApiArticlesRouteChildren = {
   ApiArticlesIdRoute: ApiArticlesIdRouteWithChildren,
   ApiArticlesCategoriesRoute: ApiArticlesCategoriesRoute,
   ApiArticlesRecommendationsRoute: ApiArticlesRecommendationsRoute,
+  ApiArticlesSearchRoute: ApiArticlesSearchRoute,
   ApiArticlesStatsRoute: ApiArticlesStatsRoute,
   ApiArticlesTagsRoute: ApiArticlesTagsRoute,
 }
