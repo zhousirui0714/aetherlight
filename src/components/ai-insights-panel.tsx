@@ -438,6 +438,31 @@ export function AIInsightsPanel({ article }: AIInsightsPanelProps) {
           items={article.relatedBooks || []}
           colorClass="text-pink-500"
         />
+        {/* 权威平台外链：基于相关典籍书名查表 */}
+        {(() => {
+          const books = article.relatedBooks || [];
+          const matched = books
+            .map((b) => findBookLink(b.title))
+            .filter((x): x is NonNullable<typeof x> => !!x);
+          if (matched.length === 0) return null;
+          return (
+            <div className="rounded-xl border border-accent/20 bg-accent/5 p-3">
+              <div className="text-xs text-muted-foreground">
+                <BookLinkButtons
+                  shidianguji={matched[0].shidianguji}
+                  ctext={matched[0].ctext}
+                  wikisource={matched[0].wikisource}
+                  title={matched[0].name}
+                />
+              </div>
+              {matched.length > 1 && (
+                <div className="mt-2 text-[10px] text-muted-foreground/70">
+                  · {matched.slice(1, 3).map((m) => m.name).join(" · ")} 也可在识典古籍查看
+                </div>
+              )}
+            </div>
+          );
+        })()}
         <RelatedItemsView
           title="相关事件"
           icon={Calendar}

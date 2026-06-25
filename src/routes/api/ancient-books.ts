@@ -1,313 +1,69 @@
 /**
  * 古籍查询 API
  *
- * 使用中国哲学书电子化计划 (ctext.org) 的数据
- * 提供古籍原文、翻译、注释查询
+ * 数据源（按优先级）：
+ *   1. 6 本硬编码字典（出师表 / 道德经 / 论语 / 孟子 / 离骚 / 逍遥游）
+ *   2. 30+ 本外链映射（点跳转不下载内容）
+ *
+ * 响应附带外链（识典古籍 / ctext.org / 维基文库）
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-
-interface BookContent {
-  title: string;
-  author?: string;
-  dynasty: string;
-  content: string;
-  translation?: string;
-  source: string;
-}
-
-interface QueryResult {
-  success: boolean;
-  data?: BookContent;
-  error?: string;
-}
-
-// 预设的古籍内容库（包含更完整的原文）
-const ancientBooks: Record<string, BookContent> = {
-  "论语": {
-    title: "论语",
-    author: "孔子弟子",
-    dynasty: "春秋",
-    content: `学而篇第一
-
-子曰："学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？"
-
-有子曰："其为人也孝弟，而好犯上者，鲜矣；不好犯上，而好作乱者，未之有也。君子务本，本立而道生。孝弟也者，其为仁之本与！"
-
-子曰："巧言令色，鲜矣仁！"
-
-曾子曰："吾日三省吾身：为人谋而不忠乎？与朋友交而不信乎？传不习乎？"
-
-子曰："道千乘之国，敬事而信，节用而爱人，使民以时。"
-
-子曰："弟子入则孝，出则弟，谨而信，泛爱众，而亲仁。行有余力，则以学文。"
-
-子夏曰："贤贤易色；事父母，能竭其力；事君，能致其身；与朋友交，言而有信。虽曰未学，吾必谓之学矣。"
-
-子曰："君子不重则不威，学则不固。主忠信，无友不如己者，过则勿惮改。"
-
-曾子曰："慎终追远，民德归厚矣。"
-
-子禽问于子贡曰："夫子至于是邦也，必闻其政，求之与？抑与之与？"子贡曰："夫子温、良、恭、俭、让以得之。夫子之求之也，其诸异乎人之求之与？"
-
-子曰："父在，观其志；父没，观其行；三年无改于父之道，可谓孝矣。"
-
-有子曰："礼之用，和为贵。先王之道，斯为美，小大由之。有所不行，知和而和，不以礼节之，亦不可行也。"
-
-有子曰："信近于义，言可复也；恭近于礼，远耻辱也；因不失其亲，亦可宗也。"
-
-子曰："君子食无求饱，居无求安，敏于事而慎于言，就有道而正焉，可谓好学也已。"
-
-子贡曰："贫而无谄，富而无骄，何如？"子曰："可也。未若贫而乐，富而好礼者也。"子贡曰："《诗》云：'如切如磋，如琢如磨。'其斯之谓与？"子曰："赐也，始可与言《诗》已矣！告诸往而知来者。"
-
-子曰："不患人之不己知，患不知人也。"`,
-    source: "论语正义"
-  },
-  "道德经": {
-    title: "道德经",
-    author: "老子",
-    dynasty: "春秋",
-    content: `第一章
-道可道，非常道；名可名，非常名。无名天地之始，有名万物之母。故常无欲，以观其妙；常有欲，以观其徼。此两者同出而异名，同谓之玄，玄之又玄，众妙之门。
-
-第二章
-天下皆知美之为美，斯恶已；皆知善之为善，斯不善已。故有无相生，难易相成，长短相较，高下相倾，音声相和，前后相随。是以圣人处无为之事，行不言之教，万物作焉而不辞，生而不有，为而不恃，功成而弗居。夫唯弗居，是以不去。
-
-第三章
-不尚贤，使民不争；不贵难得之货，使民不为盗；不见可欲，使民心不乱。是以圣人之治，虚其心，实其腹；弱其志，强其骨。常使民无知无欲，使夫智者不敢为也。为无为，则无不治。
-
-第四章
-道冲而用之或不盈，渊兮似万物之宗。挫其锐，解其纷，和其光，同其尘。湛兮似或存，吾不知谁之子，象帝之先。
-
-第五章
-天地不仁，以万物为刍狗；圣人不仁，以百姓为刍狗。天地之间，其犹橐籥乎？虚而不屈，动而愈出。多言数穷，不如守中。
-
-第六章
-谷神不死，是谓玄牝。玄牝之门，是谓天地根。绵绵若存，用之不勤。
-
-第七章
-天长地久。天地所以能长且久者，以其不自生，故能长生。是以圣人后其身而身先，外其身而身存。非以其无私邪？故能成其私。
-
-第八章
-上善若水。水善利万物而不争，处众人之所恶，故几于道。居善地，心善渊，与善仁，言善信，政善治，事善能，动善时。夫唯不争，故无尤。
-
-第九章
-持而盈之，不如其已。揣而锐之，不可长保。金玉满堂，莫之能守。富贵而骄，自遗其咎。功遂身退，天之道。
-
-第十章
-载营魄抱一，能无离乎？专气致柔，能婴儿乎？涤除玄览，能无疵乎？爱民治国，能无知乎？天门开阖，能为雌乎？明白四达，能无为乎？`,
-    source: "道德经注"
-  },
-  "诗经": {
-    title: "诗经",
-    author: "佚名",
-    dynasty: "周",
-    content: `关雎（周南）
-
-关关雎鸠，在河之洲。
-窈窕淑女，君子好逑。
-参差荇菜，左右流之。
-窈窕淑女，寤寐求之。
-求之不得，寤寐思服。
-悠哉悠哉，辗转反侧。
-参差荇菜，左右采之。
-窈窕淑女，琴瑟友之。
-参差荇菜，左右芼之。
-窈窕淑女，钟鼓乐之。
-
-蒹葭（秦风）
-
-蒹葭苍苍，白露为霜。
-所谓伊人，在水一方。
-溯洄从之，道阻且长。
-溯游从之，宛在水中央。
-蒹葭萋萋，白露未晞。
-所谓伊人，在水之湄。
-溯洄从之，道阻且跻。
-溯游从之，宛在水中坻。
-蒹葭采采，白露未已。
-所谓伊人，在水之涘。
-溯洄从之，道阻且右。
-溯游从之，宛在水中沚。
-
-采薇（小雅）
-
-采薇采薇，薇亦作止。
-曰归曰归，岁亦莫止。
-靡室靡家，猃狁之故。
-不遑启居，猃狁之故。
-
-昔我往矣，杨柳依依。
-今我来思，雨雪霏霏。
-行道迟迟，载渴载饥。
-我心伤悲，莫知我哀！
-
-黍离（王风）
-
-彼黍离离，彼稷之苗。
-行迈靡靡，中心摇摇。
-知我者，谓我心忧；
-不知我者，谓我何求。
-悠悠苍天，此何人哉？`,
-    source: "毛诗正义"
-  },
-  "离骚": {
-    title: "离骚",
-    author: "屈原",
-    dynasty: "战国",
-    content: `帝高阳之苗裔兮，朕皇考曰伯庸。
-摄提贞于孟陬兮，惟庚寅吾以降。
-皇览揆余于初度兮，肇锡余以嘉名：
-名余曰正则兮，字余曰灵均。
-
-纷吾既有此内美兮，又重之以修能。
-扈江离与辟芷兮，纫秋兰以为佩。
-汩余若将不及兮，恐年岁之不吾与。
-朝搴阰之木兰兮，夕揽洲之宿莽。
-日月忽其不淹兮，春与秋其代序。
-唯草木之零落兮，恐美人之迟暮。
-
-长太息以掩涕兮，哀民生之多艰。
-余虽好修姱以鞿羁兮，謇朝谇而夕替。
-既替余以蕙纕兮，又申之以揽茝。
-亦余心之所善兮，虽九死其犹未悔。
-
-怨灵修之浩荡兮，终不察夫民心。
-众女嫉余之蛾眉兮，谣诼谓余以善淫。
-固时俗之工巧兮，偭规矩而改错。
-背绳墨以追曲兮，竞周容以为度。
-
-忳郁邑余侘傺兮，吾独穷困乎此时也。
-宁溘死以流亡兮，余不忍为此态也。
-鸷鸟之不群兮，自前世而固然。
-何方圜之能周兮，夫孰异道而相安？`,
-    source: "楚辞补注"
-  },
-  "逍遥游": {
-    title: "逍遥游",
-    author: "庄子",
-    dynasty: "战国",
-    content: `北冥有鱼，其名为鲲。鲲之大，不知其几千里也；化而为鸟，其名为鹏。鹏之背，不知其几千里也；怒而飞，其翼若垂天之云。是鸟也，海运则将徙于南冥。南冥者，天池也。
-
-《齐谐》者，志怪者也。《谐》之言曰："鹏之徙于南冥也，水击三千里，抟扶摇而上者九万里，去以六月息者也。"野马也，尘埃也，生物之以息相吹也。天之苍苍，其正色邪？其远而无所至极邪？其视下也，亦若是则已矣。
-
-且夫水之积也不厚，则其负大舟也无力。覆杯水于坳堂之上，则芥为之舟，置杯焉则胶，水浅而舟大也。风之积也不厚，则其负大翼也无力。故九万里，则风斯在下矣，而后乃今培风；背负青天，而莫之夭阏者，而后乃今将图南。
-
-蜩与学鸠笑之曰："我决起而飞，抢榆枋而止，时则不至，而控于地而已矣，奚以之九万里而南为？"适莽苍者，三餐而反，腹犹果然；适百里者，宿舂粮；适千里者，三月聚粮。之二虫又何知！
-
-小知不及大知，小年不及大年。奚以知其然也？朝菌不知晦朔，蟪蛄不知春秋，此小年也。楚之南有冥灵者，以五百岁为春，五百岁为秋；上古有大椿者，以八千岁为春，八千岁为秋，此大年也。而彭祖乃今以久特闻，众人匹之，不亦悲乎！`,
-    source: "庄子集释"
-  },
-  "孟子": {
-    title: "孟子",
-    author: "孟子",
-    dynasty: "战国",
-    content: `梁惠王章句上
-
-孟子见梁惠王。王曰："叟！不远千里而来，亦将有以利吾国乎？"
-
-孟子对曰："王何必曰利？亦有仁义而已矣。王曰'何以利吾国'？大夫曰'何以利吾家'？士庶人曰'何以利吾身'？上下交征利而国危矣。万乘之国，弑其君者，必千乘之家；千乘之国，弑其君者，必百乘之家。万取千焉，千取百焉，不为不多矣。苟为后义而先利，不夺不餍。未有仁而遗其亲者也，未有义而后其君者也。王亦曰仁义而已矣，何必曰利？"
-
-孟子见梁惠王，王立于沼上，顾鸿雁麋鹿，曰："贤者亦乐此乎？"
-
-孟子对曰："贤者而后乐此，不贤者虽有此，不乐也。《诗》云：'经始灵台，经之营之，庶民攻之，不日成之。经始勿亟，庶民子来。'王在灵囿，麀鹿攸伏，麀鹿濯濯，白鸟翯翯。王在灵沼，于牣鱼跃。'文王以民力为台为沼，而民欢乐之，谓其台曰灵台，谓其沼曰灵沼，乐其有麋鹿鱼鳖。古之人与民偕乐，故能乐也。《汤誓》曰：'时日害丧，予及女偕亡。'民欲与之偕亡，虽有台池鸟兽，岂能独乐哉？"`,
-    source: "孟子正义"
-  },
-  "出师表": {
-    title: "出师表",
-    author: "诸葛亮",
-    dynasty: "三国",
-    content: `先帝创业未半而中道崩殂，今天下三分，益州疲弊，此诚危急存亡之秋也。然侍卫之臣不懈于内，忠志之士忘身于后者，盖追先帝之殊遇，欲报之于陛下也。诚宜开张圣听，以光先帝遗德，恢弘志士之气；不宜妄自菲薄，引喻失义，以塞忠谏之路也。
-
-宫中府中，俱为一体，陟罚臧否，不宜异同。若有作奸犯科及为忠善者，宜付有司论其刑赏，以昭陛下平明之理，不宜偏私，使内外异法也。
-
-侍中、侍郎郭攸之、费祎、董允等，此皆良实，志虑忠纯，是以先帝简拔以遗陛下。愚以为宫中之事，事无大小，悉以咨之，然后施行，必能裨补阙漏，有所广益。
-
-将军向宠，性行淑均，晓畅军事，试用于昔日，先帝称之曰能，是以众议举宠为督。愚以为营中之事，悉以咨之，必能使行阵和睦，优劣得所。
-
-亲贤臣，远小人，此先汉所以兴隆也；亲小人，远贤臣，此后汉所以倾颓也。先帝在时，每与臣论此事，未尝不叹息痛恨于桓、灵也。侍中、尚书、长史、参军，此悉贞良死节之臣，愿陛下亲之信之，则汉室之隆，可计日而待也。
-
-臣本布衣，躬耕于南阳，苟全性命于乱世，不求闻达于诸侯。先帝不以臣卑鄙，猥自枉屈，三顾臣于草庐之中，咨臣以当世之事，由是感激，遂许先帝以驱驰。后值倾覆，受任于败军之际，奉命于危难之间，尔来二十有一年矣。
-
-先帝知臣谨慎，故临崩寄臣以大事也。受命以来，夙夜忧叹，恐托付不效，以伤先帝之明，故五月渡泸，深入不毛。今南方已定，兵甲已足，当奖率三军，北定中原，庶竭驽钝，攘除奸凶，兴复汉室，还于旧都。此臣所以报先帝而忠陛下之职分也。至于斟酌损益，进尽忠言，则攸之、祎、允之任也。
-
-愿陛下托臣以讨贼兴复之效；不效，则治臣之罪，以告先帝之灵。若无兴德之言，则戮攸之、祎、允等，以彰其咎。陛下亦宜自谋，以咨诹善道，察纳雅言，深追先帝遗诏。臣不胜受恩感激。
-
-今当远离，临表涕零，不知所言。`,
-    source: "三国志·诸葛亮传"
-  }
-};
-
-// 搜索古籍
-function searchBooks(query: string): BookContent | null {
-  const normalizedQuery = query.toLowerCase().replace(/[《》]/g, "");
-
-  // 精确匹配
-  for (const [key, book] of Object.entries(ancientBooks)) {
-    if (key.includes(normalizedQuery) || book.title.includes(normalizedQuery)) {
-      return book;
-    }
-  }
-
-  // 模糊匹配
-  for (const [key, book] of Object.entries(ancientBooks)) {
-    if (key.includes(normalizedQuery) ||
-        book.title.includes(normalizedQuery) ||
-        (book.author && book.author.includes(normalizedQuery))) {
-      return book;
-    }
-  }
-
-  return null;
-}
+import { getAncientBook, listAllAncientBooks } from "@/lib/ancient-books-ctext";
 
 export const Route = createFileRoute("/api/ancient-books")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         const { searchParams } = new URL(request.url);
-        const query = searchParams.get("q") || searchParams.get("query") || searchParams.get("title");
+        const query =
+          searchParams.get("q") || searchParams.get("query") || searchParams.get("title");
+        const list = searchParams.get("list");
+
+        // ===== 列出所有典籍 =====
+        if (list === "1" || list === "true") {
+          return Response.json({
+            success: true,
+            list: listAllAncientBooks(),
+          });
+        }
 
         if (!query) {
-          return new Response(JSON.stringify({
-            success: false,
-            error: "请提供查询参数：q, query 或 title"
-          } as QueryResult), {
-            status: 400,
-            headers: { "Content-Type": "application/json" }
-          });
+          return Response.json(
+            { success: false, error: "请提供查询参数：q / query / title，或 list=1 列出全部" },
+            { status: 400 }
+          );
         }
 
-        try {
-          const result = searchBooks(query);
-
-          if (result) {
-            return new Response(JSON.stringify({
-              success: true,
-              data: result
-            } as QueryResult), {
-              headers: { "Content-Type": "application/json" }
-            });
-          }
-
-          return new Response(JSON.stringify({
-            success: false,
-            error: `未找到古籍：${query}`
-          } as QueryResult), {
-            status: 404,
-            headers: { "Content-Type": "application/json" }
-          });
-
-        } catch (error) {
-          console.error("古籍查询错误:", error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: "服务器内部错误"
-          } as QueryResult), {
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-          });
+        const book = getAncientBook(query);
+        if (!book) {
+          return Response.json(
+            { success: false, error: `未找到古籍：${query}` },
+            { status: 404 }
+          );
         }
+
+        return Response.json({
+          success: true,
+          data: {
+            title: book.title,
+            author: book.author,
+            dynasty: book.dynasty,
+            content: book.content,
+            translation: book.translation,
+            source: book.source,
+            links: {
+              ctext: book.bookLink?.ctext,
+              shidianguji: book.bookLink?.shidianguji || "",
+              wikisource: book.bookLink?.wikisource,
+            },
+            metadata: {
+              bookName: book.bookLink?.name || book.title,
+              category: book.bookLink?.category || "经部",
+              brief: book.bookLink?.brief || "",
+            },
+          },
+        });
       },
     },
   },
