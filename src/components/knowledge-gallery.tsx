@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search, Loader2, Database, TrendingUp } from "lucide-react";
+import { Heart, Search, Loader2, Database } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import {
   CATEGORY_KEYS,
@@ -12,8 +12,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleIllustration } from "./article-illustration";
 import { AlmanacCard } from "./almanac-card";
-import { getUserInterests } from "@/lib/interests";
-import { sortByTrending } from "@/lib/recency";
 
 type DbArticle = {
   id: string;
@@ -133,7 +131,7 @@ export function KnowledgeGallery() {
       );
     }
     return { list, fromDb: false };
-  }, [cat, subCat, q, articles, sortMode]);
+  }, [cat, subCat, q, articles]);
 
   const isDb = displayArticles.fromDb;
   const items = displayArticles.list;
