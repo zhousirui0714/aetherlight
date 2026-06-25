@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search, Loader2, Database } from "lucide-react";
+import { Heart, Search, Loader2, Database, Languages } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import {
   CATEGORY_KEYS,
@@ -12,6 +12,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleIllustration } from "./article-illustration";
 import { AlmanacCard } from "./almanac-card";
+import { useTranslation } from "@/lib/use-translation";
 
 type DbArticle = {
   id: string;
@@ -31,6 +32,107 @@ type DbArticle = {
   full_text?: string | null;
   created_at: string;
 };
+
+/**
+ * 知识长廊单卡 — 抽出来为了能在 excerpt 处用 useTranslation hook
+ * 整张卡被 Link 包裹, 译按钮用 stopPropagation + preventDefault 阻止跳转
+ */
+function GalleryCard({
+  item,
+  index,
+  isDb,
+}: {
+  item: DbArticle | Article;
+  index: number;
+  isDb: boolean;
+}) {
+  const { translation, loading, open, toggle } = useTranslation({
+    mode: "scholar",
+    text: item.excerpt || "",
+  });
+  const canTranslate = !!(item.excerpt && item.excerpt.trim().length > 0);
+
+  const handleTranslateClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle();
+  };
+
+  const emoji = isDb ? (item as DbArticle).cover || "📜" : (item as Article).cover;
+  const subCategory = isDb ? (item as DbArticle).sub_category : undefined;
+  const catKey = normalizeCategory(item.category);
+  const catLabel = catKey ? CATEGORY_CN[catKey] : item.category;
+  const coverUrl = isDb ? (item as DbArticle).cover_url : undefined;
+
+  return (
+    <Link
+      to="/article/$id"
+      params={{ id: item.id }}
+      style={{ animationDelay: `${index * 40}ms` }}
+      className="scroll-in group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.25)]"
+    >
+      {/* cover */}
+      <div className="relative h-[180px] w-full overflow-hidden">
+        <ArticleIllustration
+          category={catKey || item.category}
+          title={item.title}
+          emoji={emoji}
+          coverUrl={coverUrl}
+        />
+      </div>
+
+      {/* content */}
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-block w-fit rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-accent">
+            {catLabel}
+          </span>
+          {subCategory && (
+            <span className="inline-block w-fit rounded-full bg-muted px-2 py-0.5 font-serif text-[10px] tracking-widest text-muted-foreground">
+              {subCategory}
+            </span>
+          )}
+        </div>
+        <h3 className="font-serif text-lg font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+          {item.title}
+        </h3>
+        <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+          {item.excerpt}
+        </p>
+
+        {/* 译文展开区 */}
+        {open && translation && (
+          <div className="rounded-lg border-l-2 border-accent/40 bg-accent/5 px-3 py-2 font-serif text-xs italic leading-relaxed text-foreground/80">
+            <span className="mb-1 flex items-center gap-1 text-[10px] not-italic tracking-widest text-accent">
+              <Languages className="h-2.5 w-2.5" /> 学者译文
+            </span>
+            {translation}
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center gap-3 pt-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <Heart className="h-3.5 w-3.5" /> {item.favorites?.toLocaleString() || 0} 收藏
+          </span>
+          <button
+            type="button"
+            onClick={handleTranslateClick}
+            disabled={loading || !canTranslate}
+            className="ml-auto inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/5 px-2.5 py-0.5 font-serif text-[10px] tracking-widest text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
+            title={canTranslate ? "以学者口吻将摘要译为白话" : "摘要为空, 无可译内容"}
+          >
+            {loading ? (
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            ) : (
+              <Languages className="h-2.5 w-2.5" />
+            )}
+            {open ? "收起" : "译"}
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 // 顶级分类: 全部 + 10 v3 分类
 const ALL_TOP_CATEGORIES: ("全部" | CategoryKey)[] = ["全部", ...CATEGORY_KEYS];
@@ -153,9 +255,6 @@ export function KnowledgeGallery() {
 
   return (
     <section className="mt-8">
-      {/* 今日黄历（lunisolar） */}
-      <AlmanacCard />
-
       <div className="mb-6 flex flex-col items-center gap-5">
         {/* search */}
         <div className="flex w-full max-w-xl items-center gap-2 rounded-full border border-border bg-card px-5 py-3">
@@ -253,54 +352,7 @@ export function KnowledgeGallery() {
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item, i) => (
-            <Link
-              key={item.id}
-              to="/article/$id"
-              params={{ id: item.id }}
-              style={{ animationDelay: `${i * 40}ms` }}
-              className="scroll-in group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.25)]"
-            >
-              {/* cover */}
-              <div className="relative h-[180px] w-full overflow-hidden">
-                {(() => {
-                  const emoji = isDb ? (item.cover || "📜") : (item as Article).cover;
-                  return (
-                    <ArticleIllustration
-                      category={normalizeCategory(item.category) || item.category}
-                      title={item.title}
-                      emoji={emoji}
-                      coverUrl={isDb ? (item as DbArticle).cover_url : undefined}
-                    />
-                  );
-                })()}
-              </div>
-
-              {/* content */}
-              <div className="flex flex-1 flex-col gap-2 p-5">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="inline-block w-fit rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-accent">
-                    {(() => {
-                      const k = normalizeCategory(item.category);
-                      return k ? CATEGORY_CN[k] : item.category;
-                    })()}
-                  </span>
-                  {(isDb && (item as DbArticle).sub_category) && (
-                    <span className="inline-block w-fit rounded-full bg-muted px-2 py-0.5 font-serif text-[10px] tracking-widest text-muted-foreground">
-                      {(item as DbArticle).sub_category}
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-serif text-lg font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-                  {item.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
-                  {item.excerpt}
-                </p>
-                <div className="mt-auto flex items-center gap-1.5 pt-2 text-xs text-muted-foreground">
-                  <Heart className="h-3.5 w-3.5" /> {item.favorites?.toLocaleString() || 0} 收藏
-                </div>
-              </div>
-            </Link>
+            <GalleryCard key={item.id} item={item as DbArticle | Article} index={i} isDb={isDb} />
           ))}
         </div>
       )}
