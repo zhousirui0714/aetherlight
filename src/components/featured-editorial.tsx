@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
+import { FEATURED_EDITORIAL_IMAGE, FEATURED_EDITORIAL_CARDS } from "@/lib/home-illustrations";
 
 type EditorialCard = {
   id: string;
@@ -28,12 +29,12 @@ const EDITORIALS: Editorial[] = [
     tagColor: "bg-amber-100 text-amber-800",
     title: "李白：盛唐气象与诗歌巅峰",
     desc: "从《静夜思》的游子情怀，到《将进酒》的豪放不羁，再到《月下独酌》的孤高自许——诗仙李白的笔下，盛唐的山河与风骨徐徐展开。本专题精选 12 首代表作，串起他传奇一生的 4 个阶段。",
-    image: "https://picsum.photos/seed/libai-editorial/1024/640",
+    image: FEATURED_EDITORIAL_IMAGE,
     related: [
-      { id: "static-1", title: "静夜思", desc: "床前明月光，疑是地上霜", category: "诗词", categoryColor: "text-amber-700 bg-amber-50", image: "https://picsum.photos/seed/jingyesi/400/300" },
-      { id: "static-2", title: "将进酒", desc: "君不见黄河之水天上来", category: "诗词", categoryColor: "text-amber-700 bg-amber-50", image: "https://picsum.photos/seed/jiangjinjiu/400/300" },
-      { id: "static-3", title: "月下独酌", desc: "举杯邀明月，对影成三人", category: "诗词", categoryColor: "text-amber-700 bg-amber-50", image: "https://picsum.photos/seed/yuexiazhuo/400/300" },
-      { id: "static-4", title: "李白的蜀中岁月", desc: "少年仗剑去国，辞亲远游", category: "人物", categoryColor: "text-blue-700 bg-blue-50", image: "https://picsum.photos/seed/libaishuzhong/400/300" },
+      { id: "static-1", title: "静夜思", desc: "床前明月光，疑是地上霜", category: "诗词", categoryColor: "text-amber-700 bg-amber-50", image: FEATURED_EDITORIAL_CARDS[0].image },
+      { id: "static-2", title: "将进酒", desc: "君不见黄河之水天上来", category: "诗词", categoryColor: "text-amber-700 bg-amber-50", image: FEATURED_EDITORIAL_CARDS[1].image },
+      { id: "static-3", title: "月下独酌", desc: "举杯邀明月，对影成三人", category: "诗词", categoryColor: "text-amber-700 bg-amber-50", image: FEATURED_EDITORIAL_CARDS[2].image },
+      { id: "static-4", title: "李白的蜀中岁月", desc: "少年仗剑去国，辞亲远游", category: "人物", categoryColor: "text-blue-700 bg-blue-50", image: FEATURED_EDITORIAL_CARDS[3].image },
     ],
   },
   // 后续可加更多专题

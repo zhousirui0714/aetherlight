@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, ChevronDown, Loader2 } from "lucide-react";
 import { fetchDailyPush } from "@/lib/daily-push.functions";
+import { HOME_FALLBACK_IMAGES } from "@/lib/home-illustrations";
 
 type DailyPush = { date: string; title: string; body: string; source_note: string | null; image_prompt?: string };
 
@@ -10,18 +11,18 @@ function chineseDate(d: Date) {
   return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
 }
 
-const FALLBACK_IMAGES = [
-  "https://picsum.photos/seed/aetherlight-hero-1/1920/1080", // 山
-  "https://picsum.photos/seed/aetherlight-hero-2/1920/1080", // 园林
-  "https://picsum.photos/seed/aetherlight-hero-3/1920/1080", // 古建筑
-  "https://picsum.photos/seed/aetherlight-hero-4/1920/1080", // 古寺
-];
-const FALLBACK_IMG = FALLBACK_IMAGES[0];
+// 按日期种子从 4 张 AI 水墨图中选一张，保证同一天背景稳定
+function pickFallbackByDate(date: Date): string {
+  const dayKey = date.toISOString().slice(0, 10);
+  let hash = 0;
+  for (let i = 0; i < dayKey.length; i++) hash = (hash * 31 + dayKey.charCodeAt(i)) | 0;
+  return HOME_FALLBACK_IMAGES[Math.abs(hash) % HOME_FALLBACK_IMAGES.length];
+}
 
 export function HomeHero() {
   const navigate = useNavigate();
   const [data, setData] = useState<DailyPush | null>(null);
-  const [imageUrl, setImageUrl] = useState<string>(FALLBACK_IMG);
+  const [imageUrl, setImageUrl] = useState<string>(pickFallbackByDate(new Date()));
   const [searchInput, setSearchInput] = useState("");
   const [searching, setSearching] = useState(false);
 
@@ -33,14 +34,6 @@ export function HomeHero() {
         const res = await fetchDailyPush({ data: { date: fmtDate(today) } });
         if (cancelled) return;
         setData(res);
-        if (res.image_prompt || res.title) {
-          const query = encodeURIComponent(`${res.title} 中国传统文化`);
-          const imgRes = await fetch(`/api/search-image?q=${query}`);
-          const imgData = await imgRes.json();
-          if (!cancelled && imgData.url) {
-            setImageUrl(imgData.url);
-          }
-        }
       } catch (e) {
         // 失败 fallback 已设
       }

@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { SAGES } from "@/lib/sages";
+import { SAGE_AVATAR_URLS } from "@/lib/home-illustrations";
 
 const FEATURED_SAGE_IDS = [
   "confucius",      // 孔子
@@ -12,18 +13,6 @@ const FEATURED_SAGE_IDS = [
   "caoxueqin",      // 曹雪芹
   "meilanfang",     // 梅兰芳
 ];
-
-// 8 位圣贤头像 (用 picsum seed 保持稳定, 后续可换 AI 生成的圣贤插图)
-const SAGE_AVATAR: Record<string, string> = {
-  confucius:    "https://picsum.photos/seed/confucius-portrait/240/240",
-  wangxizhi:    "https://picsum.photos/seed/wangxizhi-portrait/240/240",
-  libai:        "https://picsum.photos/seed/libai-portrait/240/240",
-  sushi:        "https://picsum.photos/seed/sushi-portrait/240/240",
-  wangyangming: "https://picsum.photos/seed/wangyangming-portrait/240/240",
-  guanhanqing:  "https://picsum.photos/seed/guanhanqing-portrait/240/240",
-  caoxueqin:    "https://picsum.photos/seed/caoxueqin-portrait/240/240",
-  meilanfang:   "https://picsum.photos/seed/meilanfang-portrait/240/240",
-};
 
 export function SagesDialogue() {
   const navigate = useNavigate();
@@ -61,7 +50,7 @@ export function SagesDialogue() {
               <div className="relative">
                 <div
                   className="h-20 w-20 rounded-full bg-cover bg-center ring-2 ring-amber-100 transition-all group-hover:ring-amber-400 md:h-24 md:w-24"
-                  style={{ backgroundImage: `url(${SAGE_AVATAR[sage.id] || "https://picsum.photos/seed/sage/240/240"})` }}
+                  style={{ backgroundImage: `url(${SAGE_AVATAR_URLS[sage.id] || "https://picsum.photos/seed/sage/240/240"})` }}
                 />
                 <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary font-serif text-xs text-primary-foreground shadow-md">
                   {sage.avatar}
