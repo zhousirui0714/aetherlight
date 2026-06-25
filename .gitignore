@@ -69,6 +69,9 @@ Reservator-master/
 src/data/reservator-cache.json
 src/data/reservator-books/
 
+# Xirang 解析产物（已导入到 Supabase，避免 345MB 触发 Vercel 限制）
+src/data/xirang-cache.json
+
 # AI 生成的封面/插图（80MB+，走 Supabase Storage 而非仓库）
 public/ai-covers/
 public/home-illustrations/
