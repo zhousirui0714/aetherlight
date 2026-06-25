@@ -513,6 +513,41 @@ export const culturalKnowledge: Record<string, KnowledgeEntry> = {
       { id: "dangtu", label: "当涂李白墓", type: "event", description: "李白终老之地", connections: ["li-bai"] }
     ]
   },
+  "杜甫": {
+    id: "du-fu-comprehensive",
+    question: "杜甫",
+    answer: "杜甫（712年-770年），字子美，自号少陵野老，盛唐至中唐间最负诗史之誉者。其诗沉郁顿挫，以仁心观世，以血泪写真，《春望》「国破山河在」、《茅屋为秋风所破歌》「安得广厦千万间」，皆见儒者襟怀与苍生之念。他亲历安史之乱，漂泊西南，诗作如镜，照见时代裂痕与人性光辉，故元稹赞曰：「至于子美，盖所谓上薄风骚，下该沈宋……尽得古今之体势。」其集名《杜工部集》，后世尊为「诗圣」。",
+    quotes: [
+      { text: "国破山河在，城春草木深。感时花溅泪，恨别鸟惊心。烽火连三月，家书抵万金。白头搔更短，浑欲不胜簪。", title: "春望", author: "杜甫", dynasty: "唐" },
+      { text: "八月秋高风怒号，卷我屋上三重茅。茅飞渡江洒江郊，高者挂罥长林梢，下者飘转沉塘坳。……安得广厦千万间，大庇天下寒士俱欢颜，风雨不动安如山。", title: "茅屋为秋风所破歌", author: "杜甫", dynasty: "唐" },
+      { text: "风急天高猿啸哀，渚清沙白鸟飞回。无边落木萧萧下，不尽长江滚滚来。万里悲秋常作客，百年多病独登台。艰难苦恨繁霜鬓，潦倒新停浊酒杯。", title: "登高", author: "杜甫", dynasty: "唐" },
+      { text: "朱门酒肉臭，路有冻死骨。荣枯咫尺异，惆怅难再述。", title: "自京赴奉先县咏怀五百字", author: "杜甫", dynasty: "唐" }
+    ],
+    sources: [
+      { title: "杜工部集", type: "book", isBook: true },
+      { title: "旧唐书·文苑传", type: "book", isBook: true },
+      { title: "新唐书·杜甫传", type: "book", isBook: true },
+      { title: "杜甫年谱", type: "book", isBook: true },
+      { title: "钱注杜诗", type: "book", isBook: true },
+      { title: "杜诗详注", type: "book", isBook: true }
+    ],
+    interpretations: "杜甫的诗是中国诗歌史上最厚重的「诗史」。他以沉郁顿挫的笔法，写尽战乱中黎民之苦、士人之困、家国之痛，字字皆关生命，字字皆见仁心。",
+    scholarAnalysis: "文学史家钱谦益在《杜诗笺注》序中说：「杜诗之妙，在能随地写情，因物赋形，千汇万状，兼古今而有之。」学者叶嘉莹《杜甫秋兴八首集说》指出，杜诗之伟大，在于将个人命运与时代巨变相融，「以小我写大我，以一瞬写永恒」。",
+    graphNodes: [
+      { id: "du-fu", label: "杜甫", type: "person", description: "诗圣、现实主义诗人", connections: ["li-bai", "wang-wei", "gao-shi", "cen-shen"] },
+      { id: "li-bai", label: "李白", type: "person", description: "诗仙、杜甫挚友", connections: ["du-fu"] },
+      { id: "wang-wei", label: "王维", type: "person", description: "诗佛、与杜甫同时代", connections: ["du-fu"] },
+      { id: "gao-shi", label: "高适", type: "person", description: "边塞诗人、杜甫挚友", connections: ["du-fu"] },
+      { id: "cen-shen", label: "岑参", type: "person", description: "边塞诗人", connections: ["du-fu"] },
+      { id: "chun-wang", label: "春望", type: "book", description: "安史之乱中的家国忧思", connections: ["du-fu"] },
+      { id: "mao-wu-ge", label: "茅屋为秋风所破歌", type: "book", description: "推己及人的仁者情怀", connections: ["du-fu"] },
+      { id: "deng-gao", label: "登高", type: "book", description: "七律冠冕、沉郁顿挫", connections: ["du-fu"] },
+      { id: "shi-sheng", label: "诗圣", type: "concept", description: "杜甫的称号", connections: ["du-fu"] },
+      { id: "xianshizhuyi", label: "现实主义", type: "concept", description: "杜甫诗歌的核心风格", connections: ["du-fu"] },
+      { id: "an-shi", label: "安史之乱", type: "event", description: "杜甫人生与诗风转折点", connections: ["du-fu"] },
+      { id: "gongbu", label: "杜工部", type: "concept", description: "杜甫曾任检校工部员外郎", connections: ["du-fu"] }
+    ]
+  },
   "端午节由来": {
     id: "dragon-boat-festival-origin",
     question: "端午节的由来？",
