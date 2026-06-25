@@ -13,7 +13,7 @@ import { AIInsightsPanel } from "@/components/ai-insights-panel";
 import { ArticleRelatedGraph } from "@/components/article-related-graph";
 import { FullTextPanel } from "@/components/full-text-panel";
 import { ShareCardButton } from "@/components/share-card-button";
-import { aiFillArticle, type ArticleDetail } from "@/lib/knowledge-api";
+import { aiFillArticle, type ArticleDetail, getRecommendations, type ArticleRecommendation } from "@/lib/knowledge-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/article/$id")({
@@ -64,6 +64,8 @@ function ArticlePage() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [aiFilling, setAiFilling] = useState(false);
+  const [recommendations, setRecommendations] = useState<ArticleRecommendation[]>([]);
+  const [recLoading, setRecLoading] = useState(false);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -168,6 +170,27 @@ function ArticlePage() {
     };
     checkFavorite();
   }, [article]);
+
+  // TF-IDF 推荐：基于全量文章算相似度
+  useEffect(() => {
+    if (!article) return;
+    let aborted = false;
+    setRecLoading(true);
+    setRecommendations([]);
+    getRecommendations(article.id, { topK: 6 })
+      .then((res) => {
+        if (!aborted) setRecommendations(res.recommendations || []);
+      })
+      .catch((err) => {
+        if (!aborted) console.warn("[article-page] rec failed:", err);
+      })
+      .finally(() => {
+        if (!aborted) setRecLoading(false);
+      });
+    return () => {
+      aborted = true;
+    };
+  }, [article?.id]);
 
   const handleFavorite = async () => {
     if (!article || favoriteLoading) return;
@@ -368,6 +391,53 @@ function ArticlePage() {
           </div>
 
           <AIInsightsPanel article={article} />
+
+          {/* 猜你喜欢：TF-IDF 余弦相似度推荐 */}
+          {(recLoading || recommendations.length > 0) && (
+            <section className="mt-10 rounded-2xl border border-accent/20 bg-accent/5 p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-accent" />
+                <h2 className="font-serif text-xl text-foreground">猜你喜欢</h2>
+                <span className="ml-auto rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-serif text-accent">
+                  算法推荐
+                </span>
+              </div>
+              {recLoading ? (
+                <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  正在为你找相似的文章…
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {recommendations.map((rec) => (
+                    <button
+                      key={rec.id}
+                      onClick={() => navigate({ to: "/article/$id", params: { id: rec.id } })}
+                      className="group flex flex-col items-start gap-1.5 rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-accent/50 hover:bg-background"
+                    >
+                      <div className="flex w-full items-center gap-2">
+                        <span className="text-xl leading-none">{rec.cover || "📜"}</span>
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">
+                          {rec.category}
+                        </span>
+                        <span className="ml-auto text-[10px] text-muted-foreground/70">
+                          {(rec.score * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <h3 className="font-serif text-sm font-semibold text-foreground line-clamp-1 group-hover:text-accent">
+                        {rec.title}
+                      </h3>
+                      {rec.excerpt && (
+                        <p className="line-clamp-2 text-xs text-muted-foreground">
+                          {rec.excerpt}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* 底部操作 */}
           <div className="mt-12 flex items-center justify-between border-t border-border pt-8">

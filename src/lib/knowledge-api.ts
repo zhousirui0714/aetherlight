@@ -210,3 +210,42 @@ export const knowledgeApi = {
   getTags,
   getRelations,
 };
+
+/**
+ * 基于 TF-IDF 余弦相似度的相关文章推荐
+ */
+export interface ArticleRecommendation {
+  id: string;
+  title: string;
+  category: string;
+  excerpt: string;
+  cover: string;
+  coverUrl: string | null;
+  viewCount: number;
+  favorites: number;
+  score: number;
+}
+
+export interface RecommendationsResponse {
+  recommendations: ArticleRecommendation[];
+  indexedDocs: number;
+  cached: boolean;
+  age: number;
+}
+
+export async function getRecommendations(
+  articleId: string,
+  options: { topK?: number; exclude?: string[] } = {}
+): Promise<RecommendationsResponse> {
+  const { topK = 6, exclude = [] } = options;
+  const search = new URLSearchParams({ id: articleId, topK: String(topK) });
+  if (exclude.length) search.set("exclude", exclude.join(","));
+  try {
+    return await jsonFetch<RecommendationsResponse>(
+      `${API_BASE}/articles/recommendations?${search.toString()}`
+    );
+  } catch (err) {
+    console.warn(`[knowledge-api] getRecommendations(${articleId}) failed:`, err);
+    return { recommendations: [], indexedDocs: 0, cached: false, age: 0 };
+  }
+}
