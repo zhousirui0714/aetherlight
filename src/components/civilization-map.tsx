@@ -28,7 +28,7 @@ export function CivilizationMap() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden bg-background py-20">
+    <section data-section="civilization-map" className="relative overflow-hidden bg-background py-20">
       {/* 极淡的水墨底纹：右上角晕染圆 */}
       <div
         className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full opacity-[0.04]"
