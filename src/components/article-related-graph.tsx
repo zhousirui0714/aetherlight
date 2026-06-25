@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Network, Info, X, Clock, Compass, ArrowLeft } from "lucide-react";
 import { knowledgeApi } from "@/lib/knowledge-api";
 import type { KnowledgeGraph, GraphNode, GraphEdge } from "@/lib/knowledge-types";
+import { computeImportance } from "@/lib/graph-centrality";
 
 interface ArticleRelatedGraphProps {
   articleId: string;
@@ -154,16 +155,26 @@ function preprocessGraph(graph: KnowledgeGraph, articleId: string) {
   const center = graph.center || { id: articleId, title: "", category: "" };
   // 中心节点年份作为兜底
   const centerYear = inferYear(center);
+
+  // 计算图中心性（degree / weighted / betweenness 综合）
+  // 在邻居图上算，反映"在当前关系网中的重要性"
+  const importance = computeImportance(graph.nodes, graph.edges);
+
   const processedNodes: ProcessedNode[] = graph.nodes
     .filter(n => n.id !== articleId)
     .map(n => {
       const type = classifyNode(n, false);
+      const baseStrength = type === "core" ? 1.0 : type === "content" ? 0.7 : 0.4;
+      // 中心性 0-1 归一化后，混 30% 进去（不破坏节点类型基础权重）
+      const centralityScore = importance.get(n.id) || 0;
+      const strength = Math.min(1.0, baseStrength * 0.7 + centralityScore * 0.3);
       return {
         ...n,
         type,
         year: inferYear(n, centerYear),
-        // 内容节点弱化、概念节点最弱、核心最强
-        strength: type === "core" ? 1.0 : type === "content" ? 0.7 : 0.4,
+        strength,
+        // 把 importance 暂存到节点的 centrality 字段（如果类型允许）
+        ...({ centrality: centralityScore } as any),
       };
     });
 
@@ -762,6 +773,8 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
               const dimmed = isDimmed(n.id);
               const isNei = isNeighbor(n.id);
               const isHov = hoveredId === n.id;
+              // 节点 size 反映中心性：strength 0-1 → 0.85-1.25 缩放
+              const sizeScale = 0.85 + (n.strength || 0.5) * 0.4;
 
               return (
                 <g key={n.id} style={{
@@ -773,6 +786,7 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
                       cx={p.x} cy={p.y}
                       title={n.title}
                       lit={lit} hovered={isHov} neighbor={isNei}
+                      sizeScale={sizeScale}
                       onClick={(e) => { e.stopPropagation(); setSelectedId(n.id); }}
                       onDoubleClick={(e) => { e.stopPropagation(); drillInto(n.id, n.title); }}
                       onHover={(h) => setHoveredId(h ? n.id : null)}
@@ -782,6 +796,7 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
                       cx={p.x} cy={p.y}
                       title={n.title}
                       lit={lit} hovered={isHov} neighbor={isNei}
+                      sizeScale={sizeScale}
                       onClick={(e) => { e.stopPropagation(); setSelectedId(n.id); }}
                       onDoubleClick={(e) => { e.stopPropagation(); drillInto(n.id, n.title); }}
                       onHover={(h) => setHoveredId(h ? n.id : null)}
@@ -1063,15 +1078,17 @@ function CoreNode({ cx, cy, title, lit, dimmed, isRoot, onClick }: {
 }
 
 // 内容节点：半透明小墨点
-function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleClick, onHover }: {
+function ContentNode({ cx, cy, title, lit, dimmed, hovered, neighbor, onClick, onDoubleClick, onHover, sizeScale = 1 }: {
   cx: number; cy: number; title: string;
-  lit: boolean; hovered: boolean; neighbor: boolean;
+  lit: boolean; dimmed: boolean; hovered: boolean; neighbor: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick?: (e: React.MouseEvent) => void;
   onHover: (h: boolean) => void;
+  sizeScale?: number;
 }) {
   const baseR = 12;
   const r = hovered ? baseR + 4 : (neighbor || lit) ? baseR + 2 : baseR;
+  const finalR = r * sizeScale;
   const opacity = hovered ? 0.95 : (neighbor || lit) ? 0.7 : 0.35;
   return (
     <g
@@ -1082,7 +1099,7 @@ function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleC
       style={{ cursor: "pointer", transition: "all 0.3s" }}
     >
       <circle
-        cx={cx} cy={cy} r={r}
+        cx={cx} cy={cy} r={finalR}
         fill="url(#ink-content)"
         opacity={opacity}
       />
@@ -1090,11 +1107,11 @@ function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleC
       {(hovered || neighbor || lit) && (
         <g>
           <rect
-            x={cx - 36} y={cy + r + 4} width="72" height="20" rx="3"
+            x={cx - 36} y={cy + finalR + 4} width="72" height="20" rx="3"
             fill="#F5F0E8" stroke="#C43A30" strokeWidth="0.5" strokeOpacity="0.4"
           />
           <text
-            x={cx} y={cy + r + 17}
+            x={cx} y={cy + finalR + 17}
             textAnchor="middle"
             fontFamily="'Noto Serif SC', serif"
             fontSize="10" fontWeight="500"
@@ -1110,15 +1127,17 @@ function ContentNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleC
 }
 
 // 概念节点：雾状不规则墨影
-function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleClick, onHover }: {
+function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleClick, onHover, sizeScale = 1 }: {
   cx: number; cy: number; title: string;
   lit: boolean; hovered: boolean; neighbor: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick?: (e: React.MouseEvent) => void;
   onHover: (h: boolean) => void;
+  sizeScale?: number;
 }) {
   const baseR = 22;
   const r = hovered ? baseR + 6 : (neighbor || lit) ? baseR + 4 : baseR;
+  const finalR = r * sizeScale;
   const opacity = hovered ? 0.85 : (neighbor || lit) ? 0.6 : 0.3;
   return (
     <g
@@ -1129,14 +1148,14 @@ function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleC
       style={{ cursor: "pointer", transition: "all 0.4s" }}
     >
       <circle
-        cx={cx} cy={cy} r={r}
+        cx={cx} cy={cy} r={finalR}
         fill="url(#ink-concept)"
         filter="url(#ink-mist)"
         opacity={opacity}
       />
       {/* 概念节点不规则形（叠加） */}
       <ellipse
-        cx={cx} cy={cy} rx={r * 0.7} ry={r * 0.5}
+        cx={cx} cy={cy} rx={finalR * 0.7} ry={finalR * 0.5}
         fill="url(#ink-concept)"
         filter="url(#ink-mist)"
         opacity={opacity * 0.7}
@@ -1145,7 +1164,7 @@ function ConceptNode({ cx, cy, title, lit, hovered, neighbor, onClick, onDoubleC
       {/* 文字标签 */}
       {(hovered || neighbor || lit) && (
         <text
-          x={cx} y={cy + r + 14}
+          x={cx} y={cy + finalR + 14}
           textAnchor="middle"
           fontFamily="'Noto Serif SC', serif"
           fontSize="10" fontStyle="italic"
