@@ -8,6 +8,7 @@ interface ArticleIllustrationProps {
   category: Category | string;
   title: string;
   emoji: string;
+  coverUrl?: string; // AI 生成的真实水墨配图 (Supabase Storage), 优先于 emoji
 }
 
 // 从标题中提取关键词，用于个性化装饰
