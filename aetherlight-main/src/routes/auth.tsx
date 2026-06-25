@@ -21,7 +21,6 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
-  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -30,7 +29,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -39,16 +38,39 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast("注册成功", { description: "欢迎来到溯光" });
+
+        // 如果 Supabase 开启了「邮箱验证」,signUp 后不会自动建立 session
+        // 此时需要走 signInWithPassword 拿 session,或者提示用户去邮箱确认
+        if (!data.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (!signInError) {
+            toast.success("注册成功", { description: "欢迎来到溯光" });
+            navigate({ to: "/onboarding" });
+            return;
+          }
+          // signIn 失败 → 大概率是 Supabase 项目开启了邮箱验证
+          const msg = (signInError.message || "").toLowerCase();
+          if (msg.includes("email not confirmed")) {
+            toast.warning("注册成功！请前往邮箱点击确认链接后再登录", {
+              description: "若没收到邮件，请检查垃圾箱或联系管理员",
+              duration: 8000,
+            });
+            setMode("login");
+            return;
+          }
+          throw signInError;
+        }
+
+        toast.success("注册成功", { description: "欢迎来到溯光" });
         navigate({ to: "/onboarding" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast("欢迎归来");
+        toast.success("欢迎归来");
         navigate({ to: "/" });
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "出错了");
+      toast.error(translateAuthError(e), { duration: 6000 });
     } finally {
       setLoading(false);
     }
@@ -62,7 +84,43 @@ function AuthPage() {
       if (r.redirected) return;
       navigate({ to: "/" });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Google 登录失败");
+      toast.error(translateAuthError(e), { duration: 6000 });
+      setLoading(false);
+    }
+  };
+
+  const forgotPassword = async () => {
+    if (!email) {
+      toast.warning("请先在上方输入注册时使用的邮箱");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) throw error;
+      toast.success("重置密码邮件已发送", { description: "请前往邮箱查收" });
+    } catch (e) {
+      toast.error(translateAuthError(e), { duration: 6000 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendConfirm = async () => {
+    if (!email) {
+      toast.warning("请先在上方输入注册时使用的邮箱");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: window.location.origin } });
+      if (error) throw error;
+      toast.success("确认邮件已重新发送", { description: "请检查收件箱（含垃圾箱）" });
+    } catch (e) {
+      toast.error(translateAuthError(e), { duration: 6000 });
+    } finally {
       setLoading(false);
     }
   };
@@ -126,31 +184,33 @@ function AuthPage() {
                 <Field label="昵称" value={nickname} onChange={setNickname} placeholder="您的雅号" />
               )}
               <Field
-                label={mode === "signup" ? "手机号 / 邮箱" : "手机号 / 邮箱"}
+                label="邮箱"
                 type="email"
                 value={email}
                 onChange={setEmail}
                 placeholder="you@example.com"
                 required
               />
-              {mode === "signup" && (
-                <Field
-                  label="验证码"
-                  value={code}
-                  onChange={setCode}
-                  placeholder="6 位验证码"
-                  rightSlot={
-                    <button type="button" className="rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground hover:text-foreground">
-                      获取验证码
-                    </button>
-                  }
-                />
-              )}
               <Field label="密码" type="password" value={password} onChange={setPassword} placeholder="至少 6 位" required />
 
               {mode === "login" && (
-                <div className="flex justify-end">
-                  <button type="button" className="text-xs text-muted-foreground hover:text-primary">忘记密码？</button>
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={resendConfirm}
+                    disabled={loading}
+                    className="text-muted-foreground hover:text-primary disabled:opacity-50"
+                  >
+                    没收到验证邮件？
+                  </button>
+                  <button
+                    type="button"
+                    onClick={forgotPassword}
+                    disabled={loading}
+                    className="text-muted-foreground hover:text-primary disabled:opacity-50"
+                  >
+                    忘记密码？
+                  </button>
                 </div>
               )}
 
@@ -220,4 +280,30 @@ function Field({
       </div>
     </label>
   );
+}
+
+/**
+ * 把 Supabase Auth 的英文错误翻译成中文，避免「信息错误」这种莫名其妙的提示。
+ */
+function translateAuthError(e: unknown): string {
+  const raw =
+    e && typeof e === "object" && "message" in e
+      ? String((e as { message?: unknown }).message ?? "")
+      : typeof e === "string"
+        ? e
+        : "出错了，请稍后再试";
+  const m = raw.toLowerCase();
+  if (m.includes("email not confirmed")) return "邮箱尚未验证，请先点击邮件中的确认链接";
+  if (m.includes("invalid login credentials")) return "邮箱或密码错误";
+  if (m.includes("invalid email")) return "邮箱格式不正确";
+  if (m.includes("user already registered") || m.includes("already been registered"))
+    return "该邮箱已注册，请直接登录或使用找回密码";
+  if (m.includes("user not found")) return "该邮箱尚未注册";
+  if (m.includes("password should be") || m.includes("password is too short"))
+    return "密码至少需要 6 位字符";
+  if (m.includes("rate limit") || m.includes("too many requests"))
+    return "请求过于频繁，请稍后再试";
+  if (m.includes("signup disabled")) return "注册功能暂未开放";
+  if (m.includes("network") || m.includes("fetch")) return "网络异常，请检查连接后重试";
+  return raw;
 }

@@ -30,6 +30,7 @@ import { Route as TongyouChallengeRouteImport } from './routes/tongyou/challenge
 import { Route as DialogueHistoryRouteImport } from './routes/dialogue.history'
 import { Route as DialogueIdRouteImport } from './routes/dialogue.$id'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
+import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
 import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
 import { Route as ApiKnowledgeAiFillRouteImport } from './routes/api/knowledge-ai-fill'
@@ -152,6 +153,11 @@ const ArticleIdRoute = ArticleIdRouteImport.update({
   path: '/article/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTranslateRoute = ApiTranslateRouteImport.update({
+  id: '/api/translate',
+  path: '/api/translate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTextToImageRoute = ApiTextToImageRouteImport.update({
   id: '/api/text-to-image',
   path: '/api/text-to-image',
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
+  '/api/translate': typeof ApiTranslateRoute
   '/article/$id': typeof ArticleIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
+  '/api/translate': typeof ApiTranslateRoute
   '/article/$id': typeof ArticleIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
@@ -335,6 +343,7 @@ export interface FileRoutesById {
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
+  '/api/translate': typeof ApiTranslateRoute
   '/article/$id': typeof ArticleIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
     | '/api/text-to-image'
+    | '/api/translate'
     | '/article/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
     | '/api/text-to-image'
+    | '/api/translate'
     | '/article/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
     | '/api/text-to-image'
+    | '/api/translate'
     | '/article/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
@@ -493,6 +505,7 @@ export interface RootRouteChildren {
   ApiKnowledgeAiFillRoute: typeof ApiKnowledgeAiFillRoute
   ApiSearchImageRoute: typeof ApiSearchImageRoute
   ApiTextToImageRoute: typeof ApiTextToImageRoute
+  ApiTranslateRoute: typeof ApiTranslateRoute
   ArticleIdRoute: typeof ArticleIdRoute
   TongyouChallengeRoute: typeof TongyouChallengeRoute
   TongyouCommunityRoute: typeof TongyouCommunityRouteWithChildren
@@ -646,6 +659,13 @@ declare module '@tanstack/react-router' {
       path: '/article/$id'
       fullPath: '/article/$id'
       preLoaderRoute: typeof ArticleIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/translate': {
+      id: '/api/translate'
+      path: '/api/translate'
+      fullPath: '/api/translate'
+      preLoaderRoute: typeof ApiTranslateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/text-to-image': {
@@ -847,6 +867,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKnowledgeAiFillRoute: ApiKnowledgeAiFillRoute,
   ApiSearchImageRoute: ApiSearchImageRoute,
   ApiTextToImageRoute: ApiTextToImageRoute,
+  ApiTranslateRoute: ApiTranslateRoute,
   ArticleIdRoute: ArticleIdRoute,
   TongyouChallengeRoute: TongyouChallengeRoute,
   TongyouCommunityRoute: TongyouCommunityRouteWithChildren,

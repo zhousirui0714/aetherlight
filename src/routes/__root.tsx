@@ -76,7 +76,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/550ebf65-2542-4d9c-8a8b-d5229076f365/id-preview-4644bef5--2ddf4d2d-cda3-4109-b6c5-024db6929bc8.lovable.app-1781864993073.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/550ebf65-2542-4d9c-8a8b-d5229076f365/id-preview-4644bef5--2ddf4d2d-cda3-4109-b6c5-024db6929bc8.lovable.app-1781864993073.png" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      // Reservator 兜底扩展 v1.1：Noto Serif SC 字体兜底生僻字（CJK 扩展区）
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap",
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

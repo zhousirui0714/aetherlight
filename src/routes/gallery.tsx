@@ -16,7 +16,7 @@ function GalleryPage() {
   return (
     <AppShell>
       <div className="mb-2 text-center">
-        <div className="font-serif text-xs tracking-[0.4em] text-accent">SUGUANG GALLERY</div>
+        <div className="font-serif text-xs tracking-[0.4em] text-accent">KNOWLEDGE CORRIDOR</div>
         <h1 className="mt-3 font-serif text-4xl text-foreground">知 识 长 廊</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-loose text-muted-foreground">
           以书卷之姿，铺陈千年文化。在分类中漫步，在搜索中相遇。

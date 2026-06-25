@@ -13,6 +13,11 @@ interface ModalProps {
 interface ExtendedBook extends Book {
   translation?: string;
   fullContent?: string;
+  /** 新增：Reservator 兜底扩展 v1.1 —— 卷次数组（取代旧 chapters: string[]） */
+  chapters?: Array<{ urn: string; title: string; paragraphs: string[] }>;
+  chapterCount?: number;
+  hasUnresolvedChars?: boolean;
+  source?: "reservator" | "hardcoded" | "fallback-link";
 }
 
 export function Modal({ isOpen, onClose, type, data, title }: ModalProps) {
@@ -248,6 +253,44 @@ function BookDetail({ book, extendedContent, loading }: { book: Book; extendedCo
               >
                 {chapter}
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reservator 兜底扩展 v1.1：若 extendedContent 含卷次 + 段落，全文展开 */}
+      {extendedContent?.chapters && extendedContent.chapters.length > 0 && (
+        <div>
+          <h4 className="mb-3 flex items-center gap-2 font-serif text-base font-semibold text-foreground">
+            <BookOpen className="h-4 w-4 text-green-500" />
+            站内全文（共 {extendedContent.chapters.length} 卷）
+            {extendedContent.hasUnresolvedChars && (
+              <span className="ml-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-600 dark:text-amber-300">
+                部分生僻字待校
+              </span>
+            )}
+          </h4>
+          <div className="space-y-4">
+            {extendedContent.chapters.map((ch) => (
+              <details
+                key={ch.urn}
+                className="rounded-xl border border-border bg-secondary/20 p-3"
+                open={extendedContent.chapters!.length <= 3}
+              >
+                <summary className="cursor-pointer font-serif text-sm font-medium text-foreground/90">
+                  {ch.title}
+                </summary>
+                <div className="mt-3 space-y-2 border-t border-border pt-3">
+                  {ch.paragraphs.map((p, i) => (
+                    <p
+                      key={i}
+                      className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-foreground/90"
+                    >
+                      {p}
+                    </p>
+                  ))}
+                </div>
+              </details>
             ))}
           </div>
         </div>

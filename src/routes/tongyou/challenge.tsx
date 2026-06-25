@@ -5,6 +5,52 @@ import { trackEvent } from "@/lib/journey-storage";
 import { Calendar, CheckCircle, Flame, Star, Trophy, Users, Clock, ChevronLeft, ChevronRight, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
+/**
+ * 返回本地时区的 YYYY-MM-DD 字符串(避免 toISOString 的 UTC 偏移导致跨时区日期错位)
+ */
+function getLocalDateString(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * 从打卡记录里重算连续天数(不依赖累计的 streak 字段)
+ * - 去重,按日期降序排
+ * - 找最近一次连续段
+ * - 若最近一次不是今天/昨天 → 视为已中断,返回 0
+ */
+function recalculateStreak(progress: ChallengeProgress[]): number {
+  const dates = Array.from(
+    new Set(
+      progress
+        .filter((p) => p.completed && p.completed_at)
+        .map((p) => getLocalDateString(new Date(p.completed_at!)))
+    )
+  ).sort((a, b) => (a < b ? 1 : -1));
+
+  if (dates.length === 0) return 0;
+
+  const today = getLocalDateString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yesterday);
+
+  // 最近一次打卡必须落在今天或昨天,否则连续已断
+  if (dates[0] !== today && dates[0] !== yesterdayStr) return 0;
+
+  let streak = 1;
+  for (let i = 0; i < dates.length - 1; i++) {
+    const curr = new Date(dates[i]).getTime();
+    const prev = new Date(dates[i + 1]).getTime();
+    const diff = Math.round((curr - prev) / 86400000);
+    if (diff === 1) streak++;
+    else break;
+  }
+  return streak;
+}
+
 export const Route = createFileRoute("/tongyou/challenge")({
   head: () => ({ meta: [{ title: "诗词打卡挑战 · 溯光" }] }),
   component: ChallengePage,
@@ -118,9 +164,11 @@ function ChallengePage() {
       const saved = localStorage.getItem("sukou_challenge_progress");
       if (saved) {
         const data = JSON.parse(saved);
-        setProgress(data.progress || []);
-        setStreak(data.streak || 0);
+        const loaded = data.progress || [];
+        setProgress(loaded);
         setCurrentDay(data.currentDay || 1);
+        // 用真实日期重算 streak,自动修复历史脏数据
+        setStreak(recalculateStreak(loaded));
       }
     } catch {}
   };
@@ -142,16 +190,32 @@ function ChallengePage() {
   };
 
   const handleCompleteDay = async () => {
+    const today = getLocalDateString();
+
+    // 找最近一次打卡的本地日期
+    const lastCompleted = progress
+      .filter((p) => p.completed && p.completed_at)
+      .map((p) => ({ ...p, localDate: getLocalDateString(new Date(p.completed_at!)) }))
+      .sort((a, b) => (a.localDate < b.localDate ? 1 : -1))[0];
+
+    // 同一天重复点击 → 拒绝
+    if (lastCompleted && lastCompleted.localDate === today) {
+      toast.info("今日已打卡，明日再续 ✨");
+      return;
+    }
+
+    const newDay = currentDay + 1;
+
     const newProgress: ChallengeProgress = {
-      day: currentDay,
+      day: newDay,
       completed: true,
       poem_id: currentPoem.id,
       completed_at: new Date().toISOString(),
     };
 
-    const updatedProgress = [...progress.filter(p => p.day !== currentDay), newProgress];
-    const newStreak = streak + 1;
-    const newDay = currentDay + 1;
+    const updatedProgress = [...progress.filter((p) => p.day !== newDay), newProgress];
+    // 用真实日期重算 streak,不依赖脏数据
+    const newStreak = recalculateStreak(updatedProgress);
 
     setProgress(updatedProgress);
     setStreak(newStreak);
@@ -161,11 +225,11 @@ function ChallengePage() {
     await trackEvent({
       type: "article_view",
       title: `诗词打卡：${currentPoem.title}`,
-      description: `第${currentDay}天打卡完成`,
+      description: `第${newDay}天打卡完成`,
       category: "诗词挑战",
     });
 
-    toast.success(`第${currentDay}天打卡完成！连续${newStreak}天`);
+    toast.success(`第${newDay}天打卡完成！连续${newStreak}天`);
   };
 
   const handleStartQuiz = () => {
@@ -205,7 +269,10 @@ function ChallengePage() {
   };
 
   const completedDays = progress.filter(p => p.completed).length;
-  const isTodayCompleted = progress.some(p => p.day === currentDay && p.completed);
+  const todayStr = getLocalDateString();
+  const isTodayCompleted = progress.some(
+    (p) => p.completed && p.completed_at && getLocalDateString(new Date(p.completed_at)) === todayStr
+  );
 
   return (
     <AppShell title="诗词打卡挑战">

@@ -61,3 +61,14 @@ backend/data/knowledge_articles_v2.json
 
 # Trae 工作区
 .trae/
+
+# 外部下载的原始仓库（已转换为 src/data/reservator-books/）
+Reservator-master/
+
+# 临时脚本日志和进度
+*.err
+*-progress.json
+scripts/output/
+
+# 临时 git 辅助文件
+.git-commit-msg.txt
