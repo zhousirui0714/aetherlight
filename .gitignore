@@ -65,6 +65,14 @@ backend/data/knowledge_articles_v2.json
 # 外部下载的原始仓库（已转换为 src/data/reservator-books/）
 Reservator-master/
 
+# Reservator 解析产物（已导入到 Supabase，避免 60MB 触发 Vercel 限制）
+src/data/reservator-cache.json
+src/data/reservator-books/
+
+# AI 生成的封面/插图（80MB+，走 Supabase Storage 而非仓库）
+public/ai-covers/
+public/home-illustrations/
+
 # 临时脚本日志和进度
 *.err
 *-progress.json
@@ -72,3 +80,9 @@ scripts/output/
 
 # 临时 git 辅助文件
 .git-commit-msg.txt
+
+# 老 Lovable 快照（独立项目，不在当前 Vercel 部署范围内）
+aetherlight-main/
+
+# 本地 Python 后端（Vercel 只部署前端 vite build）
+backend/

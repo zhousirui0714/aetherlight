@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Palette, Music, Image, Sparkles, Wand2, Download, Share2, RefreshCw, Loader2, Trash2, Clock, Lightbulb } from "lucide-react";
+import { Music, Image, Sparkles, Wand2, Download, Share2, RefreshCw, Loader2, Trash2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { listCreations, saveCreation, deleteCreation, type CreationItem } from "@/lib/creation-storage";
 import { generateMelody, playMelody, stopMelody } from "@/lib/music-generator";
@@ -27,7 +27,6 @@ function CreatePage() {
   const [result, setResult] = useState<{ type: CreateMode; url: string; prompt: string } | null>(null);
   const [history, setHistory] = useState<CreationItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
-  const [historyTab, setHistoryTab] = useState<"history" | "inspiration">("history");
   const [isPlaying, setIsPlaying] = useState(false);
   const [playProgress, setPlayProgress] = useState(0);
   const [musicInfo, setMusicInfo] = useState<{ duration: number; noteCount: number } | null>(null);
@@ -238,36 +237,259 @@ function CreatePage() {
         </button>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-        {/* 左侧：创作区 */}
-        <div className="space-y-6">
-          {/* 输入区 */}
+      <div className="grid gap-6 xl:grid-cols-[280px_1fr_320px]">
+        {/* 左栏：创作记录 */}
+        <aside className="space-y-4">
+          <div className="rounded-3xl border border-border bg-card p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-accent" />
+              <h3 className="font-serif text-lg text-foreground">创作记录</h3>
+              <span className="ml-auto text-xs text-muted-foreground">{history.length}</span>
+            </div>
+
+            <div className="space-y-2 max-h-[720px] overflow-y-auto pr-1">
+              {historyLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : history.length === 0 ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background/40">
+                    <Sparkles className="h-5 w-5 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-sm font-serif text-muted-foreground">暂无创作记录</p>
+                  <p className="mt-1 text-xs text-muted-foreground/70">开始你的第一幅作品吧</p>
+                </div>
+              ) : (
+                history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group rounded-xl border border-border bg-background/50 overflow-hidden transition hover:border-primary/30"
+                  >
+                    {item.type === "image" && (
+                      <div className="relative h-20 overflow-hidden">
+                        <img
+                          src={item.url}
+                          alt={item.prompt}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://picsum.photos/400/200?random=" + item.id;
+                          }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteCreation(item.id).then(() => loadHistory());
+                          }}
+                          className="absolute top-1.5 right-1.5 rounded-full bg-black/50 p-1 opacity-0 transition group-hover:opacity-100 hover:bg-destructive"
+                        >
+                          <Trash2 className="h-3 w-3 text-white" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {item.type === "image" ? (
+                          <Image className="h-3 w-3 text-accent" />
+                        ) : (
+                          <Music className="h-3 w-3 text-accent" />
+                        )}
+                        <span className="text-[10px] tracking-wider text-muted-foreground">
+                          {item.style}
+                        </span>
+                        <span className="ml-auto text-[10px] text-muted-foreground/60">
+                          {new Date(item.createdAt).toLocaleDateString("zh-CN")}
+                        </span>
+                      </div>
+                      <p
+                        className="text-xs font-serif text-foreground/80 line-clamp-1 cursor-pointer hover:text-foreground"
+                        onClick={() => {
+                          setPrompt(item.prompt);
+                          setStyle(item.style);
+                          setMode(item.type);
+                          setResult({ type: item.type, url: item.url, prompt: item.prompt });
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                      >
+                        {item.prompt}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* 中栏：创作成果（主视觉） */}
+        <main className="space-y-6 min-w-0">
           <div className="rounded-3xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-serif text-lg text-foreground">
+                {result
+                  ? result.type === "image"
+                    ? "画作成果"
+                    : "乐曲成果"
+                  : isGenerating
+                    ? "正在创作"
+                    : "创作成果"}
+              </h3>
+              {result && !isGenerating && (
+                <button
+                  onClick={handleGenerate}
+                  className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> 重新创作
+                </button>
+              )}
+            </div>
+
+            {isGenerating && !result && (
+              <div className="rounded-2xl border border-dashed border-border bg-background/30 p-16 text-center">
+                <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
+                  {mode === "image" ? (
+                    <Image className="h-10 w-10 animate-pulse text-primary" />
+                  ) : (
+                    <Music className="h-10 w-10 animate-pulse text-primary" />
+                  )}
+                </div>
+                <p className="font-serif text-lg text-foreground">正在创作...</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {mode === "image"
+                    ? `以"${style}"风格描绘"${prompt.slice(0, 30)}..."`
+                    : `以"${style}"风格演绎"${prompt.slice(0, 30)}..."`}
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              </div>
+            )}
+
+            {!result && !isGenerating && (
+              <div className="rounded-2xl border border-dashed border-border bg-background/30 p-16 text-center">
+                <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5">
+                  {mode === "image" ? (
+                    <Image className="h-8 w-8 text-primary/50" />
+                  ) : (
+                    <Music className="h-8 w-8 text-primary/50" />
+                  )}
+                </div>
+                <p className="font-serif text-base text-muted-foreground">执笔待墨，等灵感落纸</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">在右侧输入灵感，开启你的创作</p>
+              </div>
+            )}
+
+            {result && result.type === "image" && (
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-secondary">
+                <img
+                  src={result.url}
+                  alt={result.prompt}
+                  className="w-full h-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://picsum.photos/800/450?random=" + Date.now();
+                  }}
+                />
+              </div>
+            )}
+
+            {result && result.type === "music" && (
+              <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary via-background to-secondary p-8">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={togglePlayMusic}
+                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90"
+                  >
+                    {isPlaying ? (
+                      <Loader2 className="h-7 w-7 animate-spin" />
+                    ) : (
+                      <Music className="h-7 w-7" />
+                    )}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-serif text-lg text-foreground">{result.prompt}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{style}风格 · {musicInfo?.noteCount || 0} 个音符</p>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-100"
+                      style={{ width: `${playProgress * 100}%` }}
+                    />
+                  </div>
+                  <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+                    <span>{formatTime(playProgress * (musicInfo?.duration || 0))}</span>
+                    <span>{formatTime(musicInfo?.duration || 0)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-center justify-center gap-2">
+                  <div className="flex items-end gap-0.5 h-8">
+                    {[...Array(16)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-1 rounded-full bg-accent/60 transition-all duration-150 ${
+                          isPlaying ? "animate-pulse" : ""
+                        }`}
+                        style={{
+                          height: isPlaying ? `${20 + Math.random() * 80}%` : "20%",
+                          animationDelay: `${i * 0.1}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {result && !isGenerating && (
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 rounded-full border border-border px-5 py-2 text-sm text-muted-foreground hover:text-foreground transition"
+              >
+                <Download className="h-4 w-4" /> 下载
+              </button>
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 rounded-full border border-border px-5 py-2 text-sm text-muted-foreground hover:text-foreground transition"
+              >
+                <Share2 className="h-4 w-4" /> 分享
+              </button>
+            </div>
+          )}
+        </main>
+
+        {/* 右栏：创作灵感（紧凑） */}
+        <aside className="space-y-4">
+          <div className="rounded-3xl border border-border bg-card p-5 xl:sticky xl:top-6">
             <div className="mb-4 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-accent" />
               <h3 className="font-serif text-lg text-foreground">创作灵感</h3>
             </div>
-            
+
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={mode === "image" 
-                ? "描述你想创作的画面，如：李白月下独酌，举杯邀明月..." 
-                : "描述你想创作的音乐意境，如：春江花月夜的悠远意境..."
+              placeholder={
+                mode === "image"
+                  ? "描述你想创作的画面，如：李白月下独酌，举杯邀明月..."
+                  : "描述你想创作的音乐意境，如：春江花月夜的悠远意境..."
               }
               rows={3}
               className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/50 placeholder:text-muted-foreground/70 resize-none"
             />
 
-            {/* 风格选择 */}
             <div className="mt-4">
               <p className="mb-2 text-xs text-muted-foreground">选择风格</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {(mode === "image" ? imageStyles : musicStyles).map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setStyle(s.label)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-serif transition ${
+                    className={`rounded-full px-2.5 py-1 text-xs font-serif transition ${
                       style === s.label
                         ? "bg-accent text-accent-foreground"
                         : "border border-border bg-background text-muted-foreground hover:text-foreground"
@@ -279,15 +501,14 @@ function CreatePage() {
               </div>
             </div>
 
-            {/* 示例灵感 */}
             <div className="mt-4">
               <p className="mb-2 text-xs text-muted-foreground">试试这些灵感</p>
-              <div className="flex flex-wrap gap-2">
-                {examplePrompts.slice(0, 4).map((p, i) => (
+              <div className="flex flex-col gap-1.5">
+                {examplePrompts.slice(0, 3).map((p, i) => (
                   <button
                     key={i}
                     onClick={() => setPrompt(p)}
-                    className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
+                    className="text-left rounded-lg border border-border bg-background/50 px-3 py-1.5 text-xs font-serif text-muted-foreground hover:text-foreground hover:border-primary/30 transition truncate"
                   >
                     {p}
                   </button>
@@ -295,11 +516,10 @@ function CreatePage() {
               </div>
             </div>
 
-            {/* 生成按钮 */}
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !prompt.trim()}
-              className="mt-6 w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3 font-serif text-sm tracking-widest text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+              className="mt-5 w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3 font-serif text-sm tracking-widest text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
             >
               {isGenerating ? (
                 <>
@@ -314,282 +534,7 @@ function CreatePage() {
               )}
             </button>
           </div>
-
-          {/* 结果展示 */}
-          {result && (
-            <div className="rounded-3xl border border-border bg-card p-6 scroll-in">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-serif text-lg text-foreground">
-                  {result.type === "image" ? "画作成果" : "乐曲成果"}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleGenerate}
-                    className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" /> 重新创作
-                  </button>
-                </div>
-              </div>
-
-              {result.type === "image" ? (
-                <div className="relative overflow-hidden rounded-2xl border border-border">
-                  <img
-                    src={result.url}
-                    alt={result.prompt}
-                    className="w-full h-auto"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://picsum.photos/800/450?random=" + Date.now();
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary via-background to-secondary p-6">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={togglePlayMusic}
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90"
-                    >
-                      {isPlaying ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                      ) : (
-                        <Music className="h-6 w-6" />
-                      )}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-serif text-base text-foreground">{result.prompt}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{style}风格 · {musicInfo?.noteCount || 0}个音符</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-5">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                      <div 
-                        className="h-full rounded-full bg-primary transition-all duration-100"
-                        style={{ width: `${playProgress * 100}%` }}
-                      />
-                    </div>
-                    <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-                      <span>{formatTime(playProgress * (musicInfo?.duration || 0))}</span>
-                      <span>{formatTime(musicInfo?.duration || 0)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 flex items-center justify-center gap-2">
-                    <div className="flex items-end gap-0.5 h-6">
-                      {[...Array(12)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-1 rounded-full bg-accent/60 transition-all duration-150 ${
-                            isPlaying ? "animate-pulse" : ""
-                          }`}
-                          style={{
-                            height: isPlaying 
-                              ? `${20 + Math.random() * 80}%` 
-                              : "20%",
-                            animationDelay: `${i * 0.1}s`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 操作按钮 */}
-              <div className="mt-4 flex items-center justify-center gap-3">
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
-                >
-                  <Download className="h-4 w-4" /> 下载
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
-                >
-                  <Share2 className="h-4 w-4" /> 分享
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 生成中状态 */}
-          {isGenerating && !result && (
-            <div className="rounded-3xl border border-border bg-card p-12 text-center">
-              <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
-                {mode === "image" ? (
-                  <Image className="h-10 w-10 animate-pulse text-primary" />
-                ) : (
-                  <Music className="h-10 w-10 animate-pulse text-primary" />
-                )}
-              </div>
-              <p className="font-serif text-lg text-foreground">正在创作...</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {mode === "image" 
-                  ? `以"${style}"风格描绘"${prompt.slice(0, 30)}..."` 
-                  : `以"${style}"风格演绎"${prompt.slice(0, 30)}..."`
-                }
-              </p>
-              <div className="mt-6 flex justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 右侧：创作指南 */}
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Palette className="h-5 w-5 text-accent" />
-              <h3 className="font-serif text-lg text-foreground">创作指南</h3>
-            </div>
-            
-            <div className="space-y-4 text-sm text-muted-foreground">
-              <div className="rounded-xl border border-border bg-background/50 p-4">
-                <h4 className="font-serif text-base text-foreground mb-2">文生图技巧</h4>
-                <ul className="space-y-1.5 list-disc list-inside">
-                  <li>描述具体场景和人物动作</li>
-                  <li>融入诗词意象更添韵味</li>
-                  <li>选择合适的传统画风</li>
-                  <li>可添加季节、时间等细节</li>
-                </ul>
-              </div>
-              
-              <div className="rounded-xl border border-border bg-background/50 p-4">
-                <h4 className="font-serif text-base text-foreground mb-2">文生音乐技巧</h4>
-                <ul className="space-y-1.5 list-disc list-inside">
-                  <li>描述音乐的情感基调</li>
-                  <li>指定传统乐器类型</li>
-                  <li>融入诗词意境</li>
-                  <li>可描述场景氛围</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* 创作历史 & 灵感库 */}
-          <div className="rounded-3xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-accent" />
-                <h3 className="font-serif text-lg text-foreground">创作中心</h3>
-              </div>
-              <div className="flex rounded-full border border-border bg-background p-0.5">
-                <button
-                  onClick={() => setHistoryTab("history")}
-                  className={`rounded-full px-3 py-1 text-xs transition ${
-                    historyTab === "history"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  我的创作
-                </button>
-                <button
-                  onClick={() => setHistoryTab("inspiration")}
-                  className={`rounded-full px-3 py-1 text-xs transition ${
-                    historyTab === "inspiration"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  灵感库
-                </button>
-              </div>
-            </div>
-            
-            {historyTab === "history" ? (
-              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-                {historyLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : history.length === 0 ? (
-                  <div className="py-8 text-center">
-                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background/40">
-                      <Sparkles className="h-5 w-5 text-muted-foreground/60" />
-                    </div>
-                    <p className="text-sm font-serif text-muted-foreground">暂无创作记录</p>
-                    <p className="mt-1 text-xs text-muted-foreground/70">开始你的第一幅作品吧</p>
-                  </div>
-                ) : (
-                  history.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group rounded-xl border border-border bg-background/50 overflow-hidden transition hover:border-primary/30"
-                    >
-                      {item.type === "image" && (
-                        <div className="relative h-28 overflow-hidden">
-                          <img
-                            src={item.url}
-                            alt={item.prompt}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = "https://picsum.photos/400/200?random=" + item.id;
-                            }}
-                          />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteCreation(item.id).then(() => loadHistory());
-                            }}
-                            className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 opacity-0 transition group-hover:opacity-100 hover:bg-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-white" />
-                          </button>
-                        </div>
-                      )}
-                      <div className="p-3">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          {item.type === "image" ? (
-                            <Image className="h-3.5 w-3.5 text-accent" />
-                          ) : (
-                            <Music className="h-3.5 w-3.5 text-accent" />
-                          )}
-                          <span className="text-[10px] tracking-wider text-muted-foreground">
-                            {item.style}
-                          </span>
-                          <span className="ml-auto text-[10px] text-muted-foreground/60">
-                            {new Date(item.createdAt).toLocaleDateString("zh-CN")}
-                          </span>
-                        </div>
-                        <p
-                          className="text-xs font-serif text-foreground/80 line-clamp-2 cursor-pointer hover:text-foreground"
-                          onClick={() => {
-                            setPrompt(item.prompt);
-                            setStyle(item.style);
-                            setMode(item.type);
-                            setResult({ type: item.type, url: item.url, prompt: item.prompt });
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                        >
-                          {item.prompt}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {examplePrompts.map((p, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPrompt(p)}
-                    className="flex w-full items-start gap-2 rounded-xl border border-border bg-background/50 px-4 py-3 text-left transition hover:border-primary/30"
-                  >
-                    <Lightbulb className="h-4 w-4 mt-0.5 text-accent shrink-0" />
-                    <span className="text-sm font-serif text-muted-foreground hover:text-foreground">
-                      {p}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        </aside>
       </div>
     </AppShell>
   );
