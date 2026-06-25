@@ -5,12 +5,43 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { findSage, SAGES, type Sage } from "@/lib/sages";
 import { SageAvatar } from "./dialogue.index";
-import { Send, Share2, Users, X, Copy, Download, RotateCw, ChevronDown } from "lucide-react";
+import { Send, Share2, Users, X, Copy, Download, RotateCw, ChevronDown, Languages } from "lucide-react";
 import { toast } from "sonner";
 import {
   loadDialogue, saveDialogue,
 } from "@/lib/dialogue-storage";
-import { trackEvent } from "@/lib/journey-storage";
+import { trackEvent, getCachedWorkLink, setCachedWorkLink } from "@/lib/journey-storage";
+import { useTranslation } from "@/lib/use-translation";
+import { ARTICLES } from "@/lib/knowledge-data";
+import { listArticles } from "@/lib/knowledge-api";
+
+/**
+ * 把「《春望》」/「《诗经》(编订)」类代表作名归一化用于搜索
+ */
+function normalizeWorkName(raw: string): string {
+  return raw
+    .replace(/[《》]/g, "")
+    .replace(/[（(].*?[)）]/g, "")
+    .trim();
+}
+
+/**
+ * 静态 ARTICLES 数组里做一次前缀/精确匹配,同步拿到 id
+ */
+function findWorkArticleStatic(workName: string): { id: string; title: string } | null {
+  const cleaned = normalizeWorkName(workName);
+  if (!cleaned) return null;
+  const found = ARTICLES.find((a) => {
+    const t = a.title.replace(/[《》]/g, "");
+    return (
+      t === cleaned ||
+      t.startsWith(cleaned + "·") ||
+      t.startsWith(cleaned + "：") ||
+      t.startsWith(cleaned + ":")
+    );
+  });
+  return found ? { id: found.id, title: found.title } : null;
+}
 
 export const Route = createFileRoute("/dialogue/$id")({
   loader: ({ params }) => {
@@ -44,6 +75,75 @@ function SageRoom({ sage }: { sage: Sage }) {
   const [input, setInput] = useState("");
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  // 代表作 → 文章 id 映射
+  // 优先级:静态 ARTICLES > localStorage 缓存(7天TTL) > 后端 listArticles 异步搜索
+  // 没解析完的 key 不在 map 中(useEffect 跳过已解析的项)
+  const [workLinks, setWorkLinks] = useState<Record<string, { id: string; title: string } | null>>(
+    () => {
+      const map: Record<string, { id: string; title: string } | null> = {};
+      for (const w of sage.works) {
+        // 1) 静态 ARTICLES 命中(无需异步)
+        const staticHit = findWorkArticleStatic(w);
+        if (staticHit) {
+          map[w] = staticHit;
+          continue;
+        }
+        // 2) 缓存命中(undefined=没缓存,null=确认不存在,obj=命中)
+        const cleaned = normalizeWorkName(w);
+        const cached = getCachedWorkLink(cleaned);
+        if (cached !== undefined) {
+          map[w] = cached;
+        }
+      }
+      return map;
+    }
+  );
+
+  // 异步搜索:把还没解析的(sage.works 中没出现在 map 里的)拿到后端找
+  useEffect(() => {
+    let aborted = false;
+    (async () => {
+      for (const w of sage.works) {
+        if (workLinks[w] !== undefined) continue; // 静态/缓存已解析
+        const cleaned = normalizeWorkName(w);
+        if (!cleaned) continue;
+        // 二次确认缓存(可能其他 sage 刚写入)
+        const cached = getCachedWorkLink(cleaned);
+        if (cached !== undefined) {
+          if (!aborted) {
+            setWorkLinks((prev) => ({ ...prev, [w]: cached }));
+          }
+          continue;
+        }
+        // 后端搜索
+        try {
+          const res = await listArticles({ keyword: cleaned, limit: 5 });
+          const match = res.items.find(
+            (item) =>
+              item.title === cleaned ||
+              item.title.startsWith(cleaned + "·") ||
+              item.title.startsWith(cleaned + "：") ||
+              item.title.startsWith(cleaned + ":") ||
+              item.title.startsWith(cleaned)
+          );
+          const result: { id: string; title: string } | null = match
+            ? { id: match.id, title: match.title }
+            : null;
+          // 写缓存:null 也存,避免对不存在的条目反复打接口
+          setCachedWorkLink(cleaned, result);
+          if (!aborted) {
+            setWorkLinks((prev) => ({ ...prev, [w]: result }));
+          }
+        } catch {
+          // 网络错误:不缓存,下次进入会重试
+        }
+      }
+    })();
+    return () => {
+      aborted = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sage.id]);
 
   const transport = useRef(new DefaultChatTransport({
     api: "/api/dialogue",
@@ -131,12 +231,34 @@ function SageRoom({ sage }: { sage: Sage }) {
             <div className="mt-5">
               <h4 className="mb-2 font-serif text-xs tracking-[0.3em] text-muted-foreground">代 表 作</h4>
               <ul className="space-y-1.5 text-sm font-serif text-foreground/85">
-                {sage.works.map((w) => (
-                  <li key={w} className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 rounded-full bg-primary" />
-                    {w}
-                  </li>
-                ))}
+                {sage.works.map((w) => {
+                  const link = workLinks[w];
+                  return (
+                    <li key={w} className="flex items-start gap-2">
+                      <span className="mt-2 h-1 w-1 rounded-full bg-primary" />
+                      {link ? (
+                        <Link
+                          to="/article/$id"
+                          params={{ id: link.id }}
+                          className="text-foreground/85 underline decoration-dotted decoration-primary/40 underline-offset-[5px] transition hover:text-primary hover:decoration-solid hover:decoration-primary"
+                          title={`查看「${link.title}」知识详情`}
+                          onClick={() =>
+                            trackEvent({
+                              type: "article_view",
+                              title: `代表作跳转：${w}`,
+                              description: `从 ${sage.name} 对话页跳转到 ${link.title}`,
+                              category: "诗词/经典",
+                            })
+                          }
+                        >
+                          {w}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground/70" title="知识库暂无对应条目">《{normalizeWorkName(w)}》</span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -296,6 +418,11 @@ function renderAssistant(text: string) {
   });
 }
 
+/**
+ * 单条 AI 消息的「译」按钮逻辑已抽到 @/lib/use-translation(三种口吻通用)
+ * 这里直接用 useTranslation({ mode: "voice", sageId, text })
+ */
+
 function SageMessage({ m, sage }: { m: UIMessage; sage: Sage }) {
   const text = extractText(m);
   if (m.role === "user") {
@@ -307,11 +434,36 @@ function SageMessage({ m, sage }: { m: UIMessage; sage: Sage }) {
       </div>
     );
   }
+  const { translation, loading, open, toggle } = useTranslation({ mode: "voice", sageId: sage.id, text });
   return (
-    <div className="flex gap-3">
+    <div className="group flex gap-3">
       <SageAvatar sage={sage} size={36} />
       <div className="flex-1 rounded-2xl rounded-tl-md border border-border bg-background/40 p-5">
         {renderAssistant(text)}
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <button
+            onClick={toggle}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/40 hover:text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+            title={open ? "收起大白话版" : "用名家的口吻翻译成大白话"}
+          >
+            <Languages className="h-3.5 w-3.5" />
+            {open ? "收起" : "译"}
+          </button>
+        </div>
+        {open && (
+          <div className="mt-3 border-t border-dashed border-border pt-3">
+            <p className="mb-1.5 text-[11px] tracking-[0.3em] text-muted-foreground/80">
+              {sage.name} · 大白话版
+            </p>
+            <div className="font-serif text-sm leading-relaxed text-foreground/80 italic">
+              {loading ? (
+                <span className="text-muted-foreground not-italic">{sage.name} 正在转译…</span>
+              ) : (
+                translation
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

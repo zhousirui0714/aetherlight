@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles, Network } from "lucide-react";
+import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles, Network, Languages } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import type { Article } from "@/lib/knowledge-data";
 import { getExpandedContent } from "@/lib/expanded-content";
 import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { trackEvent } from "@/lib/journey-storage";
+import { useTranslation } from "@/lib/use-translation";
 import { AnnotationPanel } from "@/components/annotation-panel";
 import { AIInsightsPanel } from "@/components/ai-insights-panel";
 import { ArticleRelatedGraph } from "@/components/article-related-graph";
@@ -15,6 +16,178 @@ import { FullTextPanel } from "@/components/full-text-panel";
 import { ShareCardButton } from "@/components/share-card-button";
 import { aiFillArticle, type ArticleDetail, getRecommendations, type ArticleRecommendation } from "@/lib/knowledge-api";
 import { toast } from "sonner";
+
+/**
+ * 解析正文中的「...」诗句, 拆成段 + 句两块, 方便逐句挂"译"按钮
+ */
+function splitByQuotes(text: string): Array<{ type: "text" | "quote"; content: string }> {
+  const segments: Array<{ type: "text" | "quote"; content: string }> = [];
+  const regex = /「([^」]*)」/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: "text", content: text.slice(lastIndex, match.index) });
+    }
+    segments.push({ type: "quote", content: match[1] });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ type: "text", content: text.slice(lastIndex) });
+  }
+  return segments;
+}
+
+/**
+ * 诗句"译"按钮 — poet 模式, 以诗人本人(若知道)口吻翻译
+ */
+function QuoteWithTranslate({ quote, poetName }: { quote: string; poetName: string }) {
+  const { translation, loading, open, toggle } = useTranslation({
+    mode: "poet",
+    poetName,
+    text: quote,
+  });
+  return (
+    <span className="inline">
+      「
+      <span className="font-serif text-accent">{quote}</span>
+      」<button
+        type="button"
+        onClick={toggle}
+        disabled={loading}
+        className="ml-1 inline-flex items-center gap-0.5 rounded border border-accent/30 bg-accent/5 px-1.5 py-0.5 align-middle text-[10px] tracking-widest text-accent transition hover:bg-accent/10 disabled:opacity-50"
+        title={`以${poetName}口吻翻译`}
+      >
+        {loading ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Languages className="h-2.5 w-2.5" />}
+        译
+      </button>
+      {open && translation && (
+        <span className="my-1 ml-1 inline-block rounded border-l-2 border-accent/40 bg-accent/5 px-2 py-1 font-serif text-xs italic leading-relaxed text-foreground/75">
+          {translation}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * 渲染正文段, 把「...」诗句单独拆出来挂译按钮
+ */
+function renderBodyWithQuotes(text: string, poetName: string, keyPrefix: string) {
+  const segments = splitByQuotes(text);
+  return (
+    <>
+      {segments.map((seg, idx) => {
+        if (seg.type === "text") {
+          return <span key={`${keyPrefix}-t-${idx}`}>{seg.content}</span>;
+        }
+        return (
+          <QuoteWithTranslate key={`${keyPrefix}-q-${idx}`} quote={seg.content} poetName={poetName} />
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * 文章正文子组件
+ * - 顶部一个"译全文"按钮(scholar 口吻)
+ * - 每段正文中「...」诗句挂"译"按钮(poet 口吻)
+ */
+function ArticleBody({
+  articleId,
+  author,
+  content,
+  excerpt,
+}: {
+  articleId: string;
+  author?: string;
+  content?: string;
+  excerpt?: string;
+}) {
+  const expanded = getExpandedContent(articleId);
+  // 用于 scholar 模式"译全文" — 取最长的可用正文片段作为翻译对象
+  const fullText = content || expanded?.content || excerpt || "";
+  // 诗人名兜底: 有 author 用 author, 否则用"古代诗人"让 API 走通用 poet 口吻
+  const poetName = (author && author.trim()) || "古代诗人";
+
+  const { translation, loading, open, toggle } = useTranslation({
+    mode: "scholar",
+    text: fullText,
+  });
+  const canTranslate = fullText.trim().length > 0;
+
+  return (
+    <div>
+      {/* 译全文工具条 */}
+      <div className="mb-4 flex items-center justify-end">
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={loading || !canTranslate}
+          className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/5 px-4 py-1.5 font-serif text-xs tracking-widest text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
+          title={canTranslate ? "以学者口吻将整段正文译为白话" : "正文为空, 无可译内容"}
+        >
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
+          {open ? "收起译文" : "译全文"}
+        </button>
+      </div>
+
+      <div className="prose prose-lg max-w-none font-serif leading-loose text-foreground/85">
+        {content ? (
+          <div className="whitespace-pre-wrap">{renderBodyWithQuotes(content, poetName, "c")}</div>
+        ) : expanded ? (
+          (() => {
+            const paragraphs = expanded.content.split(/\n\n+/);
+            return (
+              <div className="space-y-5">
+                {paragraphs.map((para, idx) => {
+                  const match = para.match(/^(【[^】]+】)\s*([\s\S]*)$/);
+                  if (match) {
+                    return (
+                      <div key={idx}>
+                        <h3 className="mb-2 mt-6 font-serif text-xl font-semibold text-foreground/90 first:mt-0">
+                          {match[1].replace(/[【】]/g, "")}
+                        </h3>
+                        <p className="leading-loose text-foreground/85">
+                          {renderBodyWithQuotes(match[2].trim(), poetName, `e-${idx}`)}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <p key={idx} className="leading-loose text-foreground/85">
+                      {renderBodyWithQuotes(para.trim(), poetName, `e-${idx}`)}
+                    </p>
+                  );
+                })}
+              </div>
+            );
+          })()
+        ) : (
+          <p>
+            <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
+              {excerpt?.charAt(0) || "溯"}
+            </span>
+            {renderBodyWithQuotes(content || excerpt || "", poetName, "f")}
+          </p>
+        )}
+      </div>
+
+      {/* 译全文结果 */}
+      {open && translation && (
+        <div className="mt-6 rounded-2xl border-l-4 border-accent/50 bg-accent/5 px-6 py-5">
+          <div className="mb-2 flex items-center gap-2 text-xs tracking-widest text-accent">
+            <Sparkles className="h-3.5 w-3.5" /> 学者译文
+          </div>
+          <p className="whitespace-pre-wrap font-serif text-base leading-loose text-foreground/80">
+            {translation}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/article/$id")({
   head: () => ({
@@ -323,45 +496,12 @@ function ArticlePage() {
           </div>
 
           {/* 正文 */}
-          <div className="prose prose-lg max-w-none font-serif leading-loose text-foreground/85">
-            {(() => {
-              const expanded = getExpandedContent(article.id);
-              if (article.content) {
-                return <div className="whitespace-pre-wrap">{article.content}</div>;
-              }
-              if (expanded) {
-                const paragraphs = expanded.content.split(/\n\n+/);
-                return (
-                  <div className="space-y-5">
-                    {paragraphs.map((para, idx) => {
-                      const match = para.match(/^(【[^】]+】)\s*([\s\S]*)$/);
-                      if (match) {
-                        return (
-                          <div key={idx}>
-                            <h3 className="mb-2 mt-6 font-serif text-xl font-semibold text-foreground/90 first:mt-0">
-                              {match[1].replace(/[【】]/g, "")}
-                            </h3>
-                            <p className="leading-loose text-foreground/85">
-                              {match[2].trim()}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return <p key={idx} className="leading-loose text-foreground/85">{para.trim()}</p>;
-                    })}
-                  </div>
-                );
-              }
-              return (
-                <p>
-                  <span className="float-left mr-3 mt-1 font-serif text-6xl leading-none text-accent">
-                    {article.excerpt?.charAt(0) || "溯"}
-                  </span>
-                  {article.content || article.excerpt}
-                </p>
-              );
-            })()}
-          </div>
+          <ArticleBody
+            articleId={article.id}
+            author={article.author}
+            content={article.content}
+            excerpt={article.excerpt}
+          />
 
           {/* AI 深度内容面板 - 包含：出处、历史背景、相关人物/典籍/事件/诗词/推荐、知识图谱、时间线、现代解读、常见问题 */}
           {/* v3 全文/翻译/注释面板 (诗词/典籍专用) */}
