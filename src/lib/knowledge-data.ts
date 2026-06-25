@@ -27,6 +27,7 @@ export interface Article {
   content: string;
   favorites: number;
   cover: string; // emoji or symbol
+  coverUrl?: string; // AI 生成的真实水墨配图 (Supabase Storage)
   // ===== 静态结构化字段 =====
   source?: string;                  // 出处/文献来源
   history?: string;                 // 历史背景

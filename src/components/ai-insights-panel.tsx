@@ -1,5 +1,5 @@
 // AI 深度内容展示组件
-// 包含：知识图谱、时间线、现代解读、常见问题四大模块
+// 包含：时间线、现代解读、常见问题四大模块
 
 import { useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -421,84 +421,7 @@ export function AIInsightsPanel({ article }: AIInsightsPanelProps) {
         </section>
       )}
 
-      {/* 关联条目：人物 / 典籍 / 事件 / 诗词 / 推荐 */}
-      <section className="space-y-5 rounded-2xl border border-border bg-card/30 p-6">
-        <h2 className="font-serif text-lg font-semibold text-foreground">
-          知识关联
-        </h2>
-        <RelatedItemsView
-          title="相关人物"
-          icon={User}
-          items={article.relatedPeople || []}
-          colorClass="text-blue-500"
-        />
-        <RelatedItemsView
-          title="相关典籍"
-          icon={BookOpen}
-          items={article.relatedBooks || []}
-          colorClass="text-pink-500"
-        />
-        {/* 权威平台外链：基于相关典籍书名查表 */}
-        {(() => {
-          const books = article.relatedBooks || [];
-          const matched = books
-            .map((b) => findBookLink(b.title))
-            .filter((x): x is NonNullable<typeof x> => !!x);
-          if (matched.length === 0) return null;
-          return (
-            <div className="rounded-xl border border-accent/20 bg-accent/5 p-3">
-              <div className="text-xs text-muted-foreground">
-                <BookLinkButtons
-                  shidianguji={matched[0].shidianguji}
-                  ctext={matched[0].ctext}
-                  wikisource={matched[0].wikisource}
-                  title={matched[0].name}
-                />
-              </div>
-              {matched.length > 1 && (
-                <div className="mt-2 text-[10px] text-muted-foreground/70">
-                  · {matched.slice(1, 3).map((m) => m.name).join(" · ")} 也可在识典古籍查看
-                </div>
-              )}
-            </div>
-          );
-        })()}
-        <RelatedItemsView
-          title="相关事件"
-          icon={Calendar}
-          items={article.relatedEvents || []}
-          colorClass="text-emerald-500"
-        />
-        <RelatedItemsView
-          title="相关诗词"
-          icon={Quote}
-          items={article.relatedPoems || []}
-          colorClass="text-violet-500"
-        />
-        <RelatedItemsView
-          title="相关推荐"
-          icon={ArrowRight}
-          items={article.relatedArticles || []}
-          colorClass="text-accent"
-        />
-      </section>
-
       {/* ===== AI 自动生成部分 ===== */}
-
-      {/* 知识图谱 */}
-      <section className="rounded-2xl border border-accent/20 bg-accent/5 p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Network className="h-5 w-5 text-accent" />
-          <h2 className="font-serif text-xl text-foreground">知识图谱</h2>
-          <span className="ml-auto rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-serif text-accent">
-            AI 生成
-          </span>
-        </div>
-        <p className="mb-4 font-serif text-sm text-muted-foreground">
-          点击节点查看关联条目的详细信息
-        </p>
-        <KnowledgeGraphView graph={insights.knowledgeGraph} />
-      </section>
 
       {/* 时间线 */}
       <section className="rounded-2xl border border-border bg-card/30 p-6">

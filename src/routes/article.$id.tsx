@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles, Network, Languages } from "lucide-react";
+import { Heart, ArrowLeft, Calendar, Loader2, Share2, BookOpen, Sparkles, Languages } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import type { Article } from "@/lib/knowledge-data";
 import { getExpandedContent } from "@/lib/expanded-content";
@@ -11,7 +11,7 @@ import { trackEvent } from "@/lib/journey-storage";
 import { useTranslation } from "@/lib/use-translation";
 import { AnnotationPanel } from "@/components/annotation-panel";
 import { AIInsightsPanel } from "@/components/ai-insights-panel";
-import { ArticleRelatedGraph } from "@/components/article-related-graph";
+import { ArticleIllustration } from "@/components/article-illustration";
 import { FullTextPanel } from "@/components/full-text-panel";
 import { ShareCardButton } from "@/components/share-card-button";
 import { aiFillArticle, type ArticleDetail, getRecommendations, type ArticleRecommendation } from "@/lib/knowledge-api";
@@ -212,6 +212,7 @@ function normalizeArticle(raw: any): Article {
     content: raw.content || raw.body || "",
     favorites: raw.favorites ?? 0,
     cover: raw.cover || "📜",
+    coverUrl: raw.cover_url || raw.coverUrl,
     source: raw.source,
     history: raw.history,
     relatedPeople: raw.relatedPeople || raw.related_people || [],
@@ -344,27 +345,6 @@ function ArticlePage() {
     checkFavorite();
   }, [article]);
 
-  // TF-IDF 推荐：基于全量文章算相似度
-  useEffect(() => {
-    if (!article) return;
-    let aborted = false;
-    setRecLoading(true);
-    setRecommendations([]);
-    getRecommendations(article.id, { topK: 6 })
-      .then((res) => {
-        if (!aborted) setRecommendations(res.recommendations || []);
-      })
-      .catch((err) => {
-        if (!aborted) console.warn("[article-page] rec failed:", err);
-      })
-      .finally(() => {
-        if (!aborted) setRecLoading(false);
-      });
-    return () => {
-      aborted = true;
-    };
-  }, [article?.id]);
-
   const handleFavorite = async () => {
     if (!article || favoriteLoading) return;
     setFavoriteLoading(true);
@@ -471,30 +451,53 @@ function ArticlePage() {
           </div>
         </div>
 
-        {/* 文章封面 */}
-        <div className="mb-10 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-secondary via-background to-secondary">
-          <div className="relative h-[300px] w-full md:h-[400px]">
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 40%, var(--color-bronze) 0%, transparent 45%), radial-gradient(circle at 75% 70%, var(--color-cinnabar) 0%, transparent 40%)",
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center text-8xl md:text-9xl">
-              {article.cover || "📜"}
+        {/* Hero 卡片: 左 AI 配图 (h-48) + 右标题摘要 */}
+        <section className="mb-8 overflow-hidden rounded-3xl border border-border bg-card">
+          <div className="grid grid-cols-[35%_1fr]">
+            <div className="relative h-48 overflow-hidden bg-secondary">
+              <ArticleIllustration
+                category={String(article.category)}
+                title={article.title}
+                emoji={article.cover || "📜"}
+                coverUrl={article.coverUrl}
+              />
+            </div>
+            <div className="flex flex-col justify-between gap-2 p-5">
+              <div className="flex items-center gap-2">
+                <span className="inline-block rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-accent">
+                  {article.category}
+                </span>
+                {article.sub_category && (
+                  <span className="inline-block rounded-full bg-muted px-2 py-0.5 font-serif text-[10px] tracking-widest text-muted-foreground">
+                    {article.sub_category}
+                  </span>
+                )}
+              </div>
+              <h1 className="font-serif text-2xl font-semibold leading-tight text-foreground md:text-3xl">
+                {article.title}
+              </h1>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                {article.dynasty && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5">{article.dynasty}</span>
+                )}
+                {article.region && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5">{article.region}</span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Heart className="h-3.5 w-3.5" /> {article.favorites?.toLocaleString() || 0} 收藏
+                </span>
+              </div>
+              {article.excerpt && (
+                <p className="line-clamp-2 font-serif text-sm italic leading-relaxed text-foreground/80">
+                  {article.excerpt}
+                </p>
+              )}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* 文章内容 */}
         <div className="mx-auto max-w-3xl">
-          <div className="mb-8 rounded-2xl border-l-4 border-accent/30 bg-accent/5 px-6 py-4">
-            <p className="font-serif text-lg leading-loose text-foreground/90 italic">
-              {article.excerpt}
-            </p>
-          </div>
-
           {/* 正文 */}
           <ArticleBody
             articleId={article.id}
@@ -503,7 +506,6 @@ function ArticlePage() {
             excerpt={article.excerpt}
           />
 
-          {/* AI 深度内容面板 - 包含：出处、历史背景、相关人物/典籍/事件/诗词/推荐、知识图谱、时间线、现代解读、常见问题 */}
           {/* v3 全文/翻译/注释面板 (诗词/典籍专用) */}
           {(article.category === "poems" || article.category === "classics" || article.category === "诗词文章" || article.category === "典籍经典") && (
             <div className="mt-10">
@@ -517,67 +519,7 @@ function ArticlePage() {
             </div>
           )}
 
-          {/* v3 知识图谱 (跨分类关联) */}
-          <div className="mt-10 rounded-2xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Network className="h-5 w-5 text-primary" />
-              <h3 className="font-serif text-lg font-semibold text-foreground">知识图谱</h3>
-              <span className="ml-auto text-xs text-muted-foreground">跨分类关联</span>
-            </div>
-            <ArticleRelatedGraph
-              articleId={article.id}
-              articleTitle={article.title}
-            />
-          </div>
-
           <AIInsightsPanel article={article} />
-
-          {/* 猜你喜欢：TF-IDF 余弦相似度推荐 */}
-          {(recLoading || recommendations.length > 0) && (
-            <section className="mt-10 rounded-2xl border border-accent/20 bg-accent/5 p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <h2 className="font-serif text-xl text-foreground">猜你喜欢</h2>
-                <span className="ml-auto rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-serif text-accent">
-                  算法推荐
-                </span>
-              </div>
-              {recLoading ? (
-                <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  正在为你找相似的文章…
-                </div>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {recommendations.map((rec) => (
-                    <button
-                      key={rec.id}
-                      onClick={() => navigate({ to: "/article/$id", params: { id: rec.id } })}
-                      className="group flex flex-col items-start gap-1.5 rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-accent/50 hover:bg-background"
-                    >
-                      <div className="flex w-full items-center gap-2">
-                        <span className="text-xl leading-none">{rec.cover || "📜"}</span>
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">
-                          {rec.category}
-                        </span>
-                        <span className="ml-auto text-[10px] text-muted-foreground/70">
-                          {(rec.score * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <h3 className="font-serif text-sm font-semibold text-foreground line-clamp-1 group-hover:text-accent">
-                        {rec.title}
-                      </h3>
-                      {rec.excerpt && (
-                        <p className="line-clamp-2 text-xs text-muted-foreground">
-                          {rec.excerpt}
-                        </p>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
 
           {/* 底部操作 */}
           <div className="mt-12 flex items-center justify-between border-t border-border pt-8">
