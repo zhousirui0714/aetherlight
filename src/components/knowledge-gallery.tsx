@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search, Loader2, Database } from "lucide-react";
+import { Heart, Search, Loader2, Database, TrendingUp } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import {
   CATEGORY_KEYS,
@@ -11,6 +11,8 @@ import {
 } from "@/lib/knowledge-types";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleIllustration } from "./article-illustration";
+import { getUserInterests } from "@/lib/interests";
+import { sortByTrending } from "@/lib/recency";
 
 type DbArticle = {
   id: string;
@@ -51,6 +53,7 @@ export function KnowledgeGallery() {
   const [articles, setArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
+  const [sortMode, setSortMode] = useState<"default" | "trending">("default");
 
   // Fetch articles from Supabase
   useEffect(() => {
@@ -111,6 +114,21 @@ export function KnowledgeGallery() {
           (a) => a.title.toLowerCase().includes(k) || a.excerpt.toLowerCase().includes(k)
         );
       }
+      // 热门排序模式：时间衰减 + 收藏 + 兴趣加权
+      if (sortMode === "trending") {
+        const userInterests = getUserInterests();
+        const sorted = sortByTrending(
+          list.map((a) => ({
+            item: a,
+            popularity: a.favorites || 0,
+            createdAt: a.created_at,
+            category: a.category,
+            tags: a.tags,
+          })),
+          { halfLifeDays: 30, userInterests }
+        );
+        list = sorted.map((s) => s.item as DbArticle);
+      }
       return { list, fromDb: true };
     }
 
@@ -129,7 +147,7 @@ export function KnowledgeGallery() {
       );
     }
     return { list, fromDb: false };
-  }, [cat, subCat, q, articles]);
+  }, [cat, subCat, q, articles, sortMode]);
 
   const isDb = displayArticles.fromDb;
   const items = displayArticles.list;
@@ -151,12 +169,6 @@ export function KnowledgeGallery() {
 
   return (
     <section className="mt-24">
-      <div className="mb-8 text-center">
-        <div className="font-serif text-xs tracking-[0.4em] text-accent">THEME GALLERY</div>
-        <h2 className="mt-2 font-serif text-3xl text-foreground">主题知识长廊</h2>
-        <p className="mt-2 text-sm text-muted-foreground">节气流转，诗书相传 · 撷取文明长河中的一缕光</p>
-      </div>
-
       <div className="mb-6 flex flex-col items-center gap-5">
         {/* search */}
         <div className="flex w-full max-w-xl items-center gap-2 rounded-full border border-border bg-card px-5 py-3">
@@ -173,6 +185,33 @@ export function KnowledgeGallery() {
             </button>
           )}
         </div>
+
+        {/* 排序切换（仅 DB 模式） */}
+        {articles.length > 0 && (
+          <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1 text-xs">
+            <button
+              onClick={() => setSortMode("default")}
+              className={`rounded-full px-3 py-1 font-serif transition ${
+                sortMode === "default"
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              编辑推荐
+            </button>
+            <button
+              onClick={() => setSortMode("trending")}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-serif transition ${
+                sortMode === "trending"
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <TrendingUp className="h-3 w-3" />
+              本周热门
+            </button>
+          </div>
+        )}
 
         {/* 顶级分类 (10 顶级 + 全部) */}
         <div className="flex flex-wrap items-center justify-center gap-1">
