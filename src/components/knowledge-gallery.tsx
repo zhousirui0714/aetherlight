@@ -154,13 +154,7 @@ export function KnowledgeGallery() {
   }, [articles, isDb]);
 
   return (
-    <section className="mt-24">
-      <div className="mb-6 text-center">
-        <div className="font-serif text-xs tracking-[0.4em] text-accent">THEME GALLERY</div>
-        <h2 className="mt-2 font-serif text-3xl text-foreground">主题知识长廊</h2>
-        <p className="mt-2 text-sm text-muted-foreground">节气流转，诗书相传 · 撷取文明长河中的一缕光</p>
-      </div>
-
+    <section className="mt-8">
       {/* 今日黄历（lunisolar） */}
       <AlmanacCard />
 
