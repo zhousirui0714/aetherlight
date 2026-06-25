@@ -228,9 +228,12 @@ function ChatPage() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [{ role: "user", content: question }] }),
+        body: JSON.stringify({
+          graphQuery: true,
+          messages: [{ role: "user", parts: [{ type: "text", text: question }] }],
+        }),
       });
-      
+
       const data = await response.json();
       if (data.type === "knowledge" && data.data) {
         const knowledge = data.data as KnowledgeEntry;

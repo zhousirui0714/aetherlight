@@ -611,6 +611,34 @@ export const culturalKnowledge: Record<string, KnowledgeEntry> = {
       { id: "mao-heng", label: "毛亨", type: "person", description: "毛诗学开创者" }
     ]
   },
+  "周南": {
+    id: "zhou-nan",
+    question: "周南是什么？周南原文是什么？",
+    answer: "《周南》是《诗经·国风》中的开篇部分，共收诗十一篇，多为东周时期江汉汝水流域的民歌。其中第一篇为《关雎》，是全书的首章，故有「《周南》召南，本其始也」之说（《论语·八佾》）。《周南》之文今载于《毛诗正义》，通行校注本以阮元校刻《十三经注疏》为代表，然古籍无「原文」孤悬之理——《诗经》本为乐歌，口传入乐，汉代始有定本；若求原貌，当知：字形历篆隶楷之变、音读经古今音之转、训诂随师说而异。欲窥全篇，可参中华书局《诗经注析》或影印宋刊《监本纂图重言重意互注点校毛诗》。",
+    quotes: [
+      { text: "关关雎鸠，在河之洲。窈窕淑女，君子好逑。", title: "关雎", author: "佚名", dynasty: "周" },
+      { text: "采采芣苢，薄言采之。采采芣苢，薄言有之。", title: "芣苢", author: "佚名", dynasty: "周" },
+      { text: "桃之夭夭，灼灼其华。之子于归，宜其室家。", title: "桃夭", author: "佚名", dynasty: "周" }
+    ],
+    sources: [
+      { title: "毛诗正义", type: "book", isBook: true },
+      { title: "十三经注疏", type: "book", isBook: true },
+      { title: "诗集传", type: "book", isBook: true },
+      { title: "中华经典古籍库", type: "database" }
+    ],
+    interpretations: "《周南》多写婚恋与劳作，反映周代南方社会风貌，故以夫妇人伦为政教之本，实为风化之源。",
+    scholarAnalysis: "经学家毛亨、毛苌于河间传授《毛诗》，《周南》因而成为毛诗学的重要篇章。学者朱熹《诗集传》则以「民俗歌谣」视之。",
+    graphNodes: [
+      { id: "zhou-nan", label: "周南", type: "book", description: "《诗经·国风》开篇 11 篇" },
+      { id: "guan-ju", label: "关雎", type: "book", description: "《周南》首篇/《诗经》首篇" },
+      { id: "tao-yao", label: "桃夭", type: "book", description: "婚嫁名篇" },
+      { id: "fu-yi", label: "芣苢", type: "book", description: "采集歌" },
+      { id: "shijing", label: "诗经", type: "book", description: "中国最早诗歌总集" },
+      { id: "guo-feng", label: "国风", type: "concept", description: "《诗经》十五国风" },
+      { id: "mao-heng", label: "毛亨", type: "person", description: "毛诗学开创者" },
+      { id: "maoshizheng", label: "毛诗正义", type: "book", description: "唐代官修注疏" }
+    ]
+  },
   "苏轼代表作": {
     id: "su-shi-works",
     question: "苏东坡有哪些代表作？",
@@ -1124,15 +1152,57 @@ export const culturalKnowledge: Record<string, KnowledgeEntry> = {
 };
 
 export function searchKnowledge(query: string): KnowledgeEntry | null {
-  const normalizedQuery = query.toLowerCase();
-  
+  // 标准化：去标点、转小写、去空白
+  const stripped = query.toLowerCase().replace(/[\s\p{P}]/gu, "");
+  const normalizedQuery = query.toLowerCase().trim();
+
+  // 1) 优先做"key 是否在 query 中"的子串匹配（标准化后）
   for (const [key, entry] of Object.entries(culturalKnowledge)) {
-    if (normalizedQuery.includes(key) || 
-        entry.question.toLowerCase().includes(normalizedQuery)) {
+    const keyStripped = key.toLowerCase().replace(/[\s\p{P}]/gu, "");
+    if (keyStripped && stripped.includes(keyStripped)) {
       return entry;
     }
   }
-  
+
+  // 2) 标准化后的 query 是否在 key 中
+  for (const [key, entry] of Object.entries(culturalKnowledge)) {
+    const keyStripped = key.toLowerCase().replace(/[\s\p{P}]/gu, "");
+    if (keyStripped && keyStripped.includes(stripped)) {
+      return entry;
+    }
+  }
+
+  // 3) entry.question 是否包含 query（或反之）
+  for (const entry of Object.values(culturalKnowledge)) {
+    const question = entry.question.toLowerCase();
+    const questionStripped = question.replace(/[\s\p{P}]/gu, "");
+    if (
+      question.includes(normalizedQuery) ||
+      (questionStripped && (questionStripped.includes(stripped) || stripped.includes(questionStripped)))
+    ) {
+      return entry;
+    }
+  }
+
+  // 4) 关键词组合：拆分 query 词，任一关键词命中 key 即返回
+  const tokens = normalizedQuery.split(/[\s,，。、？?！!；;：:《》''"""]/).filter(t => t.length >= 2);
+  if (tokens.length > 0) {
+    let bestEntry: KnowledgeEntry | null = null;
+    let bestScore = 0;
+    for (const entry of Object.values(culturalKnowledge)) {
+      let score = 0;
+      const haystack = (entry.id + " " + entry.question + " " + (entry.answer || "")).toLowerCase();
+      for (const t of tokens) {
+        if (haystack.includes(t)) score += t.length;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestEntry = entry;
+      }
+    }
+    if (bestEntry && bestScore > 0) return bestEntry;
+  }
+
   return null;
 }
 

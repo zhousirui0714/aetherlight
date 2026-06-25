@@ -40,15 +40,39 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { messages } = (await request.json()) as { messages?: UIMessage[] };
+        const body = (await request.json()) as { messages?: UIMessage[]; graphQuery?: boolean };
+        const { messages, graphQuery } = body;
         if (!Array.isArray(messages)) return new Response("messages required", { status: 400 });
 
         const lastMessage = messages[messages.length - 1];
         const userQuestion = lastMessage?.parts?.find(p => p.type === "text")?.text || "";
-        // 是否首问（只有 1 条 user 消息，没有 assistant 消息）
-        const isFirstTurn = !messages.some(m => m.role === "assistant");
 
-        // ========== 知识库快速路径：仅首问 ==========
+        // ========== 知识图谱查询：始终走知识库快速路径 ==========
+        if (graphQuery && userQuestion) {
+          const cacheKey = getKnowledgeCacheKey(userQuestion);
+          const cached = getCache<{ type: string; data: KnowledgeEntry }>(cacheKey);
+          if (cached) {
+            return new Response(JSON.stringify(cached), {
+              headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
+            });
+          }
+
+          const knowledgeEntry = searchKnowledge(userQuestion);
+          if (knowledgeEntry) {
+            const response = { type: "knowledge", data: knowledgeEntry };
+            setCache(cacheKey, response);
+            return new Response(JSON.stringify(response), {
+              headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+            });
+          }
+          // 未命中知识库，返回空图谱
+          return new Response(JSON.stringify({ type: "knowledge", data: null }), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // ========== 普通对话：仅首问走知识库 ==========
+        const isFirstTurn = !messages.some(m => m.role === "assistant");
         if (isFirstTurn && userQuestion) {
           const cacheKey = getKnowledgeCacheKey(userQuestion);
           const cached = getCache<{ type: string; data: KnowledgeEntry }>(cacheKey);
