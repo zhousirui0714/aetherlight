@@ -130,7 +130,7 @@ export function HeroBlock({
 
           {/* 元信息行 */}
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-            {author && (
+            {author && !/溯光|编辑部|蜀光|水墨编辑部/.test(author) && (
               <span className="flex items-center gap-1">
                 <span className="font-serif text-[10px] tracking-widest text-muted-foreground/60">著</span>
                 <b className="font-serif text-foreground/80">{author}</b>

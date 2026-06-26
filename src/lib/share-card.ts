@@ -80,12 +80,16 @@ export async function renderShareCard(data: ShareCardData): Promise<string> {
   if (data.author) {
     cursorY += 20;
     drawAuthor(ctx, data.author, cursorY);
+    cursorY += 30;
   }
 
   // 8.5 标签气泡
   if (data.tags && data.tags.length > 0) {
-    cursorY += 30;
-    drawTags(ctx, data.tags, cursorY);
+    // 防止 tags 越过 footer (H - 260)
+    if (cursorY < H - 300) {
+      drawTags(ctx, data.tags, cursorY);
+      cursorY += 50;
+    }
   }
 
   // 9. 底部印章 + 溯光签名 + URL + 二维码
@@ -130,16 +134,17 @@ async function drawCoverBackground(ctx: CanvasRenderingContext2D, url: string) {
     const img = new Image();
     img.crossOrigin = "anonymous";
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error("封面加载失败"));
+      const t = setTimeout(() => reject(new Error("封面超时")), 5000);
+      img.onload = () => { clearTimeout(t); resolve(); };
+      img.onerror = () => { clearTimeout(t); reject(new Error("封面加载失败")); };
       img.src = url;
     });
-    // 70% 透明度铺满顶部
+    // 30% 透明度铺满顶部 35% 区域 (不遮挡分类徽章)
     ctx.save();
-    ctx.globalAlpha = 0.25;
+    ctx.globalAlpha = 0.22;
     // 居中裁剪铺满
     const ratio = img.width / img.height;
-    const targetRatio = W / (H * 0.55);
+    const targetRatio = W / (H * 0.35);
     let sw, sh, sx, sy;
     if (ratio > targetRatio) {
       sh = img.height;
@@ -152,16 +157,25 @@ async function drawCoverBackground(ctx: CanvasRenderingContext2D, url: string) {
       sx = 0;
       sy = (img.height - sh) / 2;
     }
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H * 0.55);
-    // 渐变蒙板淡入宣纸
-    const grad = ctx.createLinearGradient(0, H * 0.3, 0, H * 0.6);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H * 0.35);
+    // 渐变蒙板淡入宣纸 (H*0.18 → H*0.42, 完全不透明)
+    const grad = ctx.createLinearGradient(0, H * 0.18, 0, H * 0.42);
     grad.addColorStop(0, "rgba(245, 240, 226, 0)");
     grad.addColorStop(1, "rgba(245, 240, 226, 1)");
     ctx.fillStyle = grad;
-    ctx.fillRect(0, H * 0.3, W, H * 0.3);
+    ctx.fillRect(0, H * 0.18, W, H * 0.24);
     ctx.restore();
-  } catch {
-    // 静默失败, 不影响整体绘制
+  } catch (e) {
+    console.warn("[share-card] cover bg failed, fallback to paper:", e);
+    // 失败时画一层淡墨晕, 不影响整体
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    const grad = ctx.createRadialGradient(W / 2, H * 0.2, 50, W / 2, H * 0.2, W * 0.6);
+    grad.addColorStop(0, COLORS.ink);
+    grad.addColorStop(1, "rgba(60, 44, 30, 0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H * 0.4);
+    ctx.restore();
   }
 }
 
