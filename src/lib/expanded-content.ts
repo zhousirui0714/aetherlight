@@ -8,6 +8,7 @@
 //  4. 从 region/relatedPeople 等字段推断地图坐标、人物关系
 
 import generated from "./generated-content.json";
+import generatedExpanded from "./generated-expanded.json";
 import type { Article, RelatedItem } from "./knowledge-types";
 import { ARTICLES as LEGACY_ARTICLES } from "./knowledge-data";
 
@@ -145,7 +146,11 @@ export interface ExpandedContent {
 // 索引
 // ---------------------------------------------------------------------------
 
-const EXPANDED_JSON: Record<string, Partial<ExpandedContent>> = generated as any;
+// generated-content.json (LLM 生成的) + generated-expanded.json (推断引擎预生成) — 合并
+const EXPANDED_JSON: Record<string, Partial<ExpandedContent>> = {
+  ...(generated as any),
+  ...(generatedExpanded as any),
+};
 
 // 城市坐标 (核心城市，覆盖大部分文章 region)
 const CITY_COORDS: Record<string, { lat: number; lng: number; name: string }> = {

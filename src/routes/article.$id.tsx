@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 import { ARTICLES } from "@/lib/knowledge-data";
 import { normalizeArticle as normalizeV3Article, type Article, type RelatedItem } from "@/lib/knowledge-types";
 import { getExpandedContent } from "@/lib/expanded-content";
@@ -24,14 +24,53 @@ import {
 } from "@/components/article";
 import type { TimelineEvent, ProcessStep } from "@/components/article";
 
+/**
+ * 服务端拉取文章 — SSR 优先，避免首屏"加载中…"
+ * 优先级：Supabase knowledge_articles 表 → 静态 ARTICLES
+ * 失败时返回 null，前端兜底显示未找到
+ */
+const fetchArticleServer = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ id: z.string() }).parse(d))
+  .handler(async ({ data }) => {
+    // 尝试 Supabase (服务端使用 service role key)
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: row, error } = await supabaseAdmin
+        .from("knowledge_articles")
+        .select("*")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (row && !error) return normalizeV3Article(row);
+    } catch (err) {
+      console.warn("[article-loader] supabase fetch failed, falling back to static:", err);
+    }
+    // 回退到静态 ARTICLES
+    const staticArticle = ARTICLES.find((a) => a.id === data.id);
+    if (staticArticle) return normalizeV3Article(staticArticle);
+    return null;
+  });
+
 export const Route = createFileRoute("/article/$id")({
-  head: ({ params }) => ({
-    meta: [
-      { title: "知识详情 · 溯光" },
-      { name: "description", content: "深入了解中华传统文化知识" },
-    ],
-    links: [{ rel: "canonical", href: `/article/${params.id}` }],
-  }),
+  loader: async ({ params }) => {
+    const article = await fetchArticleServer({ data: { id: params.id } });
+    return { article };
+  },
+  head: ({ loaderData, params }) => {
+    const a: any = loaderData?.article;
+    const title = a?.title ? `${a.title} · 溯光` : "知识详情 · 溯光";
+    const desc = a?.excerpt || a?.content?.slice(0, 80) || "深入了解中华传统文化知识";
+    const ogImage = a?.coverUrl || undefined;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        ...(ogImage ? [{ property: "og:image", content: ogImage }] : []),
+      ],
+      links: [{ rel: "canonical", href: `/article/${params.id}` }],
+    };
+  },
   component: ArticlePage,
 });
 
@@ -42,68 +81,22 @@ export const Route = createFileRoute("/article/$id")({
 const normalizeArticle = normalizeV3Article;
 
 function ArticlePage() {
-  const { id } = Route.useParams();
   const navigate = useNavigate();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchArticle = async () => {
-      setLoading(true);
-      try {
-        // 优先从 Supabase 获取
-        const { data, error } = await supabase
-          .from("knowledge_articles")
-          .select("*")
-          .eq("id", id)
-          .single();
-
-        if (data && !error) {
-          setArticle(normalizeArticle(data));
-        } else {
-          // 回退到静态数据
-          const staticArticle = ARTICLES.find((a) => a.id === id);
-          if (staticArticle) {
-            setArticle(normalizeArticle(staticArticle));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch article:", err);
-        const staticArticle = ARTICLES.find((a) => a.id === id);
-        if (staticArticle) {
-          setArticle(normalizeArticle(staticArticle));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchArticle();
-  }, [id]);
+  const { article: loaderArticle } = Route.useLoaderData();
 
   // 追踪文章阅读
   useEffect(() => {
-    if (article) {
+    if (loaderArticle) {
       trackEvent({
         type: "article_view",
-        title: article.title || "未知文章",
-        description: article.excerpt || article.content?.slice(0, 50),
-        category: getCategoryMeta(article.category).label,
+        title: loaderArticle.title || "未知文章",
+        description: loaderArticle.excerpt || loaderArticle.content?.slice(0, 50),
+        category: getCategoryMeta(loaderArticle.category).label,
       });
     }
-  }, [article]);
+  }, [loaderArticle]);
 
-  if (loading) {
-    return (
-      <AppShell>
-        <div className="flex flex-col items-center justify-center py-24">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 font-serif text-sm text-muted-foreground">加载中…</p>
-        </div>
-      </AppShell>
-    );
-  }
-
-  if (!article) {
+  if (!loaderArticle) {
     return (
       <AppShell>
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -120,6 +113,8 @@ function ArticlePage() {
       </AppShell>
     );
   }
+
+  const article = loaderArticle;
 
   // 按 category 分发到对应章节
   const section = renderCategorySections(article);

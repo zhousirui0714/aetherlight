@@ -1,0 +1,201 @@
+{
+  "lunyu": {
+    "timeline": [],
+    "characters": [],
+    "chapters": [],
+    "relationships": {
+      "teachers": [],
+      "friends": [],
+      "students": [],
+      "family": []
+    },
+    "relatedBuildings": []
+  },
+  "libai": {
+    "timeline": [
+      {
+        "year": "唐",
+        "title": "浪漫主义诗人，被后人誉为'诗仙'",
+        "description": "浪漫主义诗人，被后人誉为'诗仙'"
+      },
+      {
+        "year": "代",
+        "title": "表作有《将进酒》《蜀道难》等",
+        "description": "表作有《将进酒》《蜀道难》等"
+      }
+    ],
+    "characters": [],
+    "chapters": [],
+    "relationships": {
+      "teachers": [],
+      "friends": [],
+      "students": [],
+      "family": []
+    },
+    "relatedBuildings": []
+  },
+  "jingye": {
+    "timeline": [
+      {
+        "year": "唐",
+        "title": "代诗人李白所作的一首五言古诗",
+        "description": "代诗人李白所作的一首五言古诗"
+      },
+      {
+        "year": "代",
+        "title": "诗人李白所作的一首五言古诗",
+        "description": "诗人李白所作的一首五言古诗"
+      },
+      {
+        "year": "清",
+        "title": "新朴素而韵味含蓄无穷，历来广为传诵",
+        "description": "新朴素而韵味含蓄无穷，历来广为传诵"
+      }
+    ],
+    "characters": [],
+    "chapters": [],
+    "relationships": {
+      "teachers": [],
+      "friends": [],
+      "students": [],
+      "family": []
+    },
+    "relatedBuildings": []
+  },
+  "jiangjinjiu": {
+    "timeline": [
+      {
+        "year": "唐",
+        "title": "代大诗人李白沿用乐府古题创作的一首诗",
+        "description": "代大诗人李白沿用乐府古题创作的一首诗"
+      },
+      {
+        "year": "代",
+        "title": "大诗人李白沿用乐府古题创作的一首诗",
+        "description": "大诗人李白沿用乐府古题创作的一首诗"
+      }
+    ],
+    "characters": [],
+    "chapters": [],
+    "relationships": {
+      "teachers": [],
+      "friends": [],
+      "students": [],
+      "family": []
+    },
+    "relatedBuildings": []
+  },
+  "gugong": {
+    "timeline": [
+      {
+        "year": "明",
+        "title": "清两代的皇家宫殿，旧称为紫禁城，位于北京中轴线的",
+        "description": "清两代的皇家宫殿，旧称为紫禁城，位于北京中轴线的中心"
+      },
+      {
+        "year": "清",
+        "title": "两代的皇家宫殿，旧称为紫禁城，位于北京中轴线的中",
+        "description": "两代的皇家宫殿，旧称为紫禁城，位于北京中轴线的中心"
+      },
+      {
+        "year": "代",
+        "title": "的皇家宫殿，旧称为紫禁城，位于北京中轴线的中心",
+        "description": "的皇家宫殿，旧称为紫禁城，位于北京中轴线的中心"
+      },
+      {
+        "year": "北",
+        "title": "京中轴线的中心",
+        "description": "京中轴线的中心"
+      },
+      {
+        "year": "明永乐四年",
+        "title": "（1406年），永乐十八年（1420年）建成",
+        "description": "（1406年），永乐十八年（1420年）建成"
+      },
+      {
+        "year": "1406年",
+        "title": "），永乐十八年（1420年）建成",
+        "description": "），永乐十八年（1420年）建成"
+      },
+      {
+        "year": "明",
+        "title": "成祖朱棣迁都北京后启动的皇家工程，由蒯祥、蔡信等",
+        "description": "成祖朱棣迁都北京后启动的皇家工程，由蒯祥、蔡信等匠师设计建造"
+      },
+      {
+        "year": "北",
+        "title": "京后启动的皇家工程，由蒯祥、蔡信等匠师设计建造",
+        "description": "京后启动的皇家工程，由蒯祥、蔡信等匠师设计建造"
+      }
+    ],
+    "characters": [
+      {
+        "name": "故宫又",
+        "role": "角色",
+        "description": "故宫又称紫禁城，是明清两代的皇家宫殿，旧称为紫禁城，位于北京中轴线的中心。故宫以三大殿（太和殿、中和殿、保和殿）为中心，"
+      },
+      {
+        "name": "旧称",
+        "role": "角色",
+        "description": "故宫又称紫禁城，是明清两代的皇家宫殿，旧称为紫禁城，位于北京中轴线的中心。故宫以三大殿（太和殿、中和殿、保和殿）为中心，占地面积约72万平方米，建筑面积约15"
+      },
+      {
+        "name": "保存最",
+        "role": "角色",
+        "description": "米，有大小宫殿七十多座，房屋九千余间。是世界上现存规模最大、保存最为完整的木质结构古建筑之一。 故宫始建于明永乐四年（1406年），永乐十八年（1420年）建成。是明成祖朱棣迁都北"
+      },
+      {
+        "name": "故宫",
+        "role": "角色",
+        "description": "。故宫于1987年被联合国教科文组织列入世界文化遗产名录。 故宫是中国宫廷建筑的巅峰之作，代表了中国古代建筑艺术的最高成就。它的中轴对称布局、严格的等级制度、色彩运用（红墙黄瓦）、"
+      },
+      {
+        "name": "中轴对",
+        "role": "角色",
+        "description": "国宫廷建筑的巅峰之作，代表了中国古代建筑艺术的最高成就。它的中轴对称布局、严格的等级制度、色彩运用（红墙黄瓦）、装饰艺术（龙凤纹样）都深刻影响了中国乃至东亚的建筑文化。今天的故宫博"
+      },
+      {
+        "name": "了中国",
+        "role": "角色",
+        "description": "级制度、色彩运用（红墙黄瓦）、装饰艺术（龙凤纹样）都深刻影响了中国乃至东亚的建筑文化。今天的故宫博物院馆藏文物超过186万件，是世界最大的博物馆之一。故宫文创、故宫数字博物馆让传统"
+      }
+    ],
+    "chapters": [],
+    "coordinates": {
+      "lat": 39.9163,
+      "lng": 116.3972,
+      "name": "北京故宫"
+    },
+    "relationships": {
+      "teachers": [],
+      "friends": [],
+      "students": [],
+      "family": []
+    },
+    "relatedBuildings": [
+      {
+        "id": "badaling",
+        "title": "长城：中华民族的脊梁",
+        "category": "建筑古迹",
+        "brief": "同为明清皇家工程"
+      }
+    ]
+  },
+  "gugong_evt": {
+    "timeline": [],
+    "characters": [],
+    "chapters": [],
+    "coordinates": {
+      "lat": 39.9163,
+      "lng": 116.3972,
+      "name": "北京故宫"
+    },
+    "relationships": {
+      "teachers": [],
+      "friends": [],
+      "students": [],
+      "family": []
+    },
+    "relatedBuildings": []
+  }
+}
