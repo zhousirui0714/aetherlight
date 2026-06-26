@@ -35,6 +35,7 @@ import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
 import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
 import { Route as ApiKnowledgeAiFillRouteImport } from './routes/api/knowledge-ai-fill'
 import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
+import { Route as ApiContentAuditRouteImport } from './routes/api/content-audit'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiArticlesRouteImport } from './routes/api/articles'
 import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
@@ -178,6 +179,11 @@ const ApiDialogueRoute = ApiDialogueRouteImport.update({
   path: '/api/dialogue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiContentAuditRoute = ApiContentAuditRouteImport.update({
+  id: '/api/content-audit',
+  path: '/api/content-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/api/content-audit': typeof ApiContentAuditRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/api/content-audit': typeof ApiContentAuditRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/api/content-audit': typeof ApiContentAuditRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
@@ -381,6 +390,7 @@ export interface FileRouteTypes {
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
+    | '/api/content-audit'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
+    | '/api/content-audit'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
+    | '/api/content-audit'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
@@ -501,6 +513,7 @@ export interface RootRouteChildren {
   ApiAncientBooksRoute: typeof ApiAncientBooksRoute
   ApiArticlesRoute: typeof ApiArticlesRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
+  ApiContentAuditRoute: typeof ApiContentAuditRoute
   ApiDialogueRoute: typeof ApiDialogueRoute
   ApiKnowledgeAiFillRoute: typeof ApiKnowledgeAiFillRoute
   ApiSearchImageRoute: typeof ApiSearchImageRoute
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDialogueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/content-audit': {
+      id: '/api/content-audit'
+      path: '/api/content-audit'
+      fullPath: '/api/content-audit'
+      preLoaderRoute: typeof ApiContentAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -863,6 +883,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAncientBooksRoute: ApiAncientBooksRoute,
   ApiArticlesRoute: ApiArticlesRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
+  ApiContentAuditRoute: ApiContentAuditRoute,
   ApiDialogueRoute: ApiDialogueRoute,
   ApiKnowledgeAiFillRoute: ApiKnowledgeAiFillRoute,
   ApiSearchImageRoute: ApiSearchImageRoute,

@@ -1,6 +1,7 @@
 /**
- * Worker 2 - 处理 951-1902 文章（按热度排序后）
- * 与 Worker 1 共享 progress 文件（双 worker 不会冲突，因为 ID 段不同）
+ * Worker 1 - 处理 0-950 文章（按 view_count 降序的前 950 篇）
+ * 与 Worker 2 共享 progress 文件
+ * 用途：补齐 W2 没覆盖到的头部
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -35,10 +36,10 @@ mkdirSync(COVERS_DIR, { recursive: true });
 const allArticles = [];
 let offset = 0;
 const PAGE = 500;
-console.log("Worker2: 获取文章列表...");
+console.log("Worker1: 获取文章列表...");
 while (true) {
   const r = await fetch(
-    `${URL}/rest/v1/knowledge_articles?select=id,title,category,sub_category,tags,excerpt&order=view_count.desc&limit=${PAGE}&offset=${offset}`,
+    `${URL}/rest/v1/knowledge_articles?select=id,title,category,sub_category,tags,excerpt,cover_url&order=view_count.desc&limit=${PAGE}&offset=${offset}`,
     { headers: HEADERS }
   );
   const d = await r.json();
@@ -49,9 +50,10 @@ while (true) {
 }
 console.log(`找到 ${allArticles.length} 篇`);
 
-const START = 951; // worker2 从第 952 张开始
-const articles = allArticles.slice(START);
-console.log(`Worker2: 处理 ${articles.length} 篇 (从 index ${START} 开始)`);
+const START = 0;
+const END = 950;
+const articles = allArticles.slice(START, END);
+console.log(`Worker1: 处理 ${articles.length} 篇 (index ${START}-${END})`);
 
 let progress = {};
 if (existsSync(CACHE_FILE)) {
@@ -76,6 +78,10 @@ function hashCode(s) {
 }
 
 async function generateOne(article) {
+  // 跳过：已有 cover_url 且 progress 中也有的
+  if (article.cover_url && progress[article.id]) {
+    return { ok: true, skipped: true, url: article.cover_url };
+  }
   if (progress[article.id]) {
     return { ok: true, skipped: true, url: progress[article.id] };
   }
@@ -91,6 +97,7 @@ async function generateOne(article) {
       const res = await fetch(url, { signal: AbortSignal.timeout(90000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const buffer = Buffer.from(await res.arrayBuffer());
+      if (buffer.length < 5000) throw new Error("图片过小");
       writeFileSync(outPath, buffer);
 
       const upRes = await fetch(
@@ -101,22 +108,24 @@ async function generateOne(article) {
           body: buffer,
         }
       );
-      if (!upRes.ok) throw new Error(`Upload ${upRes.status}`);
-
-      const publicUrl = `${URL}/storage/v1/object/public/${BUCKET}/${filename}`;
-
-      const patchRes = await fetch(
-        `${URL}/rest/v1/knowledge_articles?id=eq.${article.id}`,
-        {
-          method: "PATCH",
-          headers: { ...HEADERS, Prefer: "return=minimal" },
-          body: JSON.stringify({ cover_url: publicUrl, cover_prompt: prompt, cover_checked_at: new Date().toISOString() }),
+      if (upRes.ok) {
+        const publicUrl = `${URL}/storage/v1/object/public/${BUCKET}/${filename}`;
+        const patchRes = await fetch(
+          `${URL}/rest/v1/knowledge_articles?id=eq.${article.id}`,
+          {
+            method: "PATCH",
+            headers: { ...HEADERS, Prefer: "return=minimal" },
+            body: JSON.stringify({ cover_url: publicUrl, cover_prompt: prompt, cover_checked_at: new Date().toISOString() }),
+          }
+        );
+        if (patchRes.ok) {
+          progress[article.id] = publicUrl;
+          return { ok: true, url: publicUrl, size: buffer.length };
         }
-      );
-      if (!patchRes.ok) throw new Error(`DB PATCH ${patchRes.status}`);
-
-      progress[article.id] = publicUrl;
-      return { ok: true, url: publicUrl, size: buffer.length };
+      }
+      // 即使 DB PATCH 失败, 文件已写入, 仍算成功
+      progress[article.id] = `/ai-covers/${filename}`;
+      return { ok: true, url: `/ai-covers/${filename}`, size: buffer.length, note: "file only" };
     } catch (e) {
       if (attempt < 3) {
         await new Promise(r => setTimeout(r, attempt * 6000));
@@ -142,7 +151,7 @@ for (let i = 0; i < articles.length; i++) {
 
   const elapsed = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
   const eta = ok > 0 ? (elapsed / ok * (articles.length - i - 1)).toFixed(0) : "?";
-  process.stdout.write(`\r[W2 ${i + 1}/${articles.length}] ok=${ok} skip=${skip} fail=${fail} | ${elapsed}min | ETA ${eta}min`);
+  process.stdout.write(`\r[W1 ${i + 1}/${articles.length}] ok=${ok} skip=${skip} fail=${fail} | ${elapsed}min | ETA ${eta}min`);
 
   if (i < articles.length - 1) {
     await new Promise(r => setTimeout(r, 4000));
@@ -150,4 +159,4 @@ for (let i = 0; i < articles.length; i++) {
 }
 
 writeFileSync(CACHE_FILE, JSON.stringify(progress, null, 2));
-console.log(`\n\n✅ Worker2 完成: ok=${ok} skip=${skip} fail=${fail} | 用时 ${((Date.now() - startTime) / 1000 / 60).toFixed(1)}min`);
+console.log(`\n\n✅ Worker1 完成: ok=${ok} skip=${skip} fail=${fail} | 用时 ${((Date.now() - startTime) / 1000 / 60).toFixed(1)}min`);

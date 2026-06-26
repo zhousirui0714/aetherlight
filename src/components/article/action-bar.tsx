@@ -18,6 +18,8 @@ interface ActionBarProps {
   author?: string;
   excerpt: string;
   cover?: string;
+  coverUrl?: string;     // 完整封面图 URL（分享卡用）
+  tags?: string[];       // 标签（分享卡用）
   onAskAI?: () => void;        // 进入 AI 问答
   onTalkFigure?: () => void;   // 与人物对话 (仅 figures)
   accent?: string;
@@ -31,6 +33,8 @@ export function ActionBar({
   author,
   excerpt,
   cover,
+  coverUrl,
+  tags,
   onAskAI,
   onTalkFigure,
   accent = "var(--color-cinnabar)",
@@ -127,6 +131,8 @@ export function ActionBar({
               author,
               articleUrl: typeof window !== "undefined" ? window.location.href : "",
               coverEmoji: cover,
+              coverUrl,
+              tags,
             }}
           />
         )}

@@ -13,6 +13,8 @@ export interface ShareCardData {
   author?: string;           // 作者
   articleUrl: string;        // 详情页 URL
   coverEmoji?: string;       // 兜底 emoji（无封面图时用）
+  coverUrl?: string;         // 封面图 URL（增强版会作为背景大图）
+  tags?: string[];           // 标签 (3 个以内)
 }
 
 const W = 1080;
@@ -44,6 +46,11 @@ export async function renderShareCard(data: ShareCardData): Promise<string> {
   // 1. 背景：宣纸纹理（径向渐变模拟）
   drawPaperBackground(ctx);
 
+  // 1.5 封面背景大图（如有）
+  if (data.coverUrl) {
+    await drawCoverBackground(ctx, data.coverUrl);
+  }
+
   // 2. 顶部装饰：朱砂横线 + 飞白墨点
   drawTopDecor(ctx);
 
@@ -57,7 +64,7 @@ export async function renderShareCard(data: ShareCardData): Promise<string> {
     cursorY += 60;
   }
 
-  // 5. 大标题（最多 4 行）
+  // 5. 大标题（自适应字号）
   cursorY += 30;
   cursorY = drawTitle(ctx, data.title, cursorY);
 
@@ -75,6 +82,12 @@ export async function renderShareCard(data: ShareCardData): Promise<string> {
     drawAuthor(ctx, data.author, cursorY);
   }
 
+  // 8.5 标签气泡
+  if (data.tags && data.tags.length > 0) {
+    cursorY += 30;
+    drawTags(ctx, data.tags, cursorY);
+  }
+
   // 9. 底部印章 + 溯光签名 + URL + 二维码
   drawFooter(ctx, data.articleUrl);
 
@@ -82,6 +95,74 @@ export async function renderShareCard(data: ShareCardData): Promise<string> {
   drawInkSplash(ctx);
 
   return canvas.toDataURL("image/png", 0.95);
+}
+
+/**
+ * 分类专属印章文字
+ */
+const CATEGORY_SEAL: Record<string, string> = {
+  poems: "诗",
+  figures: "传",
+  classics: "典",
+  artifacts: "器",
+  festivals: "节",
+  philosophy: "道",
+  technology: "工",
+  intangible: "艺",
+  lifestyle: "俗",
+  mythology: "神",
+  cuisine: "食",
+  architecture: "建",
+  medicine: "医",
+  art: "美",
+  music: "音",
+  clothing: "服",
+  geography: "地",
+  education: "教",
+  default: "文",
+};
+
+/**
+ * 封面图作为背景大图（异步加载）
+ */
+async function drawCoverBackground(ctx: CanvasRenderingContext2D, url: string) {
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("封面加载失败"));
+      img.src = url;
+    });
+    // 70% 透明度铺满顶部
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    // 居中裁剪铺满
+    const ratio = img.width / img.height;
+    const targetRatio = W / (H * 0.55);
+    let sw, sh, sx, sy;
+    if (ratio > targetRatio) {
+      sh = img.height;
+      sw = sh * targetRatio;
+      sx = (img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = img.width;
+      sh = sw / targetRatio;
+      sx = 0;
+      sy = (img.height - sh) / 2;
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H * 0.55);
+    // 渐变蒙板淡入宣纸
+    const grad = ctx.createLinearGradient(0, H * 0.3, 0, H * 0.6);
+    grad.addColorStop(0, "rgba(245, 240, 226, 0)");
+    grad.addColorStop(1, "rgba(245, 240, 226, 1)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, H * 0.3, W, H * 0.3);
+    ctx.restore();
+  } catch {
+    // 静默失败, 不影响整体绘制
+  }
 }
 
 function drawPaperBackground(ctx: CanvasRenderingContext2D) {
@@ -124,9 +205,6 @@ function drawTopDecor(ctx: CanvasRenderingContext2D) {
   // 飞白墨点（左上 + 右上）
   drawInkDot(ctx, 100, 120, 35, 0.12);
   drawInkDot(ctx, W - 100, 120, 28, 0.10);
-
-  // 顶部小印章「文」
-  drawSeal(ctx, W - 130, 180, 60, "文", COLORS.cinnabar);
 }
 
 function drawCategoryBadge(ctx: CanvasRenderingContext2D, category: string) {
@@ -156,23 +234,34 @@ function drawDynasty(ctx: CanvasRenderingContext2D, dynasty: string, y: number) 
 }
 
 function drawTitle(ctx: CanvasRenderingContext2D, title: string, startY: number): number {
-  ctx.font = `700 72px ${FONT_SERIF}`;
+  // 标题字数决定字号: 2字 120 / 3字 100 / 4字 88 / 5-6字 76 / 7-8字 64 / >8字 52
+  const len = title.replace(/[\s，。！？、；：《》【】]/g, "").length;
+  let fontSize: number;
+  if (len <= 2) fontSize = 120;
+  else if (len <= 3) fontSize = 100;
+  else if (len <= 4) fontSize = 88;
+  else if (len <= 6) fontSize = 76;
+  else if (len <= 8) fontSize = 64;
+  else fontSize = 52;
+
+  ctx.font = `700 ${fontSize}px ${FONT_SERIF}`;
   ctx.fillStyle = COLORS.ink;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
 
-  // 自动断行：每行最多 8 个汉字
-  const lines = wrapText(ctx, title, W - 200, 8);
+  // 自动断行: 每行最多 8 个汉字 (受 fontSize 动态调整)
+  const charsPerLine = fontSize >= 100 ? 6 : fontSize >= 76 ? 7 : 8;
+  const lines = wrapText(ctx, title, W - 200, charsPerLine);
 
   let y = startY;
-  const lineHeight = 96;
-  const maxLines = 4;
+  const lineHeight = Math.round(fontSize * 1.3);
+  const maxLines = 5;
   for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
     ctx.fillText(lines[i], W / 2, y);
     y += lineHeight;
   }
 
-  // 第 5 行用省略号
+  // 第 6 行用省略号
   if (lines.length > maxLines) {
     ctx.fillText("…", W / 2, y);
     y += lineHeight;
@@ -219,6 +308,62 @@ function drawAuthor(ctx: CanvasRenderingContext2D, author: string, y: number) {
   ctx.textAlign = "right";
   ctx.textBaseline = "top";
   ctx.fillText(`— ${author}`, W - 200, y);
+}
+
+function drawTags(ctx: CanvasRenderingContext2D, tags: string[], y: number) {
+  ctx.font = `400 22px ${FONT_SERIF}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const items = tags.slice(0, 3);
+  // 计算总宽, 居中
+  const padX = 24, padY = 10, gap = 12;
+  let totalW = 0;
+  const widths: number[] = [];
+  for (const t of items) {
+    const w = ctx.measureText(`#${t}`).width + padX * 2;
+    widths.push(w);
+    totalW += w;
+  }
+  totalW += gap * (items.length - 1);
+  let x = (W - totalW) / 2;
+  for (let i = 0; i < items.length; i++) {
+    const w = widths[i];
+    const h = 44;
+    // 圆角矩形背景
+    ctx.fillStyle = "rgba(181, 58, 42, 0.08)";
+    roundRect(ctx, x, y, w, h, 22);
+    ctx.fill();
+    // 描边
+    ctx.strokeStyle = "rgba(181, 58, 42, 0.35)";
+    ctx.lineWidth = 1;
+    roundRect(ctx, x, y, w, h, 22);
+    ctx.stroke();
+    // 文字
+    ctx.fillStyle = COLORS.cinnabar;
+    ctx.fillText(`#${items[i]}`, x + w / 2, y + h / 2);
+    x += w + gap;
+  }
+}
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 function drawFooter(ctx: CanvasRenderingContext2D, articleUrl: string) {

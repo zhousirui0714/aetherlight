@@ -7,6 +7,7 @@ import { ActionBar } from "./action-bar";
 import { AiDeepAnalysis } from "./ai-deep-analysis";
 import { AiQAPanel } from "./ai-qa-panel";
 import { ContinueTracingPath } from "./continue-tracing-path";
+import { CompletenessBadge } from "./completeness-badge";
 import { ArticleIllustration } from "@/components/article-illustration";
 import { getCategoryMeta } from "./category-meta";
 import type { Article } from "@/lib/knowledge-types";
@@ -80,6 +81,23 @@ export function ArticlePageShell({
           accent2={meta.accent2}
         />
 
+        {/* 完整度徽章 (放在 Hero 下方) */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <CompletenessBadge
+            articleId={article.id}
+            known={{
+              hasCover: !!article.coverUrl,
+              hasExcerpt: !!article.excerpt && article.excerpt.length >= 10,
+              hasBody: !!article.content && article.content.length >= 30,
+              hasHistory: !!(article as any).history && (article as any).history.length >= 20,
+              hasInfluence: !!(article as any).influence && (article as any).influence.length >= 20,
+              hasFaq: Array.isArray((article as any).faq) && (article as any).faq.length >= 2,
+              hasRelatedPeople:
+                Array.isArray((article as any).relatedPeople) && (article as any).relatedPeople.length >= 1,
+            }}
+          />
+        </div>
+
         {/* ============ 分类专属章节（核心） ============ */}
         <div className="mb-12">{categorySections}</div>
 
@@ -97,6 +115,8 @@ export function ArticlePageShell({
           author={article.author}
           excerpt={article.excerpt}
           cover={article.cover}
+          coverUrl={article.coverUrl}
+          tags={article.tags}
           accent={meta.accent}
           onTalkFigure={article.category === "figures" ? () =>
             navigate({ to: "/dialogue/$id", params: { id: article.id } })
