@@ -90,13 +90,31 @@ async function callLLM(article) {
 }
 
 async function findArticleByTitle(title) {
-  const r = await fetch(
-    `${URL}/rest/v1/knowledge_articles?title=ilike.*${encodeURIComponent(title)}*&select=id&limit=1`,
-    { headers: H }
-  );
-  if (!r.ok) return null;
-  const d = await r.json();
-  return d[0]?.id || null;
+  // 拆词: 取括号前/顿号前/逗号前/前 4 字
+  const cleanTitle = title
+    .replace(/[：:].*$/, "")
+    .replace(/[（(].*?[)）]/g, "")
+    .replace(/[，。；,;].*$/, "")
+    .trim();
+  const candidates = [];
+  if (cleanTitle && cleanTitle !== title) candidates.push(cleanTitle);
+  if (cleanTitle.slice(0, 3)) candidates.push(cleanTitle.slice(0, 3));
+  if (cleanTitle.slice(0, 2)) candidates.push(cleanTitle.slice(0, 2));
+  if (title !== cleanTitle) candidates.push(title);
+
+  for (const q of candidates) {
+    if (!q || q.length < 1) continue;
+    // 先试 ilike
+    const r = await fetch(
+      `${URL}/rest/v1/knowledge_articles?title=ilike.*${encodeURIComponent(q)}*&select=id&limit=1`,
+      { headers: H }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (d[0]?.id) return d[0].id;
+    }
+  }
+  return null;
 }
 
 async function relExists(from, to) {
