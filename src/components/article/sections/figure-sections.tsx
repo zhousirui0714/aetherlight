@@ -183,7 +183,27 @@ export function FigureSections({ article, timeline = [], relationships }: Props)
             </div>
           </div>
         </section>
-      ) : null}
+      ) : (
+        /* 无 relations 关系分类时, 仍展示知识图谱 (中心即本人) */
+        <section className="mb-8">
+          <SectionHeading icon={Users} title="人物关系" watermark="系" accent={accent} />
+          <div className="rounded-2xl border border-amber-200/40 bg-[#FAF6EC]/40 p-4">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[10px] tracking-widest text-amber-900/60">
+              <span className="h-px flex-1 bg-amber-200/50" />
+              <span className="font-serif">水墨知识图谱 · 溯光将逐步建立「{article.title}」的关联网络</span>
+              <span className="h-px flex-1 bg-amber-200/50" />
+            </div>
+            <p className="mb-3 px-1 text-xs text-muted-foreground">
+              暂未结构化「师承 / 友人 / 弟子 / 家族」分类，欢迎 <a href="/chat" className="underline">告知溯光</a> 补充。
+            </p>
+            <ArticleRelatedGraph
+              articleId={article.id}
+              articleTitle={article.title}
+              compact
+            />
+          </div>
+        </section>
+      )}
 
       {/* === 7. 历史评价 === */}
       {article.influence && (

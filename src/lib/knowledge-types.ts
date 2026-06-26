@@ -160,7 +160,7 @@ export function normalizeArticle(raw: any): Article {
     source: raw.source || "",
     history: raw.history || "",
     influence: raw.influence || "",
-    author: raw.author || "溯光编辑部",
+    author: raw.author || "",
     dynasty: raw.dynasty || "",
     era: raw.era || "",
     region: raw.region || "",

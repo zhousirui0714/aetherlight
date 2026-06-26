@@ -169,6 +169,35 @@ function parseContent(field: Field, text: string): any {
     const m = text.match(/\{[\s\S]*\}/);
     return m ? safeJson(m[0], { summary: text, applications: [], perspectives: [] }) : { summary: text, applications: [], perspectives: [] };
   }
+  if (field === "translation") {
+    // 尝试从 LLM 文本中提取 JSON 对象（可能包裹在 ```json ... ``` 中）
+    const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
+    const m = stripped.match(/\{[\s\S]*\}/);
+    if (m) {
+      const parsed = safeJson<{ verseByVerse?: { original: string; modern: string }[]; overall?: string }>(
+        m[0],
+        null as any
+      );
+      if (parsed && typeof parsed === "object") {
+        return {
+          verseByVerse: Array.isArray(parsed.verseByVerse) ? parsed.verseByVerse : [],
+          overall: parsed.overall || "",
+        };
+      }
+    }
+    // 解析失败 → 当作 overall 字符串
+    return { verseByVerse: [], overall: stripped };
+  }
+  if (field === "annotation") {
+    const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
+    const m = stripped.match(/\[[\s\S]*\]/);
+    if (m) {
+      const parsed = safeJson<{ term: string; meaning: string; source: string }[]>(m[0], null as any);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    // 解析失败 → 当作 overall 字符串兜底
+    return stripped;
+  }
   return text.trim();
 }
 
