@@ -213,3 +213,105 @@
   box-shadow: 0 1px 3px rgba(181, 58, 42, 0.25);
   cursor: grab;
 }
+
+/* ========== 详情页分类视觉扩展 ========== */
+
+/* 卷轴竖排 (诗词文章) */
+@utility scroll-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.15em;
+  line-height: 2;
+}
+
+/* 竹简纹 (典籍) */
+@utility bamboo-bg {
+  background-color: var(--color-paper);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 38px,
+      color-mix(in oklab, var(--color-bronze) 12%, transparent) 38px,
+      color-mix(in oklab, var(--color-bronze) 12%, transparent) 40px
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-bronze) 4%, transparent) 0%,
+      color-mix(in oklab, var(--color-bronze) 8%, transparent) 100%
+    );
+}
+
+/* 灯笼晕染 (节日) */
+@utility lantern-glow {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklab, oklch(0.65 0.21 28) 25%, transparent) 0%,
+    color-mix(in oklab, oklch(0.65 0.21 28) 10%, transparent) 40%,
+    transparent 70%
+  );
+}
+
+/* 工笔边 (非遗/器物) */
+@utility gongbi-border {
+  border: 1px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-bronze) 20%, transparent),
+    inset 0 0 0 4px var(--color-paper),
+    inset 0 0 0 5px color-mix(in oklab, var(--color-bronze) 25%, transparent);
+}
+
+/* 仙雾气 (神话) */
+@utility mist-bg {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, oklch(0.78 0.06 280) 30%, transparent) 0%,
+    color-mix(in oklab, oklch(0.86 0.04 280) 18%, transparent) 40%,
+    transparent 80%
+  );
+}
+
+/* 铜锈色块 (科技) */
+@utility bronze-patina {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, oklch(0.55 0.08 200) 8%, var(--color-paper)) 0%,
+    color-mix(in oklab, oklch(0.65 0.13 75) 12%, var(--color-paper)) 100%
+  );
+}
+
+/* 烟火气 (饮食) */
+@utility fire-glow {
+  background: radial-gradient(
+    ellipse at center top,
+    color-mix(in oklab, oklch(0.68 0.18 50) 18%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+/* 入场动画 - 分类章节 */
+@keyframes section-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility section-in {
+  animation: section-in 0.4s ease-out both;
+}
+
+/* 节点连线动画 (用于知识图谱) */
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@utility node-pulse {
+  animation: node-pulse 2s ease-in-out infinite;
+}
+
+/* 倒计时数字翻转 */
+@keyframes flip-in {
+  from { transform: rotateX(-90deg); opacity: 0; }
+  to { transform: rotateX(0); opacity: 1; }
+}
+@utility flip-in {
+  animation: flip-in 0.4s ease-out both;
+}

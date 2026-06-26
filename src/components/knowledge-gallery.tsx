@@ -59,10 +59,14 @@ function GalleryCard({
   };
 
   const emoji = isDb ? (item as DbArticle).cover || "📜" : (item as Article).cover;
-  const subCategory = isDb ? (item as DbArticle).sub_category : undefined;
+  const subCategory = isDb
+    ? (item as DbArticle).sub_category
+    : (item as Article).subCategory;
   const catKey = normalizeCategory(item.category);
   const catLabel = catKey ? CATEGORY_CN[catKey] : item.category;
-  const coverUrl = isDb ? (item as DbArticle).cover_url : undefined;
+  const coverUrl = isDb
+    ? (item as DbArticle).cover_url
+    : (item as Article).coverUrl;
 
   return (
     <Link

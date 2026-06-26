@@ -1,4 +1,7 @@
-export type Category =
+// ---------------------------------------------------------------------------
+// 历史旧类型（中文分类名） — 保留仅供老模块/外部使用
+// ---------------------------------------------------------------------------
+export type LegacyCategory =
   | "诗词文学"
   | "历史人物"
   | "节日节气"
@@ -8,6 +11,8 @@ export type Category =
   | "经典典籍"
   | "建筑古迹"
   | "神话传说";
+
+export type Category = LegacyCategory | import("./knowledge-types").CategoryKey;
 
 // 关联条目（可点击跳转到详情）
 export interface RelatedItem {
@@ -19,6 +24,10 @@ export interface RelatedItem {
   externalUrl?: string;   // 外部链接
 }
 
+/**
+ * 兼容旧 Article 接口（v2 中文分类 + 旧字段），供 ARTICLES 静态数据 + 老组件使用
+ * 新详情页统一用 v3 Article（从 @/lib/knowledge-types 直接导入）
+ */
 export interface Article {
   id: string;
   title: string;
@@ -42,7 +51,36 @@ export interface Article {
   tutorial?: string[];              // 体验教程/入门步骤
   classics?: string[];              // 经典作品/代表人物
   tips?: string;                    // 欣赏指南/小贴士
+  // ===== v3 兼容字段 =====
+  subCategory?: string;
+  tags?: string[];
+  author?: string;
+  dynasty?: string;
+  era?: string;
+  region?: string;
+  bodyExtended?: string;
+  fullText?: string | null;
+  fullTextLang?: "classical" | "modern";
+  viewCount?: number;
+  sortWeight?: number;
+  createdAt?: string;
+  faq?: import("./knowledge-types").FAQItem[];
 }
+
+/**
+ * LegacyArticle: Article 的同义别名（已弃用，仅供老代码使用）
+ */
+export type LegacyArticle = Article;
+
+// 重新导出 v3 标准化 Article / FAQ / 类型 — 详情页与新组件统一用这些
+// 注意：v3 Article 与上面 legacy Article 字段名/类型不同，建议新代码直接用：
+//   import { Article } from "@/lib/knowledge-types";
+export type {
+  Article as V3Article,
+  FAQItem as V3FAQItem,
+  CategoryKey,
+} from "./knowledge-types";
+export { CATEGORY_CN, CATEGORY_KEYS, CATEGORY_SUB_CATEGORIES } from "./knowledge-types";
 
 export const CATEGORIES: ("全部" | Category)[] = [
   "全部",
