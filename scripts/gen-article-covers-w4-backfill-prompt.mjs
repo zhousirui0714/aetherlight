@@ -38,7 +38,7 @@ let offset = 0;
 const PAGE = 500;
 while (true) {
   const r = await fetch(
-    `${URL}/rest/v1/knowledge_articles?select=id,title,excerpt,category,sub_category,cover_url,cover_prompt&not.is.null=cover_url&limit=${PAGE}&offset=${offset}`,
+    `${URL}/rest/v1/knowledge_articles?select=id,title,excerpt,category,sub_category,cover_url,cover_prompt&cover_url=not.is.null&limit=${PAGE}&offset=${offset}`,
     { headers: HEADERS }
   );
   if (!r.ok) break;

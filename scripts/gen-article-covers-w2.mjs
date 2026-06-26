@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const ENV_FILE = join(ROOT, ".env");
-const CACHE_FILE = join(ROOT, "scripts", "covers-progress.json");
+const CACHE_FILE = join(ROOT, "scripts", "covers-progress-w2.json");
 const COVERS_DIR = join(ROOT, "public", "ai-covers");
 const BUCKET = "covers";
 
