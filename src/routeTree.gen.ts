@@ -35,6 +35,7 @@ import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
 import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
 import { Route as ApiKnowledgeAiFillRouteImport } from './routes/api/knowledge-ai-fill'
 import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
+import { Route as ApiDbCheckRouteImport } from './routes/api/db-check'
 import { Route as ApiContentAuditRouteImport } from './routes/api/content-audit'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiArticlesRouteImport } from './routes/api/articles'
@@ -179,6 +180,11 @@ const ApiDialogueRoute = ApiDialogueRouteImport.update({
   path: '/api/dialogue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDbCheckRoute = ApiDbCheckRouteImport.update({
+  id: '/api/db-check',
+  path: '/api/db-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiContentAuditRoute = ApiContentAuditRouteImport.update({
   id: '/api/content-audit',
   path: '/api/content-audit',
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/content-audit': typeof ApiContentAuditRoute
+  '/api/db-check': typeof ApiDbCheckRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/content-audit': typeof ApiContentAuditRoute
+  '/api/db-check': typeof ApiDbCheckRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/content-audit': typeof ApiContentAuditRoute
+  '/api/db-check': typeof ApiDbCheckRoute
   '/api/dialogue': typeof ApiDialogueRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/api/articles'
     | '/api/chat'
     | '/api/content-audit'
+    | '/api/db-check'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/api/articles'
     | '/api/chat'
     | '/api/content-audit'
+    | '/api/db-check'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/api/articles'
     | '/api/chat'
     | '/api/content-audit'
+    | '/api/db-check'
     | '/api/dialogue'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
@@ -514,6 +526,7 @@ export interface RootRouteChildren {
   ApiArticlesRoute: typeof ApiArticlesRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
   ApiContentAuditRoute: typeof ApiContentAuditRoute
+  ApiDbCheckRoute: typeof ApiDbCheckRoute
   ApiDialogueRoute: typeof ApiDialogueRoute
   ApiKnowledgeAiFillRoute: typeof ApiKnowledgeAiFillRoute
   ApiSearchImageRoute: typeof ApiSearchImageRoute
@@ -709,6 +722,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDialogueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/db-check': {
+      id: '/api/db-check'
+      path: '/api/db-check'
+      fullPath: '/api/db-check'
+      preLoaderRoute: typeof ApiDbCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/content-audit': {
       id: '/api/content-audit'
       path: '/api/content-audit'
@@ -884,6 +904,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiArticlesRoute: ApiArticlesRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
   ApiContentAuditRoute: ApiContentAuditRoute,
+  ApiDbCheckRoute: ApiDbCheckRoute,
   ApiDialogueRoute: ApiDialogueRoute,
   ApiKnowledgeAiFillRoute: ApiKnowledgeAiFillRoute,
   ApiSearchImageRoute: ApiSearchImageRoute,

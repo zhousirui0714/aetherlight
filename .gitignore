@@ -84,6 +84,9 @@ scripts/output/
 # 临时 git 辅助文件
 .git-commit-msg.txt
 
+# pnpm 本地 store (不要 commit)
+.pnpm-store/
+
 # 老 Lovable 快照（独立项目，不在当前 Vercel 部署范围内）
 aetherlight-main/
 
