@@ -9,7 +9,8 @@
  * 7. 人物关系图
  * 8. 历史评价
  */
-import { SectionHeading } from "../section-heading";
+import { ArticleRelatedGraph } from "@/components/article-related-graph";
+import { SectionHeading } from "./section-heading";
 import { BasicInfoCard, I } from "../basic-info-card";
 import { TimelineBlock, type TimelineEvent } from "../timeline-block";
 import { RelatedItemsBlock } from "../knowledge-card";
@@ -143,23 +144,43 @@ export function FigureSections({ article, timeline = [], relationships }: Props)
         </section>
       )}
 
-      {/* === 6. 人物关系图 === */}
+      {/* === 6. 人物关系 + 知识图谱 === */}
       {(rel.teachers?.length || rel.friends?.length || rel.students?.length || rel.family?.length) ? (
         <section className="mb-8">
           <SectionHeading icon={Users} title="人物关系" watermark="系" accent={accent} />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {rel.teachers && rel.teachers.length > 0 && (
-              <RelationCard title="师承" items={rel.teachers} accent={accent} />
-            )}
-            {rel.friends && rel.friends.length > 0 && (
-              <RelationCard title="友人" items={rel.friends} accent={accent} />
-            )}
-            {rel.students && rel.students.length > 0 && (
-              <RelationCard title="弟子" items={rel.students} accent={accent} />
-            )}
-            {rel.family && rel.family.length > 0 && (
-              <RelationCard title="家族" items={rel.family} accent={accent} />
-            )}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* 左侧：人物关系卡片 */}
+            <div className="space-y-4 lg:col-span-7 xl:col-span-8">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {rel.teachers && rel.teachers.length > 0 && (
+                  <RelationCard title="师承" items={rel.teachers} accent={accent} />
+                )}
+                {rel.friends && rel.friends.length > 0 && (
+                  <RelationCard title="友人" items={rel.friends} accent={accent} />
+                )}
+                {rel.students && rel.students.length > 0 && (
+                  <RelationCard title="弟子" items={rel.students} accent={accent} />
+                )}
+                {rel.family && rel.family.length > 0 && (
+                  <RelationCard title="家族" items={rel.family} accent={accent} />
+                )}
+              </div>
+            </div>
+            {/* 右侧：知识图谱（中国水墨风，紧凑模式） */}
+            <div className="lg:col-span-5 xl:col-span-4">
+              <div className="sticky top-4 rounded-2xl border border-amber-200/40 bg-[#FAF6EC]/40 p-3">
+                <div className="mb-2 flex items-center gap-2 px-1 text-[10px] tracking-widest text-amber-900/60">
+                  <span className="h-px flex-1 bg-amber-200/50" />
+                  <span className="font-serif">水墨知识图谱</span>
+                  <span className="h-px flex-1 bg-amber-200/50" />
+                </div>
+                <ArticleRelatedGraph
+                  articleId={article.id}
+                  articleTitle={article.title}
+                  compact
+                />
+              </div>
+            </div>
           </div>
         </section>
       ) : null}

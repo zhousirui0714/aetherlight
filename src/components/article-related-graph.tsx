@@ -8,6 +8,8 @@ import { computeImportance } from "@/lib/graph-centrality";
 interface ArticleRelatedGraphProps {
   articleId: string;
   articleTitle?: string;
+  /** 紧凑模式：用于侧边栏等窄容器，会限制最大宽度并隐藏时间滑块 */
+  compact?: boolean;
 }
 
 // ============================================================
@@ -254,7 +256,7 @@ function layoutNodes(
 // ============================================================
 // 主组件
 // ============================================================
-export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedGraphProps) {
+export function ArticleRelatedGraph({ articleId, articleTitle, compact = false }: ArticleRelatedGraphProps) {
   const navigate = useNavigate();
   const [graph, setGraph] = useState<KnowledgeGraph | null>(null);
   const [loading, setLoading] = useState(true);
@@ -291,16 +293,18 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
   const [drillingLoading, setDrillingLoading] = useState(false);
 
   // 容器尺寸
-  const [size, setSize] = useState({ w: 800, h: 520 });
+  const MAX_W = compact ? 380 : 800;
+  const MAX_H = compact ? 380 : 520;
+  const [size, setSize] = useState({ w: MAX_W, h: MAX_H });
   useEffect(() => {
     const update = () => {
-      const w = Math.min(800, window.innerWidth - 40);
-      setSize({ w, h: Math.min(520, w * 0.65) });
+      const w = Math.min(MAX_W, window.innerWidth - 40);
+      setSize({ w, h: Math.min(MAX_H, w * (compact ? 1.0 : 0.65)) });
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [compact, MAX_W, MAX_H]);
 
   useEffect(() => {
     let alive = true;
@@ -524,14 +528,16 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
               回原图
             </button>
           )}
-          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-            <Info className="h-3 w-3" /> 单击溯光 · 双击钻取
-          </span>
+          {!compact && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Info className="h-3 w-3" /> 单击溯光 · 双击钻取
+            </span>
+          )}
         </div>
       </div>
 
-      {/* 时间维度滑块 */}
-      {timeStats && timeStats.max - timeStats.min > 0 && (
+      {/* 时间维度滑块 - 紧凑模式隐藏 */}
+      {!compact && timeStats && timeStats.max - timeStats.min > 0 && (
         <TimeSlider
           value={timeRange}
           min={TIME_MIN}
@@ -578,39 +584,40 @@ export function ArticleRelatedGraph({ articleId, articleTitle }: ArticleRelatedG
           );
         })()}
 
-        {/* 图例：节点类型 */}
+        {/* 图例：节点类型 - 紧凑模式仅保留节点类型，隐藏关系类型筛选 */}
         <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-1.5 text-[10px] text-amber-900/70">
           <div className="flex flex-wrap gap-2">
             <LegendDot color="#2C2C2C" label="核心" />
             <LegendDot color="#5C4A3A" label="内容" />
             <LegendDot color="#8B7355" label="概念" />
           </div>
-          {/* 关系类型筛选（可点击） */}
-          <div className="flex flex-wrap gap-1.5">
-            <span className="self-center text-[9px] uppercase tracking-widest text-amber-900/50">关系</span>
-            {(["temporal", "influence", "cultural", "imagery"] as EdgeType[]).map((t) => {
-              const s = EDGE_STYLES[t];
-              const active = edgeTypeFilter.has(t);
-              return (
-                <button
-                  key={t}
-                  onClick={(e) => { e.stopPropagation(); toggleEdgeType(t); }}
-                  className={`flex items-center gap-1 rounded-full px-2 py-0.5 transition ${
-                    active
-                      ? "bg-amber-100/80 text-amber-900 ring-1 ring-amber-300/60"
-                      : "bg-paper/40 text-amber-900/40 line-through"
-                  }`}
-                  title={active ? `隐藏「${s.label}」关系` : `显示「${s.label}」关系`}
-                >
-                  <span
-                    className="h-1.5 w-3 rounded-full"
-                    style={{ backgroundColor: s.color, opacity: active ? s.opacity : 0.3 }}
-                  />
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
+          {!compact && (
+            <div className="flex flex-wrap gap-1.5">
+              <span className="self-center text-[9px] uppercase tracking-widest text-amber-900/50">关系</span>
+              {(["temporal", "influence", "cultural", "imagery"] as EdgeType[]).map((t) => {
+                const s = EDGE_STYLES[t];
+                const active = edgeTypeFilter.has(t);
+                return (
+                  <button
+                    key={t}
+                    onClick={(e) => { e.stopPropagation(); toggleEdgeType(t); }}
+                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 transition ${
+                      active
+                        ? "bg-amber-100/80 text-amber-900 ring-1 ring-amber-300/60"
+                        : "bg-paper/40 text-amber-900/40 line-through"
+                    }`}
+                    title={active ? `隐藏「${s.label}」关系` : `显示「${s.label}」关系`}
+                  >
+                    <span
+                      className="h-1.5 w-3 rounded-full"
+                      style={{ backgroundColor: s.color, opacity: active ? s.opacity : 0.3 }}
+                    />
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="absolute bottom-3 right-3 z-10 text-[10px] tracking-widest text-amber-900/40">
