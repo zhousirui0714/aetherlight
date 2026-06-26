@@ -1,0 +1,650 @@
+{
+  "generatedAt": "2026-06-26T09:41:25.805Z",
+  "totalArticles": 1966,
+  "category": {
+    "distribution": {
+      "poems": 1405,
+      "philosophy": 44,
+      "lifestyle": 73,
+      "artifacts": 38,
+      "intangible": 68,
+      "figures": 83,
+      "classics": 143,
+      "mythology": 18,
+      "technology": 58,
+      "festivals": 36
+    },
+    "unknown": [],
+    "nullCount": 0
+  },
+  "relations": {
+    "total": 120,
+    "orphan": []
+  },
+  "relatedRefs": {
+    "brokenPeople": 789,
+    "brokenBooks": 114,
+    "brokenEvents": 108,
+    "samples": [
+      {
+        "article": "nalan-10",
+        "kind": "people",
+        "missing": "na-lan-xing-de"
+      },
+      {
+        "article": "nalan-10",
+        "kind": "people",
+        "missing": "xu-gan-da"
+      },
+      {
+        "article": "nalan-10",
+        "kind": "people",
+        "missing": "gu-zhen-guan"
+      },
+      {
+        "article": "nalan-10",
+        "kind": "people",
+        "missing": "cao-xue-qin"
+      },
+      {
+        "article": "nalan-10",
+        "kind": "people",
+        "missing": "zhu-yi-zun"
+      },
+      {
+        "article": "nalan-10",
+        "kind": "people",
+        "missing": "na-lan-yu-cheng"
+      },
+      {
+        "article": "tangshi-300-173",
+        "kind": "people",
+        "missing": "li-bai"
+      },
+      {
+        "article": "tangshi-300-173",
+        "kind": "people",
+        "missing": "yang-yu-huan"
+      },
+      {
+        "article": "tangshi-300-173",
+        "kind": "people",
+        "missing": "li-long-ji"
+      },
+      {
+        "article": "tangshi-300-173",
+        "kind": "people",
+        "missing": "gao-li-shi"
+      }
+    ]
+  },
+  "viewCount": {
+    "zeroCount": 1966,
+    "topByView": []
+  },
+  "coverUrl": {
+    "malformed": [],
+    "total": 1963
+  },
+  "duplicates": {
+    "byTitle": [
+      {
+        "title": "· 吴文英",
+        "count": 25
+      },
+      {
+        "title": "· 周邦彦",
+        "count": 22
+      },
+      {
+        "title": "· 姜夔",
+        "count": 17
+      },
+      {
+        "title": "· 晏几道",
+        "count": 17
+      },
+      {
+        "title": "· 柳永",
+        "count": 13
+      },
+      {
+        "title": "· 辛弃疾",
+        "count": 12
+      },
+      {
+        "title": "· 苏轼",
+        "count": 10
+      },
+      {
+        "title": "· 贺铸",
+        "count": 10
+      },
+      {
+        "title": "· 晏殊",
+        "count": 9
+      },
+      {
+        "title": "· 史达祖",
+        "count": 9
+      },
+      {
+        "title": "· 欧阳修",
+        "count": 8
+      },
+      {
+        "title": "· 张炎",
+        "count": 6
+      },
+      {
+        "title": "· 王沂孙",
+        "count": 6
+      },
+      {
+        "title": "· 周密",
+        "count": 5
+      },
+      {
+        "title": "· 秦观",
+        "count": 5
+      },
+      {
+        "title": "· 张先",
+        "count": 5
+      },
+      {
+        "title": "· 李清照",
+        "count": 5
+      },
+      {
+        "title": "· 刘辰翁",
+        "count": 4
+      },
+      {
+        "title": "· 刘克庄",
+        "count": 4
+      },
+      {
+        "title": "· 范成大",
+        "count": 3
+      },
+      {
+        "title": "诈妮子调风月・幺篇",
+        "count": 3
+      },
+      {
+        "title": "扬之水",
+        "count": 3
+      },
+      {
+        "title": "· 王安石",
+        "count": 3
+      },
+      {
+        "title": "· 袁去华",
+        "count": 3
+      },
+      {
+        "title": "羔裘",
+        "count": 3
+      },
+      {
+        "title": "· 晁补之",
+        "count": 3
+      },
+      {
+        "title": "· 蒋捷",
+        "count": 3
+      },
+      {
+        "title": "苏绣",
+        "count": 3
+      },
+      {
+        "title": "天坛",
+        "count": 2
+      },
+      {
+        "title": "· 卢祖皋",
+        "count": 2
+      },
+      {
+        "title": "太极拳",
+        "count": 2
+      },
+      {
+        "title": "· 陈克",
+        "count": 2
+      },
+      {
+        "title": "旗袍",
+        "count": 2
+      },
+      {
+        "title": "汉服",
+        "count": 2
+      },
+      {
+        "title": "· 张孝祥",
+        "count": 2
+      },
+      {
+        "title": "谷风",
+        "count": 2
+      },
+      {
+        "title": "中国书法",
+        "count": 2
+      },
+      {
+        "title": "湘绣",
+        "count": 2
+      },
+      {
+        "title": "唐装",
+        "count": 2
+      },
+      {
+        "title": "火药",
+        "count": 2
+      },
+      {
+        "title": "古琴",
+        "count": 2
+      },
+      {
+        "title": "· 周紫芝",
+        "count": 2
+      },
+      {
+        "title": "剪纸",
+        "count": 2
+      },
+      {
+        "title": "柏舟",
+        "count": 2
+      },
+      {
+        "title": "昆曲",
+        "count": 2
+      },
+      {
+        "title": "陆羽",
+        "count": 2
+      },
+      {
+        "title": "颐和园",
+        "count": 2
+      },
+      {
+        "title": "指南针",
+        "count": 2
+      },
+      {
+        "title": "唐太宗",
+        "count": 2
+      },
+      {
+        "title": "韩非子",
+        "count": 2
+      },
+      {
+        "title": "古筝",
+        "count": 2
+      },
+      {
+        "title": "粤绣",
+        "count": 2
+      },
+      {
+        "title": "怨思",
+        "count": 2
+      },
+      {
+        "title": "· 无名氏",
+        "count": 2
+      },
+      {
+        "title": "景德镇瓷器",
+        "count": 2
+      },
+      {
+        "title": "· 彭元逊",
+        "count": 2
+      },
+      {
+        "title": "· 韩元吉",
+        "count": 2
+      },
+      {
+        "title": "· 范仲淹",
+        "count": 2
+      },
+      {
+        "title": "黄鸟",
+        "count": 2
+      },
+      {
+        "title": "无衣",
+        "count": 2
+      },
+      {
+        "title": "· 李之仪",
+        "count": 2
+      },
+      {
+        "title": "· 陈与义",
+        "count": 2
+      },
+      {
+        "title": "· 张",
+        "count": 2
+      },
+      {
+        "title": "· 张元干",
+        "count": 2
+      },
+      {
+        "title": "杕杜",
+        "count": 2
+      },
+      {
+        "title": "甫田",
+        "count": 2
+      },
+      {
+        "title": "· 蔡伸",
+        "count": 2
+      },
+      {
+        "title": "· 叶梦得",
+        "count": 2
+      },
+      {
+        "title": "诈妮子调风月・尾",
+        "count": 2
+      },
+      {
+        "title": "皮影戏",
+        "count": 2
+      },
+      {
+        "title": "诈妮子调风月・紫花儿序",
+        "count": 2
+      },
+      {
+        "title": "离骚",
+        "count": 2
+      },
+      {
+        "title": "远游",
+        "count": 2
+      },
+      {
+        "title": "無題二首 一 · 李商隱",
+        "count": 2
+      },
+      {
+        "title": "隋宮 · 李商隱",
+        "count": 2
+      },
+      {
+        "title": "送別 · 王維",
+        "count": 2
+      },
+      {
+        "title": "春宮怨 · 杜荀鶴",
+        "count": 2
+      },
+      {
+        "title": "关雎",
+        "count": 2
+      },
+      {
+        "title": "造纸术",
+        "count": 2
+      },
+      {
+        "title": "活字印刷术",
+        "count": 2
+      },
+      {
+        "title": "越剧",
+        "count": 2
+      },
+      {
+        "title": "宜兴紫砂壶",
+        "count": 2
+      },
+      {
+        "title": "二胡",
+        "count": 2
+      },
+      {
+        "title": "黄道婆",
+        "count": 2
+      },
+      {
+        "title": "李白",
+        "count": 2
+      },
+      {
+        "title": "国画：水墨丹青",
+        "count": 2
+      },
+      {
+        "title": "宋应星",
+        "count": 2
+      },
+      {
+        "title": "王羲之",
+        "count": 2
+      },
+      {
+        "title": "京剧",
+        "count": 2
+      },
+      {
+        "title": "针灸",
+        "count": 2
+      }
+    ]
+  },
+  "length": {
+    "shortTitle": [
+      {
+        "id": "679ecccf-98cb-1cbd-e875-085fc9a9a600",
+        "title": "茶"
+      },
+      {
+        "id": "shijing-254",
+        "title": "荡"
+      },
+      {
+        "id": "shijing-97",
+        "title": "着"
+      },
+      {
+        "id": "nalan-227",
+        "title": ""
+      },
+      {
+        "id": "shijing-293",
+        "title": "桓"
+      },
+      {
+        "id": "shijing-87",
+        "title": "丰"
+      },
+      {
+        "id": "shijing-236",
+        "title": "绵"
+      },
+      {
+        "id": "shijing-96",
+        "title": "还"
+      },
+      {
+        "id": "shijing-253",
+        "title": "板"
+      },
+      {
+        "id": "shijing-255",
+        "title": "抑"
+      },
+      {
+        "id": "shijing-284",
+        "title": "武"
+      },
+      {
+        "id": "shijing-292",
+        "title": "酌"
+      },
+      {
+        "id": "shijing-280",
+        "title": "潜"
+      },
+      {
+        "id": "shijing-294",
+        "title": "赉"
+      },
+      {
+        "id": "shijing-300",
+        "title": "那"
+      },
+      {
+        "id": "shijing-57",
+        "title": "氓"
+      },
+      {
+        "id": "shijing-296",
+        "title": "駉"
+      },
+      {
+        "id": "shijing-295",
+        "title": "般"
+      },
+      {
+        "id": "shijing-281",
+        "title": "雝"
+      },
+      {
+        "id": "ren",
+        "title": "仁"
+      }
+    ],
+    "longTitle": [
+      {
+        "id": "tangshi-300-180",
+        "title": "自河南經亂關內阻饑兄弟離散各在一處因望月有感聊書所懷寄上浮梁大兄於潛七兄烏江十五兄兼示符離及下邽弟妹 · 白居易"
+      }
+    ],
+    "shortBody": [
+      {
+        "id": "lunyu-10",
+        "title": "先进篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-17",
+        "title": "微子篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-16",
+        "title": "阳货篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-15",
+        "title": "季氏篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-14",
+        "title": "卫灵公篇",
+        "bodyLen": 6
+      },
+      {
+        "id": "lunyu-11",
+        "title": "颜渊篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-12",
+        "title": "子路篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-9",
+        "title": "乡党篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-1",
+        "title": "为政篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-0",
+        "title": "学而篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-2",
+        "title": "八佾篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-3",
+        "title": "里仁篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-13",
+        "title": "宪问篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-7",
+        "title": "泰伯篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-6",
+        "title": "述而篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-8",
+        "title": "子罕篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-5",
+        "title": "雍也篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-4",
+        "title": "公冶长篇",
+        "bodyLen": 6
+      },
+      {
+        "id": "lunyu-19",
+        "title": "尧曰篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "lunyu-18",
+        "title": "子张篇",
+        "bodyLen": 5
+      },
+      {
+        "id": "zhongzhou-pagoda",
+        "title": "中州塔",
+        "bodyLen": 9
+      }
+    ]
+  }
+}

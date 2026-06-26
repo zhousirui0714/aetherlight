@@ -60,15 +60,51 @@ export const Route = createFileRoute("/article/$id")({
     const title = a?.title ? `${a.title} · 溯光` : "知识详情 · 溯光";
     const desc = a?.excerpt || a?.content?.slice(0, 80) || "深入了解中华传统文化知识";
     const ogImage = a?.coverUrl || undefined;
+    const url = `https://aetherlight.vercel.app/article/${params.id}`;
+    // JSON-LD: Article schema.org
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: a?.title || "",
+      description: desc,
+      image: ogImage ? [ogImage] : undefined,
+      datePublished: a?.createdAt || undefined,
+      dateModified: a?.createdAt || undefined,
+      author: a?.author && a.author.length > 0
+        ? { "@type": "Person", name: a.author }
+        : { "@type": "Organization", name: "溯光 Aetherlight" },
+      publisher: {
+        "@type": "Organization",
+        name: "溯光 Aetherlight",
+        logo: { "@type": "ImageObject", url: "https://aetherlight.vercel.app/logo.png" },
+      },
+      mainEntityOfPage: { "@type": "WebPage", "@id": url },
+      keywords: a?.tags?.join(",") || [a?.category, a?.dynasty, a?.era].filter(Boolean).join(","),
+      inLanguage: "zh-CN",
+    };
     return {
       meta: [
         { title },
         { name: "description", content: desc },
+        { property: "og:type", content: "article" },
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
+        { property: "og:url", content: url },
+        { property: "og:site_name", content: "溯光 Aetherlight" },
+        { property: "og:locale", content: "zh_CN" },
         ...(ogImage ? [{ property: "og:image", content: ogImage }] : []),
+        { name: "twitter:card", content: ogImage ? "summary_large_image" : "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: desc },
+        ...(ogImage ? [{ name: "twitter:image", content: ogImage }] : []),
       ],
-      links: [{ rel: "canonical", href: `/article/${params.id}` }],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(jsonLd),
+        },
+      ],
     };
   },
   component: ArticlePage,

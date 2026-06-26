@@ -41,6 +41,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiArticlesRouteImport } from './routes/api/articles'
 import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
 import { Route as TongyouCommunityIdRouteImport } from './routes/tongyou/community.$id'
+import { Route as ApiSitemapXmlRouteImport } from './routes/api/sitemap.xml'
 import { Route as ApiArticlesTagsRouteImport } from './routes/api/articles/tags'
 import { Route as ApiArticlesStatsRouteImport } from './routes/api/articles/stats'
 import { Route as ApiArticlesSearchRouteImport } from './routes/api/articles/search'
@@ -210,6 +211,11 @@ const TongyouCommunityIdRoute = TongyouCommunityIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => TongyouCommunityRoute,
 } as any)
+const ApiSitemapXmlRoute = ApiSitemapXmlRouteImport.update({
+  id: '/api/sitemap/xml',
+  path: '/api/sitemap/xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiArticlesTagsRoute = ApiArticlesTagsRouteImport.update({
   id: '/tags',
   path: '/tags',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/api/articles/search': typeof ApiArticlesSearchRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/api/sitemap/xml': typeof ApiSitemapXmlRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/api/articles/search': typeof ApiArticlesSearchRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/api/sitemap/xml': typeof ApiSitemapXmlRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/api/articles/search': typeof ApiArticlesSearchRoute
   '/api/articles/stats': typeof ApiArticlesStatsRoute
   '/api/articles/tags': typeof ApiArticlesTagsRoute
+  '/api/sitemap/xml': typeof ApiSitemapXmlRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
@@ -419,6 +428,7 @@ export interface FileRouteTypes {
     | '/api/articles/search'
     | '/api/articles/stats'
     | '/api/articles/tags'
+    | '/api/sitemap/xml'
     | '/tongyou/community/$id'
     | '/api/articles/$id/relations'
   fileRoutesByTo: FileRoutesByTo
@@ -460,6 +470,7 @@ export interface FileRouteTypes {
     | '/api/articles/search'
     | '/api/articles/stats'
     | '/api/articles/tags'
+    | '/api/sitemap/xml'
     | '/tongyou/community/$id'
     | '/api/articles/$id/relations'
   id:
@@ -502,6 +513,7 @@ export interface FileRouteTypes {
     | '/api/articles/search'
     | '/api/articles/stats'
     | '/api/articles/tags'
+    | '/api/sitemap/xml'
     | '/tongyou/community/$id'
     | '/api/articles/$id/relations'
   fileRoutesById: FileRoutesById
@@ -536,6 +548,7 @@ export interface RootRouteChildren {
   TongyouChallengeRoute: typeof TongyouChallengeRoute
   TongyouCommunityRoute: typeof TongyouCommunityRouteWithChildren
   ApiAlmanacTodayRoute: typeof ApiAlmanacTodayRoute
+  ApiSitemapXmlRoute: typeof ApiSitemapXmlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -764,6 +777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TongyouCommunityIdRouteImport
       parentRoute: typeof TongyouCommunityRoute
     }
+    '/api/sitemap/xml': {
+      id: '/api/sitemap/xml'
+      path: '/api/sitemap/xml'
+      fullPath: '/api/sitemap/xml'
+      preLoaderRoute: typeof ApiSitemapXmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/articles/tags': {
       id: '/api/articles/tags'
       path: '/tags'
@@ -914,6 +934,7 @@ const rootRouteChildren: RootRouteChildren = {
   TongyouChallengeRoute: TongyouChallengeRoute,
   TongyouCommunityRoute: TongyouCommunityRouteWithChildren,
   ApiAlmanacTodayRoute: ApiAlmanacTodayRoute,
+  ApiSitemapXmlRoute: ApiSitemapXmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
