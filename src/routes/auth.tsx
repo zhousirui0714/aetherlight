@@ -21,11 +21,13 @@ function AuthPage() {
   const [loginType, setLoginType] = useState<"password" | "code">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +38,32 @@ function AuthPage() {
       return () => clearInterval(timer);
     }
   }, [countdown]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash.includes("type=recovery")) {
+      setRecoveryMode(true);
+      setMode("login");
+      setLoginType("password");
+      setCodeSent(false);
+      setCode("");
+      toast("请设置新密码");
+    }
+
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+        setMode("login");
+        setLoginType("password");
+        setCodeSent(false);
+        setCode("");
+        toast("请设置新密码");
+      }
+    });
+
+    return () => {
+      data.subscription.unsubscribe();
+    };
+  }, []);
 
   const sendCode = async () => {
     if (!email) {
@@ -66,6 +94,28 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      if (recoveryMode) {
+        if (password.length < 6) {
+          toast.error("新密码至少 6 位");
+          return;
+        }
+        if (password !== confirmPassword) {
+          toast.error("两次输入的密码不一致");
+          return;
+        }
+
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+
+        toast.success("密码已更新，请重新登录");
+        await supabase.auth.signOut();
+        setRecoveryMode(false);
+        setPassword("");
+        setConfirmPassword("");
+        navigate({ to: "/auth" });
+        return;
+      }
+
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
@@ -104,10 +154,32 @@ function AuthPage() {
     }
   };
 
+  const sendResetEmail = async () => {
+    if (!email) {
+      toast.error("请先填写邮箱");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) throw error;
+      toast.success("重置邮件已发送，请前往邮箱继续操作");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "发送失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const google = async () => {
     setLoading(true);
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      const r = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
       if (r.error) throw new Error(r.error.message ?? "Google 登录失败");
       if (r.redirected) return;
       navigate({ to: "/" });
@@ -122,23 +194,37 @@ function AuthPage() {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="grid w-full max-w-[960px] overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] md:grid-cols-2">
-          <div className="relative hidden flex-col justify-between overflow-hidden p-12 md:flex" style={{
-            background:
-              "linear-gradient(135deg, color-mix(in oklab, var(--color-cinnabar) 12%, var(--color-card)) 0%, color-mix(in oklab, var(--color-bronze) 10%, var(--color-card)) 100%)",
-          }}>
-            <div aria-hidden className="absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-40" style={{
-              background: "radial-gradient(closest-side, var(--color-cinnabar), transparent 70%)"
-            }} />
-            <div aria-hidden className="absolute -bottom-20 -left-16 h-80 w-80 rounded-full opacity-30" style={{
-              background: "radial-gradient(closest-side, var(--color-bronze), transparent 70%)"
-            }} />
+          <div
+            className="relative hidden flex-col justify-between overflow-hidden p-12 md:flex"
+            style={{
+              background:
+                "linear-gradient(135deg, color-mix(in oklab, var(--color-cinnabar) 12%, var(--color-card)) 0%, color-mix(in oklab, var(--color-bronze) 10%, var(--color-card)) 100%)",
+            }}
+          >
+            <div
+              aria-hidden
+              className="absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-40"
+              style={{
+                background: "radial-gradient(closest-side, var(--color-cinnabar), transparent 70%)",
+              }}
+            />
+            <div
+              aria-hidden
+              className="absolute -bottom-20 -left-16 h-80 w-80 rounded-full opacity-30"
+              style={{
+                background: "radial-gradient(closest-side, var(--color-bronze), transparent 70%)",
+              }}
+            />
             <div className="relative">
               <div className="seal text-base px-3 py-1">溯光</div>
               <h2 className="mt-10 font-serif text-4xl leading-snug text-foreground">
-                寻溯<br />千年智慧之光
+                寻溯
+                <br />
+                千年智慧之光
               </h2>
               <p className="mt-4 text-sm leading-loose text-foreground/70">
-                以 AI 之力活化典籍诗书，<br />
+                以 AI 之力活化典籍诗书，
+                <br />
                 让传统文化在当下流转重生。
               </p>
             </div>
@@ -148,38 +234,51 @@ function AuthPage() {
           </div>
 
           <div className="p-10 md:p-12">
-            <div className="mb-8 flex gap-1 rounded-full border border-border bg-background/40 p-1">
-              {(["login", "signup"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => {
-                    setMode(m);
-                    setCodeSent(false);
-                    setCode("");
-                    setLoginType("password");
-                  }}
-                  className={`flex-1 rounded-full py-2 font-serif text-sm tracking-widest transition ${
-                    mode === m ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground"
-                  }`}
-                >
-                  {m === "login" ? "登 录" : "注 册"}
-                </button>
-              ))}
-            </div>
+            {!recoveryMode && (
+              <div className="mb-8 flex gap-1 rounded-full border border-border bg-background/40 p-1">
+                {(["login", "signup"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      setMode(m);
+                      setCodeSent(false);
+                      setCode("");
+                      setLoginType("password");
+                    }}
+                    className={`flex-1 rounded-full py-2 font-serif text-sm tracking-widest transition ${
+                      mode === m
+                        ? "bg-primary text-primary-foreground shadow"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {m === "login" ? "登 录" : "注 册"}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <h1 className="font-serif text-2xl text-foreground">
-              {mode === "login" ? "墨色相逢" : "结一段文缘"}
+              {recoveryMode ? "重设新密码" : mode === "login" ? "墨色相逢" : "结一段文缘"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {mode === "login" ? "登录以收藏与请教雅士" : "注册即可开启文化之旅"}
+              {recoveryMode
+                ? "请输入新的登录密码，继续你的文化之旅"
+                : mode === "login"
+                  ? "登录以收藏与请教雅士"
+                  : "注册即可开启文化之旅"}
             </p>
 
             <form onSubmit={submit} className="mt-6 space-y-3">
-              {mode === "signup" && (
-                <Field label="昵称" value={nickname} onChange={setNickname} placeholder="您的雅号" />
+              {!recoveryMode && mode === "signup" && (
+                <Field
+                  label="昵称"
+                  value={nickname}
+                  onChange={setNickname}
+                  placeholder="您的雅号"
+                />
               )}
 
-              {mode === "login" && (
+              {!recoveryMode && mode === "login" && (
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -210,16 +309,18 @@ function AuthPage() {
                 </div>
               )}
 
-              <Field
-                label="邮箱"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                placeholder="you@example.com"
-                required
-              />
+              {!recoveryMode && (
+                <Field
+                  label="邮箱"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  placeholder="you@example.com"
+                  required
+                />
+              )}
 
-              {(mode === "login" && (loginType === "code" || codeSent)) && (
+              {!recoveryMode && mode === "login" && (loginType === "code" || codeSent) && (
                 <Field
                   label="验证码"
                   value={code}
@@ -242,9 +343,9 @@ function AuthPage() {
                 />
               )}
 
-              {mode === "signup" || loginType === "password" ? (
+              {recoveryMode || mode === "signup" || loginType === "password" ? (
                 <Field
-                  label="密码"
+                  label={recoveryMode ? "新密码" : "密码"}
                   type="password"
                   value={password}
                   onChange={setPassword}
@@ -253,9 +354,26 @@ function AuthPage() {
                 />
               ) : null}
 
-              {mode === "login" && loginType === "password" && (
+              {recoveryMode && (
+                <Field
+                  label="确认新密码"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  placeholder="再次输入新密码"
+                  required
+                />
+              )}
+
+              {!recoveryMode && mode === "login" && loginType === "password" && (
                 <div className="flex justify-end">
-                  <button type="button" className="text-xs text-muted-foreground hover:text-primary">忘记密码？</button>
+                  <button
+                    type="button"
+                    onClick={sendResetEmail}
+                    className="text-xs text-muted-foreground hover:text-primary"
+                  >
+                    忘记密码？
+                  </button>
                 </div>
               )}
 
@@ -264,12 +382,19 @@ function AuthPage() {
                 disabled={loading}
                 className="w-full rounded-full bg-primary py-3 font-serif text-sm tracking-[0.3em] text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
               >
-                {loading ? "请稍候…" : mode === "login" ? "登 录" : "注 册"}
+                {loading
+                  ? "请稍候…"
+                  : recoveryMode
+                    ? "更 新"
+                    : mode === "login"
+                      ? "登 录"
+                      : "注 册"}
               </button>
             </form>
 
             <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="h-px flex-1 bg-border" /> 其他方式 <span className="h-px flex-1 bg-border" />
+              <span className="h-px flex-1 bg-border" /> 其他方式{" "}
+              <span className="h-px flex-1 bg-border" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -290,10 +415,13 @@ function AuthPage() {
             </div>
 
             <p className="mt-6 text-center text-xs text-muted-foreground">
-              注册即表示同意 <a className="hover:text-primary">服务条款</a> 与 <a className="hover:text-primary">隐私政策</a>
+              注册即表示同意 <a className="hover:text-primary">服务条款</a> 与{" "}
+              <a className="hover:text-primary">隐私政策</a>
             </p>
             <p className="mt-2 text-center">
-              <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">← 返回首页</Link>
+              <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
+                ← 返回首页
+              </Link>
             </p>
           </div>
         </div>
@@ -304,14 +432,27 @@ function AuthPage() {
 }
 
 function Field({
-  label, value, onChange, type = "text", placeholder, required, rightSlot,
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  required,
+  rightSlot,
 }: {
-  label: string; value: string; onChange: (v: string) => void;
-  type?: string; placeholder?: string; required?: boolean; rightSlot?: React.ReactNode;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  rightSlot?: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-serif tracking-widest text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-xs font-serif tracking-widest text-muted-foreground">
+        {label}
+      </span>
       <div className="flex items-center gap-2 rounded-2xl border border-input bg-background/60 px-4 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
         <input
           type={type}

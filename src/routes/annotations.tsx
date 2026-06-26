@@ -31,7 +31,7 @@ function AnnotationsPage() {
 
   const handleDelete = async (id: string) => {
     await deleteAnnotation(id);
-    setAnnotations(prev => prev.filter(a => a.id !== id));
+    setAnnotations((prev) => prev.filter((a) => a.id !== id));
   };
 
   const formatTime = (dateStr: string) => {
@@ -39,18 +39,19 @@ function AnnotationsPage() {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / 86400000);
-    
+
     if (days < 1) return "今天";
     if (days < 7) return `${days} 天前`;
     if (days < 30) return `${Math.floor(days / 7)} 周前`;
     return date.toLocaleDateString("zh-CN");
   };
 
-  const uniqueArticles = [...new Set(annotations.map(a => a.article_id))];
-  
-  const filteredAnnotations = filterArticle === "all" 
-    ? annotations 
-    : annotations.filter(a => a.article_id === filterArticle);
+  const uniqueArticles = [...new Set(annotations.map((a) => a.article_id))];
+
+  const filteredAnnotations =
+    filterArticle === "all"
+      ? annotations
+      : annotations.filter((a) => a.article_id === filterArticle);
 
   if (loading) {
     return (
@@ -83,7 +84,7 @@ function AnnotationsPage() {
             开始阅读文章，为你喜欢的段落添加批注吧
           </p>
           <Link
-            to="/knowledge"
+            to="/gallery"
             className="mt-6 inline-block rounded-full bg-primary px-6 py-2 text-sm text-primary-foreground hover:opacity-90"
           >
             去阅读
@@ -104,7 +105,7 @@ function AnnotationsPage() {
               >
                 全部
               </button>
-              {uniqueArticles.map(articleId => (
+              {uniqueArticles.map((articleId) => (
                 <button
                   key={articleId}
                   onClick={() => setFilterArticle(articleId)}
@@ -114,7 +115,7 @@ function AnnotationsPage() {
                       : "border border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {annotations.find(a => a.article_id === articleId)?.category || "文章"}
+                  {annotations.find((a) => a.article_id === articleId)?.category || "文章"}
                 </button>
               ))}
             </div>
@@ -123,10 +124,7 @@ function AnnotationsPage() {
           {/* 批注列表 */}
           <div className="space-y-4">
             {filteredAnnotations.map((annotation) => (
-              <div
-                key={annotation.id}
-                className="rounded-3xl border border-border bg-card p-6"
-              >
+              <div key={annotation.id} className="rounded-3xl border border-border bg-card p-6">
                 {/* 原文引用 */}
                 {annotation.selected_text && (
                   <div className="mb-4 rounded-xl border-l-4 border-primary/30 bg-primary/5 p-4">
@@ -155,9 +153,13 @@ function AnnotationsPage() {
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           {annotation.is_public ? (
-                            <><Eye className="h-3 w-3 text-green-500" /> 公开</>
+                            <>
+                              <Eye className="h-3 w-3 text-green-500" /> 公开
+                            </>
                           ) : (
-                            <><EyeOff className="h-3 w-3" /> 私密</>
+                            <>
+                              <EyeOff className="h-3 w-3" /> 私密
+                            </>
                           )}
                         </span>
                         <button

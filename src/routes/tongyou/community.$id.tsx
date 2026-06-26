@@ -1,15 +1,24 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Heart, MessageSquare, Clock, User, Send, Loader2, X, ThumbsUp, Reply } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  MessageSquare,
+  Clock,
+  User,
+  Send,
+  Loader2,
+  X,
+  ThumbsUp,
+  Reply,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tongyou/community/$id")({
   head: () => ({
-    meta: [
-      { title: "帖子详情 · 文化社区 · 溯光" },
-    ],
+    meta: [{ title: "帖子详情 · 文化社区 · 溯光" }],
   }),
   component: PostDetailPage,
 });
@@ -73,7 +82,7 @@ const mockComments: Comment[] = [
 function PostDetailPage() {
   const params = useParams();
   const postId = params.id;
-  
+
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,17 +93,7 @@ function PostDetailPage() {
   const [liked, setLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(0);
 
-  useEffect(() => {
-    const checkLogin = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsLoggedIn(!!data.session?.user);
-    };
-    checkLogin();
-    loadPost();
-    loadComments();
-  }, [postId]);
-
-  const loadPost = async () => {
+  const loadPost = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -113,7 +112,8 @@ function PostDetailPage() {
           user_id: "user1",
           user_name: "诗词爱好者",
           title: "李白的《将进酒》为何如此豪迈？",
-          content: "《将进酒》是李白最著名的诗作之一，其豪迈奔放的风格令人震撼。\n\n诗中'天生我材必有用，千金散尽还复来'展现了诗人对人生的豁达态度。李白以酒为媒，抒发胸中块垒，将个人的失意与对自由的追求完美融合。\n\n这首诗的艺术特色：\n1. 气势磅礴，一泻千里\n2. 想象奇特，夸张大胆\n3. 情感真挚，感染力强\n\n正如诗中所言：'古来圣贤皆寂寞，惟有饮者留其名。'李白用他独特的方式，在诗歌史上留下了浓墨重彩的一笔。",
+          content:
+            "《将进酒》是李白最著名的诗作之一，其豪迈奔放的风格令人震撼。\n\n诗中'天生我材必有用，千金散尽还复来'展现了诗人对人生的豁达态度。李白以酒为媒，抒发胸中块垒，将个人的失意与对自由的追求完美融合。\n\n这首诗的艺术特色：\n1. 气势磅礴，一泻千里\n2. 想象奇特，夸张大胆\n3. 情感真挚，感染力强\n\n正如诗中所言：'古来圣贤皆寂寞，惟有饮者留其名。'李白用他独特的方式，在诗歌史上留下了浓墨重彩的一笔。",
           category: "诗词讨论",
           likes: 42,
           replies: 3,
@@ -127,9 +127,9 @@ function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [postId]);
 
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("community_replies")
@@ -148,14 +148,24 @@ function PostDetailPage() {
       console.error("Failed to load comments:", err);
       setComments(mockComments);
     }
-  };
+  }, [postId]);
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session?.user);
+    };
+    checkLogin();
+    loadPost();
+    loadComments();
+  }, [loadComments, loadPost]);
 
   const handleLike = async () => {
     if (!post) return;
-    
+
     setLiked(!liked);
-    setLocalLikes(prev => liked ? prev - 1 : prev + 1);
-    
+    setLocalLikes((prev) => (liked ? prev - 1 : prev + 1));
+
     if (isLoggedIn) {
       try {
         await supabase
@@ -178,7 +188,7 @@ function PostDetailPage() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
-      
+
       let userName = "匿名用户";
       if (user) {
         userName = user.email?.split("@")[0] || "匿名用户";
@@ -187,7 +197,7 @@ function PostDetailPage() {
           .select("nickname")
           .eq("id", user.id)
           .maybeSingle();
-        
+
         if (profile?.nickname) {
           userName = profile.nickname;
         }
@@ -253,9 +263,7 @@ function PostDetailPage() {
   };
 
   const handleLikeComment = async (commentId: string, currentLikes: number) => {
-    setComments(prev => prev.map(c => 
-      c.id === commentId ? { ...c, likes: c.likes + 1 } : c
-    ));
+    setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, likes: c.likes + 1 } : c)));
 
     if (isLoggedIn) {
       try {
@@ -273,11 +281,11 @@ function PostDetailPage() {
     const date = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-    
+
     if (minutes < 1) return "刚刚";
     if (minutes < 60) return `${minutes}分钟前`;
     if (hours < 24) return `${hours}小时前`;
@@ -301,10 +309,7 @@ function PostDetailPage() {
       <AppShell>
         <div className="flex flex-col items-center justify-center py-20">
           <p className="font-serif text-lg text-muted-foreground">帖子不存在</p>
-          <Link
-            to="/tongyou/community"
-            className="mt-4 text-sm text-primary hover:underline"
-          >
+          <Link to="/tongyou/community" className="mt-4 text-sm text-primary hover:underline">
             返回社区
           </Link>
         </div>
@@ -316,9 +321,13 @@ function PostDetailPage() {
     <AppShell>
       {/* 导航 */}
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-foreground">首页</Link>
+        <Link to="/" className="hover:text-foreground">
+          首页
+        </Link>
         <span className="mx-2 text-border">/</span>
-        <Link to="/community" className="hover:text-foreground">文化社区</Link>
+        <Link to="/tongyou/community" className="hover:text-foreground">
+          文化社区
+        </Link>
         <span className="mx-2 text-border">/</span>
         <span className="text-foreground/80">帖子详情</span>
       </nav>
@@ -340,9 +349,7 @@ function PostDetailPage() {
         </span>
 
         {/* 标题 */}
-        <h1 className="mt-4 font-serif text-2xl text-foreground">
-          {post.title}
-        </h1>
+        <h1 className="mt-4 font-serif text-2xl text-foreground">{post.title}</h1>
 
         {/* 作者信息 */}
         <div className="mt-4 flex items-center gap-3">
@@ -400,7 +407,7 @@ function PostDetailPage() {
               </button>
             </div>
           )}
-          
+
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
@@ -408,7 +415,7 @@ function PostDetailPage() {
             rows={3}
             className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/50 placeholder:text-muted-foreground/70"
           />
-          
+
           <div className="mt-3 flex justify-end">
             <button
               onClick={handleSubmitComment}
@@ -428,34 +435,27 @@ function PostDetailPage() {
         {/* 评论列表 */}
         <div className="mt-6 space-y-4">
           {comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="rounded-2xl border border-border bg-card p-4"
-            >
+            <div key={comment.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <User className="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-serif text-sm text-foreground">
-                      {comment.user_name}
-                    </span>
+                    <span className="font-serif text-sm text-foreground">{comment.user_name}</span>
                     <span className="text-xs text-muted-foreground">
                       {formatTime(comment.created_at)}
                     </span>
                   </div>
-                  
+
                   {comment.reply_to && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       回复 <span className="font-serif">{comment.reply_to_name}</span>
                     </p>
                   )}
-                  
-                  <p className="mt-2 text-sm text-foreground/85">
-                    {comment.content}
-                  </p>
-                  
+
+                  <p className="mt-2 text-sm text-foreground/85">{comment.content}</p>
+
                   <div className="mt-3 flex items-center gap-4">
                     <button
                       onClick={() => handleLikeComment(comment.id, comment.likes)}

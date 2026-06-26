@@ -2,7 +2,22 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageSquare, LogOut, ChevronRight, BookOpen, Clock, Palette, Trophy, Sparkles, Moon, Sun, Flame, Award, FileText } from "lucide-react";
+import {
+  Heart,
+  MessageSquare,
+  LogOut,
+  ChevronRight,
+  BookOpen,
+  Clock,
+  Palette,
+  Trophy,
+  Sparkles,
+  Moon,
+  Sun,
+  Flame,
+  Award,
+  FileText,
+} from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { listCreations } from "@/lib/creation-storage";
 import { getJourney } from "@/lib/journey-storage";
@@ -30,17 +45,22 @@ function ProfilePage() {
       const user = data.session?.user;
       if (!user) return;
       setEmail(user.email ?? null);
-      const { data: profile } = await supabase.from("profiles").select("nickname").eq("id", user.id).maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nickname")
+        .eq("id", user.id)
+        .maybeSingle();
       setNickname(profile?.nickname ?? user.email?.split("@")[0] ?? "雅士");
-      
-      const [
-        { count: f }, 
-        { count: q },
-        creations,
-        journey
-      ] = await Promise.all([
-        supabase.from("favorites").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("qa_history").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+
+      const [{ count: f }, { count: q }, creations, journey] = await Promise.all([
+        supabase
+          .from("favorites")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("qa_history")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
         listCreations(),
         getJourney(),
       ]);
@@ -49,7 +69,7 @@ function ProfilePage() {
       setCreationCount(creations.length);
       setStreak(journey.streak);
       setBadgeCount(journey.badges.length);
-      
+
       const { data: scores } = await supabase
         .from("quiz_scores")
         .select("score")
@@ -74,7 +94,10 @@ function ProfilePage() {
           <div className="seal text-base">溯光</div>
           <h2 className="font-serif text-xl">尚未结缘</h2>
           <p className="text-sm text-muted-foreground">登录后即可收藏文章、留存问答</p>
-          <Link to="/auth" className="rounded-full bg-primary px-6 py-2 text-sm text-primary-foreground hover:opacity-90">
+          <Link
+            to="/auth"
+            className="rounded-full bg-primary px-6 py-2 text-sm text-primary-foreground hover:opacity-90"
+          >
             登录 / 注册
           </Link>
         </div>
@@ -94,22 +117,46 @@ function ProfilePage() {
             <p className="text-xs text-muted-foreground">{email}</p>
           </div>
         </div>
-        
+
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <button onClick={() => navigate({ to: "/favorites" })} className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50">
-            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground"><Heart className="h-4 w-4" /><span className="text-xs">收藏</span></div>
+          <button
+            onClick={() => navigate({ to: "/favorites" })}
+            className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50"
+          >
+            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground">
+              <Heart className="h-4 w-4" />
+              <span className="text-xs">收藏</span>
+            </div>
             <div className="font-serif text-2xl">{favCount}</div>
           </button>
-          <button onClick={() => navigate({ to: "/create" })} className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50">
-            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground"><Palette className="h-4 w-4" /><span className="text-xs">创作</span></div>
+          <button
+            onClick={() => navigate({ to: "/create" })}
+            className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50"
+          >
+            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground">
+              <Palette className="h-4 w-4" />
+              <span className="text-xs">创作</span>
+            </div>
             <div className="font-serif text-2xl">{creationCount}</div>
           </button>
-          <button onClick={() => navigate({ to: "/chat" })} className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50">
-            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground"><MessageSquare className="h-4 w-4" /><span className="text-xs">问答</span></div>
+          <button
+            onClick={() => navigate({ to: "/chat" })}
+            className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50"
+          >
+            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground">
+              <MessageSquare className="h-4 w-4" />
+              <span className="text-xs">问答</span>
+            </div>
             <div className="font-serif text-2xl">{qaCount}</div>
           </button>
-          <button onClick={() => navigate({ to: "/community?tab=quiz" })} className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50">
-            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground"><Trophy className="h-4 w-4" /><span className="text-xs">答题</span></div>
+          <button
+            onClick={() => navigate({ to: "/tongyou/challenge" })}
+            className="rounded-2xl bg-background/50 py-3 transition hover:bg-secondary/50"
+          >
+            <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground">
+              <Trophy className="h-4 w-4" />
+              <span className="text-xs">答题</span>
+            </div>
             <div className="font-serif text-2xl">{quizScore}</div>
           </button>
         </div>
@@ -153,41 +200,41 @@ function ProfilePage() {
           <h3 className="font-serif text-sm text-foreground">文化足迹</h3>
         </div>
         <ul className="divide-y divide-border">
-          <Row 
-            label="我的收藏" 
-            value={`${favCount} 项`} 
-            onClick={() => navigate({ to: "/favorites" })} 
-            icon={<Heart className="h-4 w-4" />} 
+          <Row
+            label="我的收藏"
+            value={`${favCount} 项`}
+            onClick={() => navigate({ to: "/favorites" })}
+            icon={<Heart className="h-4 w-4" />}
           />
-          <Row 
-            label="创作历史" 
-            value={`${creationCount} 件作品`} 
-            onClick={() => navigate({ to: "/create" })} 
-            icon={<Palette className="h-4 w-4" />} 
+          <Row
+            label="创作历史"
+            value={`${creationCount} 件作品`}
+            onClick={() => navigate({ to: "/create" })}
+            icon={<Palette className="h-4 w-4" />}
           />
-          <Row 
-            label="对话历史" 
-            value="查看" 
-            onClick={() => navigate({ to: "/dialogue/history" })} 
-            icon={<Sparkles className="h-4 w-4" />} 
+          <Row
+            label="对话历史"
+            value="查看"
+            onClick={() => navigate({ to: "/dialogue/history" })}
+            icon={<Sparkles className="h-4 w-4" />}
           />
-          <Row 
-            label="历史问答" 
-            value={`${qaCount} 次`} 
-            onClick={() => navigate({ to: "/chat" })} 
-            icon={<Clock className="h-4 w-4" />} 
+          <Row
+            label="历史问答"
+            value={`${qaCount} 次`}
+            onClick={() => navigate({ to: "/chat" })}
+            icon={<Clock className="h-4 w-4" />}
           />
-          <Row 
-            label="答题记录" 
-            value={`最高 ${quizScore} 分`} 
-            onClick={() => navigate({ to: "/tongyou/community" })} 
-            icon={<Trophy className="h-4 w-4" />} 
+          <Row
+            label="答题记录"
+            value={`最高 ${quizScore} 分`}
+            onClick={() => navigate({ to: "/tongyou/community" })}
+            icon={<Trophy className="h-4 w-4" />}
           />
-          <Row 
-            label="我的批注" 
-            value="查看" 
-            onClick={() => navigate({ to: "/annotations" })} 
-            icon={<FileText className="h-4 w-4" />} 
+          <Row
+            label="我的批注"
+            value="查看"
+            onClick={() => navigate({ to: "/annotations" })}
+            icon={<FileText className="h-4 w-4" />}
           />
         </ul>
       </div>
@@ -197,17 +244,17 @@ function ProfilePage() {
           <h3 className="font-serif text-sm text-foreground">设置</h3>
         </div>
         <ul className="divide-y divide-border">
-          <Row 
-            label="主题" 
-            value={theme === "dark" ? "暗色" : "亮色"} 
-            onClick={toggle} 
-            icon={theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} 
+          <Row
+            label="主题"
+            value={theme === "dark" ? "暗色" : "亮色"}
+            onClick={toggle}
+            icon={theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           />
-          <Row 
-            label="兴趣偏好" 
-            value="修改" 
-            onClick={() => navigate({ to: "/onboarding" })} 
-            icon={<BookOpen className="h-4 w-4" />} 
+          <Row
+            label="兴趣偏好"
+            value="修改"
+            onClick={() => navigate({ to: "/onboarding" })}
+            icon={<BookOpen className="h-4 w-4" />}
           />
           <Row label="关于溯光" value="v0.1" />
         </ul>
@@ -226,16 +273,32 @@ function ProfilePage() {
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
     <div className="rounded-2xl bg-background/50 py-3">
-      <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground">{icon}<span className="text-xs">{label}</span></div>
+      <div className="mx-auto mb-1 flex items-center justify-center gap-1 text-muted-foreground">
+        {icon}
+        <span className="text-xs">{label}</span>
+      </div>
       <div className="font-serif text-2xl">{value}</div>
     </div>
   );
 }
 
-function Row({ label, value, onClick, icon }: { label: string; value: string; onClick?: () => void; icon?: React.ReactNode }) {
+function Row({
+  label,
+  value,
+  onClick,
+  icon,
+}: {
+  label: string;
+  value: string;
+  onClick?: () => void;
+  icon?: React.ReactNode;
+}) {
   return (
     <li>
-      <button onClick={onClick} className="flex w-full items-center justify-between px-5 py-3.5 text-left transition hover:bg-secondary">
+      <button
+        onClick={onClick}
+        className="flex w-full items-center justify-between px-5 py-3.5 text-left transition hover:bg-secondary"
+      >
         <span className="flex items-center gap-2 text-sm">
           {icon && <span className="text-muted-foreground">{icon}</span>}
           {label}
