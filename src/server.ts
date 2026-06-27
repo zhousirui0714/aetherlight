@@ -20,8 +20,6 @@ async function getServerEntry(): Promise<ServerEntry> {
 
 function detailFromError(error: unknown): { message: string; stack?: string } {
   const e = error as any;
-  // h3 wraps thrown errors into H3Error. The original cause lives in .cause or
-  // .data depending on h3 version. Walk down to find an Error with a stack.
   const candidates = [
     e,
     e?.cause,
@@ -43,6 +41,46 @@ function detailFromError(error: unknown): { message: string; stack?: string } {
   }
   if (typeof error === "string") return { message: error };
   return { message: JSON.stringify(error).slice(0, 500) };
+}
+
+// Intercept the response stream so we can capture errors that happen
+// during streaming (which happen AFTER the middleware chain has already
+// returned a response). We replace the stream with one that catches
+// errors in pull() and converts them into a fresh error-page response.
+function wrapStreamForErrorCapture(response: Response, label: string): Response {
+  if (!response.body) return response;
+  const originalBody = response.body;
+  const reader = originalBody.getReader();
+  const stream = new ReadableStream({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          return;
+        }
+        controller.enqueue(value);
+      } catch (err) {
+        recordError(err);
+        const detail = detailFromError(err);
+        console.error(`[SSR ${label} stream pull error]`, detail.message, detail.stack, "\nraw:", err);
+        try {
+          controller.close();
+        } catch {}
+        // We can't replace the response here, so re-throw — h3 will turn it
+          // into its own 500, but at least the console.error captures the cause.
+        throw err;
+      }
+    },
+    cancel(reason) {
+      reader.cancel(reason).catch(() => {});
+    },
+  });
+  return new Response(stream, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
 }
 
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
@@ -79,7 +117,7 @@ export default {
       if (normalized !== response) {
         console.error(`[SSR ${requestId}] normalized to error page`);
       }
-      return normalized;
+      return wrapStreamForErrorCapture(normalized, requestId);
     } catch (error) {
       recordError(error);
       const detail = detailFromError(error);
