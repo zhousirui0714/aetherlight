@@ -1,6 +1,15 @@
-export function renderErrorPage(detail?: { message: string; stack?: string }): string {
+type ErrorDetail = {
+  message: string;
+  stack?: string;
+  name?: string;
+  code?: string;
+  cause?: unknown;
+  h3Body?: string;
+};
+
+export function renderErrorPage(detail?: ErrorDetail): string {
   const detailHtml = detail
-    ? `<details open style="margin-top:2rem;padding:1rem;background:#fef2f2;border:1px solid #fca5a5;border-radius:0.5rem;color:#7f1d1d;font-family:ui-monospace,monospace;font-size:13px;line-height:1.5;text-align:left;white-space:pre-wrap;word-break:break-word"><summary style="cursor:pointer;font-weight:600;font-family:system-ui;font-size:15px;color:#111">🚨 SSR error details (click to collapse)</summary><div style="margin-top:0.75rem"><strong>Message:</strong>\n${escapeHtml(detail.message)}</div>${detail.stack ? `<div style="margin-top:0.5rem"><strong>Stack:</strong>\n${escapeHtml(detail.stack)}</div>` : ""}</details>`
+    ? `<details open style="margin-top:2rem;padding:1rem;background:#fef2f2;border:1px solid #fca5a5;border-radius:0.5rem;color:#7f1d1d;font-family:ui-monospace,monospace;font-size:13px;line-height:1.5;text-align:left;white-space:pre-wrap;word-break:break-word"><summary style="cursor:pointer;font-weight:600;font-family:system-ui;font-size:15px;color:#111">🚨 SSR error details (click to collapse)</summary><div style="margin-top:0.75rem"><strong>Message:</strong>\n${escapeHtml(detail.message)}</div>${detail.name ? `<div style="margin-top:0.5rem"><strong>Name:</strong>\n${escapeHtml(detail.name)}</div>` : ""}${detail.code ? `<div style="margin-top:0.5rem"><strong>Code:</strong>\n${escapeHtml(detail.code)}</div>` : ""}${detail.stack ? `<div style="margin-top:0.5rem"><strong>Stack:</strong>\n${escapeHtml(detail.stack)}</div>` : ""}${detail.cause !== undefined ? `<div style="margin-top:0.5rem"><strong>Cause:</strong>\n${escapeHtml(stringifyCause(detail.cause))}</div>` : ""}${detail.h3Body ? `<div style="margin-top:0.5rem"><strong>h3 response body:</strong>\n${escapeHtml(detail.h3Body)}</div>` : ""}</details>`
     : "";
 
   return `<!doctype html>
@@ -32,6 +41,17 @@ export function renderErrorPage(detail?: { message: string; stack?: string }): s
     </div>
   </body>
 </html>`;
+}
+
+function stringifyCause(cause: unknown): string {
+  if (cause instanceof Error) {
+    return `${cause.name}: ${cause.message}${cause.stack ? "\n" + cause.stack : ""}`;
+  }
+  try {
+    return JSON.stringify(cause, null, 2);
+  } catch {
+    return String(cause);
+  }
 }
 
 function escapeHtml(s: string): string {
