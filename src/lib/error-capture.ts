@@ -4,21 +4,21 @@
 let lastCapturedError: { error: unknown; at: number } | undefined;
 const TTL_MS = 5_000;
 
-export function recordError(error: unknown) {
+function record(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
 }
 
-if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => recordError((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    recordError((event as PromiseRejectionEvent).reason),
-  );
-}
-
-// Also hook process-level handlers as a last-resort safety net.
+// On Node, register process-level handlers so that errors thrown outside
+// the TanStack Start middleware chain (e.g. during getEntries() import,
+// async router setup, or any rejected promise that escapes the
+// request handler) are still captured.
 if (typeof process !== "undefined" && process.on) {
-  process.on("uncaughtException", recordError);
-  process.on("unhandledRejection", recordError);
+  process.on("uncaughtException", record);
+  process.on("unhandledRejection", record);
+}
+if (typeof globalThis !== "undefined" && typeof (globalThis as any).addEventListener === "function") {
+  (globalThis as any).addEventListener("error", (event: any) => record(event?.error ?? event));
+  (globalThis as any).addEventListener("unhandledrejection", (event: any) => record(event?.reason));
 }
 
 export function consumeLastCapturedError(): unknown {
@@ -28,5 +28,6 @@ export function consumeLastCapturedError(): unknown {
     return undefined;
   }
   const { error } = lastCapturedError;
+  lastCapturedError = undefined;
   return error;
 }

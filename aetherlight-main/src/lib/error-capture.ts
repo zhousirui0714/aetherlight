@@ -8,11 +8,18 @@ function record(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
 }
 
-if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
+// On Node, register process-level handlers so that errors thrown outside
+// the TanStack Start middleware chain (e.g. during getEntries() import,
+// async router setup, or any rejected promise that escapes the
+// request handler) are still captured.
+if (typeof process !== "undefined" && process.on) {
+  process.on("uncaughtException", record);
+  process.on("unhandledRejection", record);
+}
+// In browser-like runtimes (Deno, edge) we can also try globalThis.
+if (typeof globalThis !== "undefined" && typeof (globalThis as any).addEventListener === "function") {
+  (globalThis as any).addEventListener("error", (event: any) => record(event?.error ?? event));
+  (globalThis as any).addEventListener("unhandledrejection", (event: any) => record(event?.reason));
 }
 
 export function consumeLastCapturedError(): unknown {
