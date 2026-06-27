@@ -107,10 +107,12 @@ function AuthPage() {
   const google = async () => {
     setLoading(true);
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-      if (r.error) throw new Error(r.error.message ?? "Google 登录失败");
-      if (r.redirected) return;
-      navigate({ to: "/" });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      // Supabase 会在浏览器跳转,不会到达这里
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Google 登录失败");
       setLoading(false);
