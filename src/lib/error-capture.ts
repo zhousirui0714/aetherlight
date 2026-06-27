@@ -4,15 +4,21 @@
 let lastCapturedError: { error: unknown; at: number } | undefined;
 const TTL_MS = 5_000;
 
-function record(error: unknown) {
+export function recordError(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
 }
 
 if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
+  globalThis.addEventListener("error", (event) => recordError((event as ErrorEvent).error ?? event));
   globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
+    recordError((event as PromiseRejectionEvent).reason),
   );
+}
+
+// Also hook process-level handlers as a last-resort safety net.
+if (typeof process !== "undefined" && process.on) {
+  process.on("uncaughtException", recordError);
+  process.on("unhandledRejection", recordError);
 }
 
 export function consumeLastCapturedError(): unknown {
@@ -22,6 +28,5 @@ export function consumeLastCapturedError(): unknown {
     return undefined;
   }
   const { error } = lastCapturedError;
-  lastCapturedError = undefined;
   return error;
 }

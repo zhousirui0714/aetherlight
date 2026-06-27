@@ -1,12 +1,14 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
+import { recordError } from "./lib/error-capture";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
   } catch (error) {
+    recordError(error); // store the original error so server.ts can read it
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
