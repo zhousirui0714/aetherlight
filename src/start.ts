@@ -8,15 +8,15 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
   } catch (error) {
-    recordError(error); // store the original error so server.ts can read it
-    if (error != null && typeof error === "object" && "statusCode" in error) {
-      throw error;
-    }
+    // IMPORTANT: never re-throw, otherwise h3 wraps the original error into
+    // HTTPError with no stack trace. Always render the error page directly.
+    recordError(error);
     const detail =
       error instanceof Error
         ? { message: error.message, stack: error.stack }
         : { message: String(error) };
-    console.error("[SSR start middleware]", detail.message, detail.stack);
+    // Verbose log so Vercel function logs capture the full original error.
+    console.error("[SSR FATAL]\nname:", (error as any)?.name, "\nmessage:", detail.message, "\nstack:\n", detail.stack, "\nraw:", error);
     return new Response(renderErrorPage(detail), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },

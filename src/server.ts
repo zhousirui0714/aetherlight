@@ -19,17 +19,30 @@ async function getServerEntry(): Promise<ServerEntry> {
 }
 
 function detailFromError(error: unknown): { message: string; stack?: string } {
-  // h3 wraps thrown errors into H3Error (a.k.a. HTTPError). The original cause
-  // is on `.cause` (h3 v1) or `.data`/`reason` depending on version.
   const e = error as any;
-  const original = e?.cause ?? e?.data?.cause ?? e?.data ?? e;
-  if (original instanceof Error) {
-    return { message: original.message, stack: original.stack };
+  // h3 wraps thrown errors into H3Error. The original cause lives in .cause or
+  // .data depending on h3 version. Walk down to find an Error with a stack.
+  const candidates = [
+    e,
+    e?.cause,
+    e?.data,
+    e?.data?.cause,
+    e?.data?.data,
+    e?.reason,
+    e?.error,
+  ];
+  for (const c of candidates) {
+    if (c instanceof Error && c.stack) {
+      return { message: c.message, stack: c.stack };
+    }
   }
-  if (original && typeof original === "object") {
-    return { message: JSON.stringify(original) };
+  for (const c of candidates) {
+    if (c && typeof c === "object" && c.message) {
+      return { message: String(c.message) };
+    }
   }
-  return { message: String(error) };
+  if (typeof error === "string") return { message: error };
+  return { message: JSON.stringify(error).slice(0, 500) };
 }
 
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
@@ -55,14 +68,22 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const requestId = Math.random().toString(36).slice(2, 8);
+    console.error(`[SSR ${requestId}] incoming:`, request.method, new URL(request.url).pathname);
     try {
       const handler = await getServerEntry();
+      console.error(`[SSR ${requestId}] got handler, calling fetch`);
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      console.error(`[SSR ${requestId}] handler returned status=${response.status}`);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      if (normalized !== response) {
+        console.error(`[SSR ${requestId}] normalized to error page`);
+      }
+      return normalized;
     } catch (error) {
-      recordError(error); // make sure the error is captured even on this code path
+      recordError(error);
       const detail = detailFromError(error);
-      console.error("[SSR outer catch]", detail.message, detail.stack);
+      console.error(`[SSR ${requestId} outer catch]`, detail.message, detail.stack, "\nraw:", error);
       return new Response(renderErrorPage(detail), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },
