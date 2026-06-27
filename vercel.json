@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "pnpm install --prefer-offline",
-  "buildCommand": "pnpm run build",
-  "outputDirectory": ".vercel/output",
+  "rootDirectory": "aetherlight-main",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "framework": null
 }
