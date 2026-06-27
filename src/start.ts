@@ -10,8 +10,12 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    console.error(error);
-    return new Response(renderErrorPage(), {
+    const detail =
+      error instanceof Error
+        ? { message: error.message, stack: error.stack }
+        : { message: String(error) };
+    console.error("[SSR start middleware]", detail.message, detail.stack);
+    return new Response(renderErrorPage(detail), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },
     });
