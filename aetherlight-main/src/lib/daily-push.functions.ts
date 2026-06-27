@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText } from "ai";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { BAILIAN_DEFAULT_MODEL, createBailianProvider } from "./ai-gateway.server";
 
 const Input = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
 
@@ -19,16 +19,16 @@ export const fetchDailyPush = createServerFn({ method: "POST" })
 
     if (existing) return existing;
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("缺少 LOVABLE_API_KEY");
+    const key = process.env.BAILIAN_API_KEY;
+    if (!key) throw new Error("缺少 BAILIAN_API_KEY");
 
-    const gateway = createLovableAiGatewayProvider(key);
+    const gateway = createBailianProvider(key);
     const d = new Date(data.date + "T08:00:00Z");
     const month = d.getUTCMonth() + 1;
     const day = d.getUTCDate();
 
     const { text } = await generateText({
-      model: gateway("google/gemini-2.5-flash"),
+      model: gateway(process.env.BAILIAN_MODEL || BAILIAN_DEFAULT_MODEL),
       prompt: `请为日期 ${data.date}(公历${month}月${day}日)生成一段中国传统文化的"每日撷光"推送。
 要求:
 1. 结合当日可能的节气、传统节日、历史人物诞辰或诗词主题选取一个切入点。

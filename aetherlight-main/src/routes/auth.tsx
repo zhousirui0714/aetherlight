@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -79,9 +78,13 @@ function AuthPage() {
   const google = async () => {
     setLoading(true);
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-      if (r.error) throw new Error(r.error.message ?? "Google 登录失败");
-      if (r.redirected) return;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      // Supabase OAuth 会在浏览器内重定向到 Google,通常到不了这里。
+      // 如果未触发重定向(例如 PKCE 流程本地预览),手动跳回首页。
       navigate({ to: "/" });
     } catch (e) {
       toast.error(translateAuthError(e), { duration: 6000 });
