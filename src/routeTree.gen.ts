@@ -34,6 +34,7 @@ import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
 import { Route as ApiSearchImageRouteImport } from './routes/api/search-image'
 import { Route as ApiKnowledgeAiFillRouteImport } from './routes/api/knowledge-ai-fill'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
 import { Route as ApiDbCheckRouteImport } from './routes/api/db-check'
 import { Route as ApiContentAuditRouteImport } from './routes/api/content-audit'
@@ -176,6 +177,11 @@ const ApiKnowledgeAiFillRoute = ApiKnowledgeAiFillRouteImport.update({
   path: '/api/knowledge-ai-fill',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDialogueRoute = ApiDialogueRouteImport.update({
   id: '/api/dialogue',
   path: '/api/dialogue',
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/api/content-audit': typeof ApiContentAuditRoute
   '/api/db-check': typeof ApiDbCheckRoute
   '/api/dialogue': typeof ApiDialogueRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/api/content-audit': typeof ApiContentAuditRoute
   '/api/db-check': typeof ApiDbCheckRoute
   '/api/dialogue': typeof ApiDialogueRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/api/content-audit': typeof ApiContentAuditRoute
   '/api/db-check': typeof ApiDbCheckRoute
   '/api/dialogue': typeof ApiDialogueRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/knowledge-ai-fill': typeof ApiKnowledgeAiFillRoute
   '/api/search-image': typeof ApiSearchImageRoute
   '/api/text-to-image': typeof ApiTextToImageRoute
@@ -411,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/content-audit'
     | '/api/db-check'
     | '/api/dialogue'
+    | '/api/health'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
     | '/api/text-to-image'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/content-audit'
     | '/api/db-check'
     | '/api/dialogue'
+    | '/api/health'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
     | '/api/text-to-image'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/content-audit'
     | '/api/db-check'
     | '/api/dialogue'
+    | '/api/health'
     | '/api/knowledge-ai-fill'
     | '/api/search-image'
     | '/api/text-to-image'
@@ -540,6 +552,7 @@ export interface RootRouteChildren {
   ApiContentAuditRoute: typeof ApiContentAuditRoute
   ApiDbCheckRoute: typeof ApiDbCheckRoute
   ApiDialogueRoute: typeof ApiDialogueRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiKnowledgeAiFillRoute: typeof ApiKnowledgeAiFillRoute
   ApiSearchImageRoute: typeof ApiSearchImageRoute
   ApiTextToImageRoute: typeof ApiTextToImageRoute
@@ -726,6 +739,13 @@ declare module '@tanstack/react-router' {
       path: '/api/knowledge-ai-fill'
       fullPath: '/api/knowledge-ai-fill'
       preLoaderRoute: typeof ApiKnowledgeAiFillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/dialogue': {
@@ -926,6 +946,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiContentAuditRoute: ApiContentAuditRoute,
   ApiDbCheckRoute: ApiDbCheckRoute,
   ApiDialogueRoute: ApiDialogueRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiKnowledgeAiFillRoute: ApiKnowledgeAiFillRoute,
   ApiSearchImageRoute: ApiSearchImageRoute,
   ApiTextToImageRoute: ApiTextToImageRoute,
