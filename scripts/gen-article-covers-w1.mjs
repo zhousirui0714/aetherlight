@@ -2,9 +2,16 @@
  * Worker 1 - 处理 0-950 文章（按 view_count 降序的前 950 篇）
  * 与 Worker 2 共享 progress 文件
  * 用途：补齐 W2 没覆盖到的头部
+ *
+ * 2026-06-27 修复: 重写 prompt 模板
+ *   - 旧: 写死 sumi-e "5-7 灰墨 + 60% 留白 + 红色印章" → 1966 张全长一样
+ *   - 新: 按 title+category 提取具体视觉关键词 (李白→举杯望月, 春节→红灯笼梅花)
+ *   - 色彩: 允许中国画颜料 (朱砂/石绿/赭石/金), 不强制死板灰墨
+ *   - 禁文字: 强 prompt 避免 AI 在图里写错字/题款
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { buildPrompt } from "./lib/cover-prompt.mjs";
 
 const ROOT = process.cwd();
 const ENV_FILE = join(ROOT, ".env");
@@ -57,13 +64,19 @@ console.log(`Worker1: 处理 ${articles.length} 篇 (index ${START}-${END})`);
 
 let progress = {};
 if (existsSync(CACHE_FILE)) {
-  progress = JSON.parse(readFileSync(CACHE_FILE, "utf-8"));
-  console.log(`已加载进度: ${Object.keys(progress).length} 张已完成`);
+  try {
+    const raw = readFileSync(CACHE_FILE, "utf-8").trim();
+    progress = raw ? JSON.parse(raw) : {};
+    console.log(`已加载进度: ${Object.keys(progress).length} 张已完成`);
+  } catch (e) {
+    console.warn(`progress 文件损坏, 从空开始: ${e.message}`);
+    progress = {};
+  }
 }
 
-const STYLE = `Traditional Chinese ink wash painting (shuimo), sumi-e brush technique, wet ink wash gradients with 5-7 shades of gray ink only, generous negative space (60% blank rice paper), no outlines, no color except one small vermillion red seal stamp at corner. STRICTLY NO TEXT, NO CHARACTERS, NO LETTERS, NO WRITING, NO CALLIGRAPHY, NO INSCRIPTIONS anywhere. Empty blank surfaces only. No modern elements, no frame, no border, no watermark, no signature, no captions, no labels, no titles, no annotations. Aspect ratio 4:3, museum quality, ultra high detail, masterpiece.`;
+const STYLE = `Traditional Chinese cultural painting in the style of meticulous gongbi, depicting:`;  // 已废, 改用 buildPrompt
 
-function buildPrompt(article) {
+function buildPromptLegacy(article) {
   return `A ${STYLE} The painting should depict a scene inspired by the following subject: ${article.title}. Visual hints: ${article.excerpt ? article.excerpt.slice(0, 150) : article.sub_category || article.category}. Atmosphere: ${article.sub_category || "classical Chinese"}. Do not include any text or characters in the painting.`;
 }
 

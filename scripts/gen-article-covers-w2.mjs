@@ -1,9 +1,16 @@
 /**
  * Worker 2 - 处理 951-1902 文章（按热度排序后）
  * 与 Worker 1 共享 progress 文件（双 worker 不会冲突，因为 ID 段不同）
+ *
+ * 2026-06-27 修复: 重写 prompt 模板
+ *   - 旧: 写死 sumi-e "5-7 灰墨 + 60% 留白 + 红色印章" → 1966 张全长一样
+ *   - 新: 按 title+category 提取具体视觉关键词
+ *   - 色彩: 允许中国画颜料, 不强制死板灰墨
+ *   - 禁文字: 强 prompt 避免 AI 在图里写错字/题款
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { buildPrompt } from "./lib/cover-prompt.mjs";
 
 const ROOT = process.cwd();
 const ENV_FILE = join(ROOT, ".env");
@@ -55,15 +62,17 @@ console.log(`Worker2: 处理 ${articles.length} 篇 (从 index ${START} 开始)`
 
 let progress = {};
 if (existsSync(CACHE_FILE)) {
-  progress = JSON.parse(readFileSync(CACHE_FILE, "utf-8"));
-  console.log(`已加载进度: ${Object.keys(progress).length} 张已完成`);
+  try {
+    const raw = readFileSync(CACHE_FILE, "utf-8").trim();
+    progress = raw ? JSON.parse(raw) : {};
+    console.log(`已加载进度: ${Object.keys(progress).length} 张已完成`);
+  } catch (e) {
+    console.warn(`progress 文件损坏, 从空开始: ${e.message}`);
+    progress = {};
+  }
 }
 
-const STYLE = `Traditional Chinese ink wash painting (shuimo), sumi-e brush technique, wet ink wash gradients with 5-7 shades of gray ink only, generous negative space (60% blank rice paper), no outlines, no color except one small vermillion red seal stamp at corner. STRICTLY NO TEXT, NO CHARACTERS, NO LETTERS, NO WRITING, NO CALLIGRAPHY, NO INSCRIPTIONS anywhere. Empty blank surfaces only. No modern elements, no frame, no border, no watermark, no signature, no captions, no labels, no titles, no annotations. Aspect ratio 4:3, museum quality, ultra high detail, masterpiece.`;
-
-function buildPrompt(article) {
-  return `A ${STYLE} The painting should depict a scene inspired by the following subject: ${article.title}. Visual hints: ${article.excerpt ? article.excerpt.slice(0, 150) : article.sub_category || article.category}. Atmosphere: ${article.sub_category || "classical Chinese"}. Do not include any text or characters in the painting.`;
-}
+// 旧的写死 STYLE + buildPrompt 已删, 改用 lib/cover-prompt.mjs 的 buildPrompt
 
 function slugify(s) {
   return s.replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 60);
