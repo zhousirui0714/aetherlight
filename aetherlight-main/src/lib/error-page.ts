@@ -22,7 +22,7 @@ export function renderErrorPage(detail?: { message: string; stack?: string }): s
   </head>
   <body>
     <div class="card">
-      <h1>This page didn't load</h1>
+      <h1>This page didn't load</h1><p style="color:#dc2626;font:12px/1.4 ui-monospace,monospace;margin:-0.75rem 0 1.5rem">[debug marker: build v2026-06-27-r2]</p>
       <p>Something went wrong on our end. You can try refreshing or head back home.</p>
       <div class="actions">
         <button class="primary" onclick="location.reload()">Try again</button>

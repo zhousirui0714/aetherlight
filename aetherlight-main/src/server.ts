@@ -56,7 +56,10 @@ export default {
       console.error(error);
       return new Response(renderErrorPage(detail), {
         status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+        },
       });
     }
   },
