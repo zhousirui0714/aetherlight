@@ -1,4 +1,10 @@
-export function renderErrorPage(): string {
+export function renderErrorPage(detail?: { message: string; stack?: string }): string {
+  // 显式设了 SSR_ERROR_VERBOSE=1 (或在非生产环境) 才把 stack 渲染到页面里,避免正式用户看到内部错误。
+  const showDetail =
+    !!detail && (process.env.SSR_ERROR_VERBOSE === "1" || process.env.NODE_ENV !== "production");
+  const detailHtml = showDetail && detail
+    ? `<details open style="margin-top:1.5rem;text-align:left;font:12px/1.5 ui-monospace,monospace;color:#374151;background:#fff;border:1px solid #e5e7eb;border-radius:0.5rem;padding:0.75rem;max-height:18rem;overflow:auto;white-space:pre-wrap;word-break:break-all"><summary style="cursor:pointer;color:#111;font-family:system-ui">Stack trace</summary>${escapeHtml(detail.message)}\n\n${escapeHtml(detail.stack ?? "")}</details>`
+    : "";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -24,7 +30,17 @@ export function renderErrorPage(): string {
         <button class="primary" onclick="location.reload()">Try again</button>
         <a class="secondary" href="/">Go home</a>
       </div>
+      ${detailHtml}
     </div>
   </body>
 </html>`;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
