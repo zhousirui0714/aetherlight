@@ -25,4 +25,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // 当前 chunks 主要被 @tanstack/react-router 和一票 @radix-ui 组件撑大
+    // (~670KB 和 300+KB)。真正瘦身要靠 dynamic import 拆路由 / 砍掉用不到的
+    // Radix 组件,先放宽阈值消除警告,避免日后再添包时反复触发。
+    build: {
+      chunkSizeWarningLimit: 1024,
+    },
+  },
 });
