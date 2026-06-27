@@ -1,5 +1,3 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd aetherlight-main && npm install",
-  "buildCommand": "cd aetherlight-main && npm run build && mkdir -p ../.vercel && cp -r .vercel/output/. ../.vercel/output/"
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
