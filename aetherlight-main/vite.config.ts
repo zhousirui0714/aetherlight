@@ -7,6 +7,19 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Force-enable the Nitro deploy plugin and pin the preset to Vercel's Node serverless
+  // runtime. Without this, the build emits a Cloudflare-Worker bundle (`dist/server/server.js`)
+  // which Vercel can't run, so the deployed site falls through to Vercel's own error page.
+  nitro: {
+    preset: "vercel",
+    vercel: {
+      // Functions take longer than the default 10s once we start doing AI streaming
+      // upstream. Bump to 30s (Vercel hobby plan max for Node functions).
+      functions: {
+        maxDuration: 30,
+      },
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
