@@ -1,33 +1,4 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-
-// 把 server-side env (SUPABASE_*, BAILIAN_*) 在 build 时内联成字符串字面量。
-// 原因:Vercel 部署包里没有 .env 文件(gitignored),c12 / loadEnv 等代码如果在 runtime
-// 读 /var/task/.env 会直接 ENOENT。把 process.env.X 替换成字符串后,bundle 里再无
-// 任何运行时读 .env 的需求。
-// 风险:内联后修改 env 需重 build。但 Vercel UI env 本身就是 build-time 注入的,语义一致。
-const SERVER_ENV_KEYS = [
-  "SUPABASE_URL",
-  "SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "BAILIAN_API_KEY",
-  "BAILIAN_BASE_URL",
-] as const;
-
-function buildServerEnvDefine(): Record<string, string> {
-  const define: Record<string, string> = {};
-  for (const key of SERVER_ENV_KEYS) {
-    const value = process.env[key];
-    // 留空字符串而不是 JSON.stringify(undefined),避免把整个表达式替换成 undefined
-    define[`process.env.${key}`] = JSON.stringify(value ?? "");
-  }
-  return define;
-}
 
 export default defineConfig({
   tanstackStart: {
@@ -37,10 +8,27 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
+    // Nitro v3 vite 插件会强制关掉 Vite 的 copyPublicDir,但它自己的 publicAssets
+    // 默认只含 Vite 构建产物(assets/ 里那些 JS/CSS/字体),不包含 Vite 的 publicDir。
+    // 这导致 public/ai-covers/, public/home-illustrations/ 等共 1000+ 张图永远
+    // 不会被复制到 .vercel/output/static/。显式把 public/ 注入 publicAssets 才能
+    // 让 Vercel 把它们当静态资源 serve。
+    publicAssets: [
+      {
+        dir: "public",
+        maxAge: 60 * 60 * 24, // 1 天缓存,图片不算 fingerprint
+        baseURL: "/",
+        fallthrough: false,
+      },
+    ],
   },
-  vite: {
-    // 把 process.env.SUPABASE_URL 等 server-side env 替换成字符串字面量。
-    // 这样 runtime 不会再触发任何 .env 文件读取,根除 ENOENT /var/task/.env。
-    define: buildServerEnvDefine(),
-  },
+  // ⚠️ 不要在这里用 vite.define 把 process.env.SUPABASE_URL 等替换成字面量:
+  // vite build 启动时 process.env 是空的(Vercel 在 build 阶段才注入 env,但如果
+  // Vercel UI 配的 env 比 build 启动晚,或者 env 通过 Vercel CLI 之外的方式管理,
+  // vite 进程就拿不到),替换出来的就是空字符串,build 产物里硬编码成 "",runtime
+  // 永远拿不到真值,Supabase 客户端就抛 "Missing Supabase environment variable(s)"
+  // 导致所有非首页路由 500。
+  // 正确做法:build 产物里保留 process.env.X 原样,Vercel runtime 会通过 process.env
+  // 注入真值。scripts/emit-runtime-env.mjs 仍然把 env 写到 function 输出目录的
+  // .env,防止任何走 dotenv/c12/loadEnv 的代码在 /var/task/.env 路径上 ENOENT。
 });

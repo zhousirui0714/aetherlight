@@ -6,29 +6,6 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// 把 server-side env (SUPABASE_*, BAILIAN_*) 在 build 时内联成字符串字面量。
-// 原因:Vercel 部署包里没有 .env 文件(gitignored),c12 / loadEnv 等代码如果在 runtime
-// 读 /var/task/.env 会直接 ENOENT。把 process.env.X 替换成字符串后,bundle 里再无
-// 任何运行时读 .env 的需求。
-// 风险:内联后修改 env 需重 build。但 Vercel UI env 本身就是 build-time 注入的,语义一致。
-const SERVER_ENV_KEYS = [
-  "SUPABASE_URL",
-  "SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "BAILIAN_API_KEY",
-  "BAILIAN_BASE_URL",
-] as const;
-
-function buildServerEnvDefine(): Record<string, string> {
-  const define: Record<string, string> = {};
-  for (const key of SERVER_ENV_KEYS) {
-    const value = process.env[key];
-    // 留空字符串而不是 JSON.stringify(undefined),避免把整个表达式替换成 undefined
-    define[`process.env.${key}`] = JSON.stringify(value ?? "");
-  }
-  return define;
-}
-
 export default defineConfig({
   // Force-enable the Nitro deploy plugin and pin the preset to Vercel's Node serverless
   // runtime. Without this, the build emits a Cloudflare-Worker bundle (`dist/server/server.js`)
@@ -42,6 +19,19 @@ export default defineConfig({
         maxDuration: 30,
       },
     },
+    // Nitro v3 vite 插件会强制关掉 Vite 的 copyPublicDir,但它自己的 publicAssets
+    // 默认只含 Vite 构建产物(assets/ 里那些 JS/CSS/字体),不包含 Vite 的 publicDir。
+    // 这导致 public/ai-covers/, public/home-illustrations/ 等共 1000+ 张图永远
+    // 不会被复制到 .vercel/output/static/。显式把 public/ 注入 publicAssets 才能
+    // 让 Vercel 把它们当静态资源 serve。
+    publicAssets: [
+      {
+        dir: "public",
+        maxAge: 60 * 60 * 24, // 1 天缓存,图片不算 fingerprint
+        baseURL: "/",
+        fallthrough: false,
+      },
+    ],
   },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -49,14 +39,19 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    // 当前 chunks 主要被 @tanstack/react-router 和一票 @radix-ui 组件撑大
-    // (~670KB 和 300+KB)。真正瘦身要靠 dynamic import 拆路由 / 砍掉用不到的
-    // Radix 组件,先放宽阈值消除警告,避免日后再添包时反复触发。
     build: {
+      // 当前 chunks 主要被 @tanstack/react-router 和一票 @radix-ui 组件撑大
+      // (~670KB 和 300+KB)。真正瘦身要靠 dynamic import 拆路由 / 砍掉用不到的
+      // Radix 组件,先放宽阈值消除警告,避免日后再添包时反复触发。
       chunkSizeWarningLimit: 1024,
     },
-    // 把 process.env.SUPABASE_URL 等 server-side env 替换成字符串字面量。
-    // 这样 runtime 不会再触发任何 .env 文件读取,根除 ENOENT /var/task/.env。
-    define: buildServerEnvDefine(),
+    // ⚠️ 不要再用 vite.define 把 process.env.SUPABASE_URL 等替换成字面量!
+    // 上一轮用 define 修 ENOENT /var/task/.env 是错的副作用:build 启动时
+    // process.env 是空的(这些 env 是 Vercel runtime 注入的,不是 build 阶段),
+    // define 替换出来硬编码成空字符串,runtime 永远拿不到真值,所有非首页
+    // createServerFn 路由 500。改回让 build 产物保留 process.env.X 由 Vercel
+    // runtime 注入。scripts/emit-runtime-env.mjs 仍然把 env 写到 function
+    // 输出目录的 .env,防御任何走 dotenv/c12/loadEnv 的代码在 /var/task/.env
+    // 路径上 ENOENT。
   },
 });
