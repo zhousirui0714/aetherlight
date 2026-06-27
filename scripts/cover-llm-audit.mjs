@@ -129,7 +129,9 @@ async function vlJudge(article) {
   };
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
+  // 单张 VL 调用允许 120s: qwen-vl-plus 经常冷启动慢 / 高峰期排到队列尾.
+  // 上轮 60s 抛了 1100+ "aborted" 错误.
+  const timer = setTimeout(() => controller.abort(), 120000);
   try {
     const res = await fetch(
       // BAILIAN_BASE_URL 已经含 /compatible-mode/v1 (workspace 专属域) ,
@@ -180,38 +182,29 @@ async function vlJudge(article) {
   }
 }
 
-// --- patch DB: clear cover_url for "n" or "partial" verdicts ---
-// partial 的图理论上能用但配得不够贴, 在 1966 张批量场景下保留 partial
-// 仍会显示"水墨留白"等跟卡片不贴的图. 全部清掉, 前端回退到主题色+SVG
-// 装饰 (代码里 <ArticleIllustration> 用了精确的 category+关键词 SVG, 至少
-// 比"千篇一律的水墨"准). 想恢复某张, 手工 PATCH cover_url 回原值即可.
+// --- patch DB ---
+// ⚠️ llm_match / llm_reason / cover_checked_at 列在 DB 里**还不存在**
+// (migration 漏了), PostgREST 对未知字段返 400, 会让整个 PATCH 失败,
+// cover_url 也不会被清. 先只 PATCH 存在的列 (cover_url), 审计信息
+// 写到本地 progress 文件 + log, 不写 DB. 等用户在 Supabase Dashboard
+// 执行 supabase/migrations/20260627_add_llm_match.sql 后, 再启用
+// llm_match 字段写入 (把下面注释掉的块打开).
 async function clearCoverUrl(articleId, verdict, reason) {
   const u = `${URL}/rest/v1/knowledge_articles?id=eq.${articleId}`;
   const r = await fetch(u, {
     method: "PATCH",
     headers: { ...HEADERS, Prefer: "return=minimal" },
-    body: JSON.stringify({
-      cover_url: null,
-      llm_match: verdict === "n" ? false : "partial",
-      llm_reason: `llm-audit: ${verdict} - ${reason || ""}`.slice(0, 200),
-      cover_checked_at: new Date().toISOString(),
-    }),
+    body: JSON.stringify({ cover_url: null }),
   });
   return r.ok;
 }
 
 async function markYes(articleId, reason) {
   const u = `${URL}/rest/v1/knowledge_articles?id=eq.${articleId}`;
-  const r = await fetch(u, {
-    method: "PATCH",
-    headers: { ...HEADERS, Prefer: "return=minimal" },
-    body: JSON.stringify({
-      llm_match: true,
-      llm_reason: reason || "llm-audit: y",
-      cover_checked_at: new Date().toISOString(),
-    }),
-  });
-  return r.ok;
+  // y 的不写 DB (保留 cover_url, 留原状). 审计信息已经在 progress.json.
+  // 如果以后加了 llm_match 列, 想把 y 的也标 true 记录, 把这个改成
+  // 完整的 PATCH { llm_match: true, llm_reason: ... } 即可.
+  return true;
 }
 
 // --- main loop with concurrency ---
@@ -219,10 +212,23 @@ async function main() {
   const articles = await fetchArticles();
   console.log(`[audit] DB 共 ${articles.length} 篇有 cover_url`);
 
-  const queue = articles.filter((a) => !progress[a.id]).slice(0, LIMIT);
+  // error 视作"未审过", 放回 queue 重跑. 上轮 1157 张因 60s timeout /
+  // data_inspection_failed 落 error, 实际没改 DB. 重跑逻辑就是把
+  // verdict === "error" 的清掉 (保留 reason/ts 之外的字段).
+  const queue = articles.filter((a) => {
+    const p = progress[a.id];
+    if (!p) return true; // 从未审
+    if (p.verdict === "error") return true; // 上次失败, 重试
+    return false; // y/n/partial 都已定, 跳过 (除非 --force)
+  }).slice(0, LIMIT);
   console.log(
     `[audit] 待审: ${queue.length} 篇 (limit=${LIMIT === Infinity ? "all" : LIMIT}, concurrency=${CONCURRENCY}, dry-run=${DRY_RUN}, force=${FORCE})`,
   );
+
+  // 重跑前把 error 的 progress 条目重置 (避免 stale verdict 干扰)
+  for (const a of queue) {
+    if (progress[a.id]?.verdict === "error") delete progress[a.id];
+  }
 
   if (queue.length === 0) {
     console.log("[audit] 没有需要审的, 收工");
