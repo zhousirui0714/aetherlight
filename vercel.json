@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rootDirectory": "aetherlight-main",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "framework": null
+  "installCommand": "cd aetherlight-main && npm install",
+  "buildCommand": "cd aetherlight-main && npm run build",
+  "outputDirectory": "aetherlight-main/.vercel/output"
 }
