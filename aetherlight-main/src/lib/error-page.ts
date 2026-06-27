@@ -1,8 +1,6 @@
 export function renderErrorPage(detail?: { message: string; stack?: string }): string {
-  // 显式设了 SSR_ERROR_VERBOSE=1 (或在非生产环境) 才把 stack 渲染到页面里,避免正式用户看到内部错误。
-  const showDetail =
-    !!detail && (process.env.SSR_ERROR_VERBOSE === "1" || process.env.NODE_ENV !== "production");
-  const detailHtml = showDetail && detail
+  // 暂时无条件展示 detail,方便调试;正式上线前再恢复成 SSR_ERROR_VERBOSE / 非生产 开关
+  const detailHtml = detail
     ? `<details open style="margin-top:1.5rem;text-align:left;font:12px/1.5 ui-monospace,monospace;color:#374151;background:#fff;border:1px solid #e5e7eb;border-radius:0.5rem;padding:0.75rem;max-height:18rem;overflow:auto;white-space:pre-wrap;word-break:break-all"><summary style="cursor:pointer;color:#111;font-family:system-ui">Stack trace</summary>${escapeHtml(detail.message)}\n\n${escapeHtml(detail.stack ?? "")}</details>`
     : "";
   return `<!doctype html>
