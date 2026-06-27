@@ -1,131 +1,44 @@
-import "./lib/error-capture";
-
-import { consumeLastCapturedError, recordError } from "./lib/error-capture";
-import { renderErrorPage } from "./lib/error-page";
-
-type ServerEntry = {
-  fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
-};
-
-let serverEntryPromise: Promise<ServerEntry> | undefined;
-
-async function getServerEntry(): Promise<ServerEntry> {
-  if (!serverEntryPromise) {
-    serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => (m.default ?? m) as ServerEntry,
-    );
-  }
-  return serverEntryPromise;
-}
-
-function detailFromError(error: unknown): { message: string; stack?: string } {
-  const e = error as any;
-  const candidates = [
-    e,
-    e?.cause,
-    e?.data,
-    e?.data?.cause,
-    e?.data?.data,
-    e?.reason,
-    e?.error,
-  ];
-  for (const c of candidates) {
-    if (c instanceof Error && c.stack) {
-      return { message: c.message, stack: c.stack };
-    }
-  }
-  for (const c of candidates) {
-    if (c && typeof c === "object" && c.message) {
-      return { message: String(c.message) };
-    }
-  }
-  if (typeof error === "string") return { message: error };
-  return { message: JSON.stringify(error).slice(0, 500) };
-}
-
-// Intercept the response stream so we can capture errors that happen
-// during streaming (which happen AFTER the middleware chain has already
-// returned a response). We replace the stream with one that catches
-// errors in pull() and converts them into a fresh error-page response.
-function wrapStreamForErrorCapture(response: Response, label: string): Response {
-  if (!response.body) return response;
-  const originalBody = response.body;
-  const reader = originalBody.getReader();
-  const stream = new ReadableStream({
-    async pull(controller) {
-      try {
-        const { done, value } = await reader.read();
-        if (done) {
-          controller.close();
-          return;
-        }
-        controller.enqueue(value);
-      } catch (err) {
-        recordError(err);
-        const detail = detailFromError(err);
-        console.error(`[SSR ${label} stream pull error]`, detail.message, detail.stack, "\nraw:", err);
-        try {
-          controller.close();
-        } catch {}
-        // We can't replace the response here, so re-throw — h3 will turn it
-          // into its own 500, but at least the console.error captures the cause.
-        throw err;
-      }
-    },
-    cancel(reason) {
-      reader.cancel(reason).catch(() => {});
-    },
-  });
-  return new Response(stream, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-  });
-}
-
-async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
-  if (response.status < 500) return response;
-  const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) return response;
-
-  const body = await response.clone().text();
-  if (!body.includes('"unhandled":true') || !body.includes('"message":"HTTPError"')) {
-    return response;
-  }
-
-  const captured = consumeLastCapturedError();
-  const detail = captured
-    ? detailFromError(captured)
-    : { message: "h3 swallowed SSR error: " + body };
-  console.error("[SSR normalized]", detail.message, (detail as any).stack);
-  return new Response(renderErrorPage(detail), {
-    status: 500,
-    headers: { "content-type": "text/html; charset=utf-8" },
-  });
-}
+// MINIMAL VERIFICATION: bypass TanStack Start entirely.
+// If the user can see "It works!" on Vercel, the function runtime is fine
+// and the bug is in the SSR chain. If they still get 500, the issue is
+// at a deeper level (build output / Vercel config / runtime mismatch).
 
 export default {
-  async fetch(request: Request, env: unknown, ctx: unknown) {
+  async fetch(request: Request, _env: unknown, _ctx: unknown) {
     const requestId = Math.random().toString(36).slice(2, 8);
-    console.error(`[SSR ${requestId}] incoming:`, request.method, new URL(request.url).pathname);
-    try {
-      const handler = await getServerEntry();
-      console.error(`[SSR ${requestId}] got handler, calling fetch`);
-      const response = await handler.fetch(request, env, ctx);
-      console.error(`[SSR ${requestId}] handler returned status=${response.status}`);
-      const normalized = await normalizeCatastrophicSsrResponse(response);
-      if (normalized !== response) {
-        console.error(`[SSR ${requestId}] normalized to error page`);
-      }
-      return wrapStreamForErrorCapture(normalized, requestId);
-    } catch (error) {
-      recordError(error);
-      const detail = detailFromError(error);
-      console.error(`[SSR ${requestId} outer catch]`, detail.message, detail.stack, "\nraw:", error);
-      return new Response(renderErrorPage(detail), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
-    }
+    const now = new Date().toISOString();
+    const url = new URL(request.url);
+    console.error(
+      `[MINIMAL ${requestId}] incoming ${request.method} ${url.pathname}${url.search}`,
+    );
+    const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vercel function works</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: #fafafa; color: #111; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
+      .card { max-width: 32rem; width: 100%; padding: 2rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+      h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
+      p { color: #4b5563; margin: 0.5rem 0; font-family: ui-monospace, monospace; font-size: 13px; }
+      .ok { color: #047857; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1 class="ok">It works! Vercel function is running.</h1>
+      <p>request-id: <strong>${requestId}</strong></p>
+      <p>time: <strong>${now}</strong></p>
+      <p>method: <strong>${request.method}</strong></p>
+      <p>path: <strong>${url.pathname}${url.search}</strong></p>
+      <p style="margin-top:1rem">This response is generated by <code>src/server.ts</code> directly, completely bypassing the TanStack Start SSR chain. If you can read this, Vercel's function runtime, Nitro build output, and the deployment pipeline are all healthy. The next step is to find which part of the SSR chain is broken on Vercel (but not locally).</p>
+    </div>
+  </body>
+</html>`;
+    return new Response(html, {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
   },
 };
