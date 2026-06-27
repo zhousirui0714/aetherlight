@@ -28,60 +28,31 @@ if (typeof process !== "undefined" && process.on) {
   process.on("uncaughtException", record);
   process.on("unhandledRejection", record);
 }
-// In browser-like runtimes (Deno, edge) we can also try globalThis.
 if (typeof globalThis !== "undefined" && typeof (globalThis as any).addEventListener === "function") {
   (globalThis as any).addEventListener("error", (event: any) => record(event?.error ?? event));
   (globalThis as any).addEventListener("unhandledrejection", (event: any) => record(event?.reason));
 }
 
-// Monkey-patch h3's onError. h3 catches errors thrown inside the route
-// handler in a try/catch and converts them into a {"status":500,
-// "unhandled":true,"message":"HTTPError"} Response. The original error
-// is never re-thrown, so process.on('uncaughtException') never sees it
-// and our middleware try/catch only sees a normal 500 Response.
+// Wrap console.error. h3 v2 calls console.error(error) at the very top
+// of its error path (see _libs/h3+rou3+srvx.mjs around line 436) BEFORE
+// it looks up config.onError, so this is the most reliable place to
+// grab the original error before it is wrapped into a generic
+// {"status":500,"unhandled":true,"message":"HTTPError"} envelope.
 //
-// Nitro exposes the h3 app instance at globalThis.__nitro__.default.h3
-// (set in node_modules/nitro/dist/runtime/internal/app.mjs). We grab
-// it here, before any request is handled, and wrap its onError so the
-// real error message is preserved.
-function installH3OnErrorHook(): void {
-  const g = globalThis as any;
-  // Poll briefly: ssr.mjs (this file) is loaded as a lazy service from
-  // index.mjs, so __nitro__ may not be set yet on the very first cold
-  // start. We retry for up to 3 seconds.
-  const deadline = Date.now() + 3_000;
-  const tryInstall = () => {
-    const nitroApp = g.__nitro__?.default;
-    const h3 = nitroApp?.h3;
-    if (!h3) {
-      if (Date.now() < deadline) setTimeout(tryInstall, 50);
-      return;
+// We only act when the first arg is an actual Error instance (or
+// something that looks like one) so we don't interfere with normal
+// application logging.
+const originalConsoleError = console.error.bind(console);
+(console as any).error = (...args: unknown[]) => {
+  for (const arg of args) {
+    if (arg instanceof Error) {
+      record(arg);
+      break;
     }
-    // h3 stores the handler in `h3.config.onError` (see h3 source).
-    // We also try `h3._onError` as a fallback for older h3 versions.
-    const configObj: any = h3.config ?? h3;
-    const original = configObj.onError ?? h3._onError;
-    const wrapped = (error: unknown, event: unknown) => {
-      record(error);
-      return typeof original === "function" ? original(error, event) : undefined;
-    };
-    try {
-      configObj.onError = wrapped;
-    } catch {
-      // config may be a getter-only object; try the alternate slot
-      try {
-        h3._onError = wrapped;
-      } catch {
-        process.stdout.write(
-          "[h3-hook] could not override onError — falling back to log only\n",
-        );
-      }
-    }
-    process.stdout.write("[h3-hook] installed onError capture\n");
-  };
-  tryInstall();
-}
-installH3OnErrorHook();
+  }
+  return originalConsoleError(...args);
+};
+process.stdout.write("[console-error-hook] installed\n");
 
 export function consumeLastCapturedError(): unknown {
   if (!lastCapturedError) return undefined;
