@@ -3,6 +3,23 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
+// [cold-start] probes — Vercel Function Logs shows these in order so we
+// can see which import is hanging on cold start. The previous build hung
+// during TLS handshake and Vercel killed the connection at 5s, so we
+// never even reached any handler. These probes flush to stdout before
+// any heavy import runs.
+const t0 = Date.now();
+const probe = (label: string) => {
+  // process.stdout.write flushes immediately, unlike console.log.
+  process.stdout.write(`[cold-start] +${Date.now() - t0}ms ${label}\n`);
+};
+probe("server.ts top reached");
+
+// The server-entry import below pulls in every route chunk + the
+// @supabase and @ai-sdk modules. Probe immediately before and after
+// so the Function Log shows how long that single dynamic import took.
+probe("before import @tanstack/react-start/server-entry");
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -12,7 +29,10 @@ let serverEntryPromise: Promise<ServerEntry> | undefined;
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => (m.default ?? m) as ServerEntry,
+      (m) => {
+        probe("after import @tanstack/react-start/server-entry");
+        return (m.default ?? m) as ServerEntry;
+      },
     );
   }
   return serverEntryPromise;
@@ -69,12 +89,16 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    probe(`fetch ${request.method} ${new URL(request.url).pathname}`);
     try {
       const handler = await getServerEntry();
+      probe("serverEntry ready, calling handler.fetch");
       const response = await handler.fetch(request, env, ctx);
+      probe(`handler.fetch returned ${response.status}`);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       const detail = detailFromError(error);
+      probe(`handler.fetch threw: ${detail.message}`);
       console.error(error);
       return new Response(renderErrorPage(detail), {
         status: 500,

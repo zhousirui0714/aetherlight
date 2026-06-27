@@ -87,8 +87,9 @@ scripts/output/
 # pnpm 本地 store (不要 commit)
 .pnpm-store/
 
-# 老 Lovable 快照（独立项目，不在当前 Vercel 部署范围内）
-aetherlight-main/
+# 老 Lovable 快照在 aetherlight-main/ 之外的根目录散落文件,这些不在 Vercel 部署范围
+# 重要:不要把 aetherlight-main/ 整行加到 gitignore 里 — Vercel 就是从这里 build
+# .lovable/
 
 # 本地 Python 后端（Vercel 只部署前端 vite build）
 backend/
