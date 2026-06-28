@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search, Loader2, Database, Languages } from "lucide-react";
+import { Heart, Search, Loader2, Database } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import {
   CATEGORY_KEYS,
@@ -10,7 +10,6 @@ import {
   type CategoryKey,
 } from "@/lib/knowledge-types";
 import { supabase } from "@/integrations/supabase/client";
-import { useTranslation } from "@/lib/use-translation";
 
 // 朱砂方印: 每个分类一个单字印文
 const SEAL: Record<CategoryKey, string> = {
@@ -39,33 +38,18 @@ type DbArticle = {
 };
 
 /**
- * 知识长廊单卡 — 抽出来为了能在 excerpt 处用 useTranslation hook
- * 整张卡被 Link 包裹, 译按钮用 stopPropagation + preventDefault 阻止跳转
+ * 知识长廊单卡 — 卷轴题字风
+ * 整张卡被 Link 包裹, 卡片内无任何操作按钮
  */
 function GalleryCard({
   item,
   index,
-  isDb,
 }: {
   item: DbArticle | Article;
   index: number;
   isDb: boolean;
 }) {
-  const { translation, loading, open, toggle } = useTranslation({
-    mode: "scholar",
-    text: item.excerpt || "",
-  });
-  const canTranslate = !!(item.excerpt && item.excerpt.trim().length > 0);
-
-  const handleTranslateClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggle();
-  };
-
-  const subCategory = isDb
-    ? (item as DbArticle).sub_category
-    : (item as Article).subCategory;
+  const subCategory = (item as DbArticle).sub_category ?? (item as Article).subCategory;
   const catKey = normalizeCategory(item.category);
   const catLabel = catKey ? CATEGORY_CN[catKey] : item.category;
   const seal = catKey ? SEAL[catKey] : "文";
@@ -75,7 +59,7 @@ function GalleryCard({
       to="/article/$id"
       params={{ id: item.id }}
       style={{ animationDelay: `${index * 40}ms` }}
-      className="scroll-in group flex flex-col overflow-hidden rounded-sm border border-cinnabar/20 bg-[#faf6ec] transition hover:-translate-y-1 hover:border-cinnabar/45 hover:shadow-[0_12px_30px_-15px_rgba(196,58,48,0.18)] min-h-[340px]"
+      className="scroll-in group flex flex-col overflow-hidden rounded-sm border border-cinnabar/20 bg-[#faf6ec] transition hover:-translate-y-1 hover:border-cinnabar/45 hover:shadow-[0_12px_30px_-15px_rgba(196,58,48,0.18)] min-h-[300px]"
     >
       {/* 顶部卷轴轴头 — 两端朱砂小圆 + 极细横线 */}
       <div className="px-5 pt-3 flex items-center gap-2">
@@ -112,40 +96,14 @@ function GalleryCard({
         </p>
       </div>
 
-      {/* 译文展开区 */}
-      {open && translation && (
-        <div className="mx-6 mb-3 border-l-2 border-cinnabar/40 bg-cinnabar/5 px-3 py-2 font-serif text-xs italic leading-relaxed text-foreground/80">
-          <span className="mb-1 flex items-center gap-1 text-[10px] not-italic tracking-widest text-cinnabar">
-            <Languages className="h-2.5 w-2.5" /> 学者译文
-          </span>
-          {translation}
-        </div>
-      )}
-
-      {/* 底部: 极细朱砂线 + 落款 + 收藏 + 译按钮 */}
+      {/* 底部: 极细朱砂线 + 落款 + 收藏 */}
       <div className="mt-auto border-t border-cinnabar/15 px-6 py-3 flex items-center justify-between gap-2">
         <span className="font-serif text-[10px] tracking-[0.3em] text-foreground/40">
           —— 溯光 辑录
         </span>
-        <div className="flex items-center gap-3">
-          <span className="font-serif text-[10px] tracking-wider text-foreground/50 flex items-center gap-1">
-            <Heart className="h-3 w-3" /> {(item.favorites || 0).toLocaleString()}
-          </span>
-          <button
-            type="button"
-            onClick={handleTranslateClick}
-            disabled={loading || !canTranslate}
-            className="inline-flex items-center gap-1 rounded-sm border border-cinnabar/30 bg-cinnabar/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-cinnabar transition hover:bg-cinnabar/10 disabled:opacity-50"
-            title={canTranslate ? "以学者口吻将摘要译为白话" : "摘要为空, 无可译内容"}
-          >
-            {loading ? (
-              <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            ) : (
-              <Languages className="h-2.5 w-2.5" />
-            )}
-            {open ? "收起" : "译"}
-          </button>
-        </div>
+        <span className="font-serif text-[10px] tracking-wider text-foreground/50 flex items-center gap-1">
+          <Heart className="h-3 w-3" /> {(item.favorites || 0).toLocaleString()}
+        </span>
       </div>
 
       {/* 底部卷轴轴头 */}
@@ -386,7 +344,7 @@ export function KnowledgeGallery() {
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item, i) => (
-            <GalleryCard key={item.id} item={item as DbArticle | Article} index={i} isDb={isDb} />
+            <GalleryCard key={item.id} item={item as DbArticle | Article} index={i} />
           ))}
         </div>
       )}
