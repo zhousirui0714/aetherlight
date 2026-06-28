@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users, Menu, X, Heart, Sparkles } from "lucide-react";
+import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users, Menu, X, Heart, Sparkles, BookMarked } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { GlobalSearch } from "./global-search";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +29,28 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isCommunityActive = pathname.startsWith("/tongyou");
+
+  // 监听登录状态: 登录后右上角 "登录/注册" 切换为 "吾阁"
+  useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) setLoggedIn(!!data.session?.user);
+      } catch {}
+    };
+    refresh();
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (mounted) setLoggedIn(!!session?.user);
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   // 路径变化时关闭移动菜单
   useEffect(() => {
@@ -175,18 +196,31 @@ export function SiteHeader() {
                 <Moon className="h-[18px] w-[18px]" strokeWidth={1.6} />
               )}
             </button>
-            <Link
-              to="/auth"
-              className="ml-2 rounded-full border border-border bg-card px-4 py-1.5 font-serif text-sm tracking-widest text-foreground transition hover:border-primary/40 hover:text-primary"
-            >
-              登录
-            </Link>
-            <Link
-              to="/auth"
-              className="hidden sm:inline-flex rounded-full bg-primary px-4 py-1.5 font-serif text-sm tracking-widest text-primary-foreground transition hover:opacity-90"
-            >
-              注册
-            </Link>
+            {loggedIn ? (
+              <Link
+                to="/wuge"
+                className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-cinnabar/30 bg-gradient-to-br from-cinnabar/5 to-cinnabar/10 px-4 py-1.5 font-serif text-sm tracking-[0.3em] text-cinnabar transition hover:border-cinnabar/60 hover:from-cinnabar/10 hover:to-cinnabar/20"
+                title="我的吾阁"
+              >
+                <BookMarked className="h-3.5 w-3.5" strokeWidth={1.8} />
+                吾 阁
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  className="ml-2 rounded-full border border-border bg-card px-4 py-1.5 font-serif text-sm tracking-widest text-foreground transition hover:border-primary/40 hover:text-primary"
+                >
+                  登录
+                </Link>
+                <Link
+                  to="/auth"
+                  className="hidden sm:inline-flex rounded-full bg-primary px-4 py-1.5 font-serif text-sm tracking-widest text-primary-foreground transition hover:opacity-90"
+                >
+                  注册
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -293,12 +327,24 @@ export function SiteHeader() {
             <Heart className="h-4 w-4" strokeWidth={1.6} />
             <span className="font-serif text-sm tracking-wider">我的收藏</span>
           </Link>
-          <Link
-            to="/auth"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-foreground/85 transition-colors hover:bg-secondary"
-          >
-            <span className="font-serif text-sm tracking-wider">登录 / 注册</span>
-          </Link>
+          {loggedIn ? (
+            <Link
+              to="/wuge"
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                pathname.startsWith("/wuge") ? "bg-secondary text-primary" : "text-foreground/85 hover:bg-secondary"
+              }`}
+            >
+              <BookMarked className="h-4 w-4" strokeWidth={1.6} />
+              <span className="font-serif text-sm tracking-wider">吾 阁</span>
+            </Link>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-foreground/85 transition-colors hover:bg-secondary"
+            >
+              <span className="font-serif text-sm tracking-wider">登录 / 注册</span>
+            </Link>
+          )}
 
           {/* 主题切换 */}
           <div className="mt-4 flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
