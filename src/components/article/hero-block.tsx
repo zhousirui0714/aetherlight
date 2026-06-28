@@ -170,7 +170,7 @@ export function HeroBlock({
         </div>
 
         {/* 右侧：封面 / 配图 */}
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-border bg-secondary shadow-md md:aspect-[3/4]">
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-border bg-secondary shadow-md md:aspect-[4/3]">
           {coverUrl ? (
             <img
               src={coverUrl}
