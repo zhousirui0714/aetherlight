@@ -75,6 +75,51 @@ function buildFollowupResponse(entry: KnowledgeEntry, followup: string, allUserQ
   return response;
 }
 
+// 闲聊/招呼: 不走 entry, 走固定招呼回复
+const SMALL_TALK_PATTERNS = /^(你好|您好|hi|hello|嗨|哈喽|早安|晚安|谢谢|多谢|感谢|再见|拜|bye|ok|好的|嗯|哦)\s*[！!。.~,，]?\s*$/i;
+const PURE_PUNCTUATION = /^[\s\p{P}]+$/u;
+
+function isSmallTalk(text: string): boolean {
+  const t = text.trim();
+  if (!t) return true;
+  if (SMALL_TALK_PATTERNS.test(t)) return true;
+  if (PURE_PUNCTUATION.test(t)) return true;
+  if (t.length <= 2 && /^[一-龥]+$/.test(t)) return true;
+  return false;
+}
+
+function buildSmallTalkResponse(question: string, entry: KnowledgeEntry | null): string {
+  const isGreeting = /^(你好|您好|hi|hello|嗨|哈喽|早安|晚安)/i.test(question.trim());
+  const isThanks = /谢谢|感谢|多谢/.test(question);
+  const isBye = /再见|拜|bye/i.test(question);
+  let response = "";
+  if (isGreeting) {
+    response = "## 雅士拱手\n\n" +
+      "见信如晤。溯光在此,可与君论诗词、谈典籍、问人物、说节气、赏建筑、品非遗。\n\n" +
+      "—— 你或可问：\n";
+    if (entry) {
+      response += `- ${entry.question}\n`;
+    }
+    response += "- 李白为什么被称为诗仙？\n- 端午节起源于何时？\n- 《山海经》是怎样的一本书？";
+  } else if (isThanks) {
+    response = "## 不敢当\n\n能与君一席谈,实乃雅事。若有所得,愿再为君解惑。";
+  } else if (isBye) {
+    response = "## 后会有期\n\n他日有疑,再来一叙。";
+  } else {
+    response = "## 在此守候\n\n君可继续发问,或前往「知识长廊」浏览全部分类。";
+  }
+  return response;
+}
+
+// 检测追问是否跟前 entry 真正相关 (避免"你好"硬塞"杜甫")
+function isRelatedToEntry(followup: string, entry: KnowledgeEntry): boolean {
+  const tokens = followup.toLowerCase().split(/[\s,，。、？?！!；;：:《》'"]+/).filter((t) => t.length >= 2);
+  if (tokens.length === 0) return true;
+  const haystack = (entry.id + " " + entry.question + " " + (entry.answer || "")).toLowerCase();
+  for (const t of tokens) if (haystack.includes(t)) return true;
+  return false;
+}
+
 function extractText(msg: UIMessage | undefined): string {
   if (!msg) return "";
   const part = msg.parts?.find((p: any) => p.type === "text");
@@ -169,7 +214,7 @@ export const Route = createFileRoute("/api/chat")({
           return sseStreamFromText(text);
         }
 
-        // ========== 多轮对话: 优先复用上轮已命中 entry ==========
+        // ========== 多轮对话: 智能路由 (闲聊/相关/降级) ==========
         const allUserQuestions: string[] = [];
         for (const m of messages) {
           if (m.role === "user") {
@@ -178,18 +223,30 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
+        // 闲聊/招呼: 不硬塞 entry, 返回固定招呼
+        if (isSmallTalk(userQuestion)) {
+          let lastEntry: KnowledgeEntry | null = null;
+          for (let i = allUserQuestions.length - 2; i >= 0; i--) {
+            const hit = searchKnowledge(allUserQuestions[i]);
+            if (hit) { lastEntry = hit; break; }
+          }
+          return sseStreamFromText(buildSmallTalkResponse(userQuestion, lastEntry));
+        }
+
+        // 在历史中找是否有 entry 命中过
         let lastHitEntry: KnowledgeEntry | null = null;
         for (let i = allUserQuestions.length - 2; i >= 0; i--) {
           const hit = searchKnowledge(allUserQuestions[i]);
           if (hit) { lastHitEntry = hit; break; }
         }
 
-        if (lastHitEntry) {
+        // 追问必须跟 entry 真正相关 (避免"你好"硬塞"杜甫")
+        if (lastHitEntry && isRelatedToEntry(userQuestion, lastHitEntry)) {
           const text = buildFollowupResponse(lastHitEntry, userQuestion, allUserQuestions);
           return sseStreamFromText(text);
         }
 
-        // 全部未命中: 降级响应
+        // 追问跟历史 entry 无关: 走降级
         const related = findRelatedEntries(userQuestion, 5);
         const text = buildFallbackResponse(related, userQuestion);
         return sseStreamFromText(text);
