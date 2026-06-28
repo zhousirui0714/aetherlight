@@ -159,19 +159,29 @@ export function KnowledgeGallery() {
   const [loading, setLoading] = useState(true);
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
-  // Fetch articles from Supabase
+  // Fetch articles from Supabase — 分页拉全表 (突破 PostgREST 单次 1000 限制)
   useEffect(() => {
     const fetchArticles = async () => {
       setLoading(true);
       try {
-        const { data, fetchError } = await supabase
-          .from("knowledge_articles")
-          .select("id, title, category, sub_category, tags, excerpt, favorites, cover, cover_url, sort_weight, view_count, created_at")
-          .order("sort_weight", { ascending: false, nullsFirst: false })
-          .order("created_at", { ascending: false });
-
-        if (fetchError) throw fetchError;
-        setArticles(data || []);
+        const PAGE = 1000;
+        const all: DbArticle[] = [];
+        let from = 0;
+        // 循环 range 直到拉空 (上限 5 页 = 5000 条, 防失控)
+        for (let page = 0; page < 5; page++) {
+          const { data, error } = await supabase
+            .from("knowledge_articles")
+            .select("id, title, category, sub_category, tags, excerpt, favorites, cover, cover_url, sort_weight, view_count, created_at")
+            .order("sort_weight", { ascending: false, nullsFirst: false })
+            .order("created_at", { ascending: false })
+            .range(from, from + PAGE - 1);
+          if (error) throw error;
+          if (!data || data.length === 0) break;
+          all.push(...(data as DbArticle[]));
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
+        setArticles(all);
       } catch (err) {
         console.error("Failed to fetch articles from Supabase:", err);
         setArticles([]);
