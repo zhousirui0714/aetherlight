@@ -73,7 +73,7 @@ export function HeroBlock({
         {seal}
       </span>
 
-      <div className="relative grid grid-cols-1 gap-6 p-6 md:grid-cols-[1fr_280px] md:gap-8 md:p-10">
+      <div className="relative grid grid-cols-1 gap-6 p-6 md:grid-cols-[1fr_340px] md:gap-8 md:p-10">
         {/* 左侧：标题 + 摘要 + 标签 */}
         <div className="flex min-w-0 flex-col">
           {/* 顶部分类标签 */}
@@ -170,7 +170,7 @@ export function HeroBlock({
         </div>
 
         {/* 右侧：封面 / 配图 */}
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-border bg-secondary shadow-md md:aspect-[3/4]">
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-border bg-secondary shadow-md md:aspect-[4/3]">
           {coverUrl ? (
             <img
               src={coverUrl}
