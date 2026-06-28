@@ -6,7 +6,7 @@ type HotQuestion = {
   question: string;
   category: string;
   heat: number;
-  q: string; // 搜索 query
+  q: string;
 };
 
 const HOT_LIST: HotQuestion[] = [
@@ -20,121 +20,165 @@ const HOT_LIST: HotQuestion[] = [
   { rank: 8, question: "《诗经》'风雅颂'到底在唱什么？305 篇该如何读？",   category: "典籍·周", heat: 4988, q: "诗经风雅颂怎么读" },
 ];
 
-/**
- * 风格 A: 文化印柔
- *  - 全部 8 行统一字号、留白、节奏
- *  - 1/2/3 用朱砂红方印 (seal, 12x12), 4-8 用淡灰方印 (10x10)
- *  - 不用渐变背景, 不用 left-border 抢色
- *  - 整段右上一枚"溯光热问"朱砂方印
- *  - 每行 hover 时: 印色加深, 文字颜色变主色
- *  - 印章统一: 圆角 2px, 字体 serif, 数字/字 都用同字体大小
- */
-function Seal({ rank, isTop }: { rank: number; isTop: boolean }) {
-  // 朱砂印 vs 淡印: 同一形状不同色调, 保持视觉一致性
-  const tone = isTop
-    ? "border-cinnabar/90 bg-cinnabar text-[#faf5e8] shadow-[0_1px_3px_rgba(196,58,48,0.25)]"
-    : "border-border/70 bg-secondary/40 text-muted-foreground/60";
-  const size = isTop ? "h-11 w-11 text-lg" : "h-9 w-9 text-base";
-  return (
-    <div
-      className={`flex shrink-0 items-center justify-center border-2 font-serif tabular-nums md:${isTop ? "h-12 md:w-12 md:text-xl" : "h-10 md:w-10 md:text-lg"} ${size} ${tone}`}
-      style={{ borderRadius: "2px" }}
-    >
-      {rank}
-    </div>
-  );
-}
+// 竖排序号的简写: 一二三四五六七八
+const CN_NUM = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 
+/**
+ * 新中式水墨风 — HotList
+ *
+ * 设计原则:
+ *  - 整段背景 = 宣纸米黄 + 淡淡水墨山水 SVG
+ *  - 序号 = 竖排毛笔体(中文数字), 而不是色块
+ *  - 分类/标签 = 极简小字 + 细线, 不再用色块
+ *  - 行间分隔 = 极淡的朱砂横线 (像题跋)
+ *  - 顶部题首 = "大家都在问" 用朱砂方印
+ *  - 底部落款 = "—— 溯光" 朱砂小印
+ *  - 整体留白 60%+, 远多于信息密度
+ *  - 没有五颜六色, 没有圆角彩色胶囊
+ */
 export function HotList() {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-secondary/30 py-20">
-      <div className="mx-auto max-w-4xl px-6">
-        {/* 标题 */}
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <div className="font-serif text-xs tracking-[0.4em] text-accent">WHAT PEOPLE ASK</div>
-            <h2 className="mt-3 font-serif text-3xl text-foreground md:text-4xl">大家都在问</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              最受关注的文化疑问 · 点击直达 AI 雅士答疑
-            </p>
+    <section className="relative overflow-hidden bg-[#f4ecdc] py-20">
+      {/* 背景水墨山水 SVG - 极淡, 营造宣纸氛围 */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.08]" aria-hidden>
+        <svg
+          width="100%"
+          height="100%"
+          preserveAspectRatio="xMidYMid slice"
+          viewBox="0 0 1200 600"
+        >
+          {/* 远山 */}
+          <path
+            d="M 0 350 Q 100 280 200 320 T 400 290 T 600 310 T 800 280 T 1000 300 T 1200 270 L 1200 600 L 0 600 Z"
+            fill="#3a3a3a"
+          />
+          {/* 中山 */}
+          <path
+            d="M 0 420 Q 150 360 300 400 T 600 380 T 900 410 T 1200 380 L 1200 600 L 0 600 Z"
+            fill="#2a2a2a"
+            opacity="0.6"
+          />
+          {/* 近山 */}
+          <path
+            d="M 0 500 Q 200 450 400 490 T 800 480 T 1200 470 L 1200 600 L 0 600 Z"
+            fill="#1a1a1a"
+            opacity="0.5"
+          />
+          {/* 飞鸟 3 只 */}
+          <path
+            d="M 850 120 q 8 -6 16 0 m -16 0 q 8 6 16 0"
+            stroke="#1a1a1a"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <path
+            d="M 920 90 q 6 -5 12 0 m -12 0 q 6 5 12 0"
+            stroke="#1a1a1a"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <path
+            d="M 980 140 q 6 -5 12 0 m -12 0 q 6 5 12 0"
+            stroke="#1a1a1a"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          {/* 一叶扁舟 */}
+          <path
+            d="M 150 480 q 40 -8 80 0 z"
+            fill="#1a1a1a"
+            opacity="0.7"
+          />
+          <line x1="190" y1="480" x2="190" y2="450" stroke="#1a1a1a" strokeWidth="1" opacity="0.6" />
+        </svg>
+      </div>
+
+      <div className="relative mx-auto max-w-4xl px-6">
+        {/* 标题区 - 卷轴题首风 */}
+        <div className="mb-12 text-center">
+          <div className="font-serif text-xs tracking-[0.6em] text-cinnabar/70">
+            溯　光
           </div>
-          <button
-            onClick={() => navigate({ to: "/tongyou/community" })}
-            className="hidden font-serif text-sm tracking-[0.2em] text-foreground/70 transition hover:text-primary md:inline-flex md:items-center md:gap-1"
-          >
-            全部问题
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </button>
+          <h2 className="mt-4 font-serif text-4xl font-light tracking-[0.2em] text-foreground md:text-5xl">
+            大家都在问
+          </h2>
+          <div className="mx-auto mt-3 h-px w-24 bg-cinnabar/40" />
+          <p className="mt-4 font-serif text-sm tracking-wider text-foreground/60">
+            最受关注的文化疑问 · 点击直达 AI 雅士答疑
+          </p>
         </div>
 
-        {/* 列表容器 - 右上角小印 */}
-        <div className="relative">
-          {/* 右上角 "溯光·热问" 朱砂方印 */}
-          <div className="absolute -right-2 -top-3 z-10 hidden md:block">
+        {/* 列表 - 卷轴风 */}
+        <div className="relative rounded-sm border border-cinnabar/15 bg-[#faf6ec]/80 px-8 py-10 shadow-[0_2px_20px_rgba(139,69,19,0.06)] backdrop-blur-sm md:px-14 md:py-12">
+          {/* 卷轴左右两端小圆头装饰 */}
+          <div className="absolute -left-1 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-cinnabar/60" />
+          <div className="absolute -right-1 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-cinnabar/60" />
+
+          {/* 顶部小印: "热问" */}
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <div
-              className="flex h-10 w-10 items-center justify-center border-2 border-vermilion-700/90 bg-vermilion-700 font-serif text-[11px] leading-tight tracking-wider text-[#faf5e8] shadow-[0_2px_6px_rgba(180,40,40,0.3)]"
-              style={{ borderRadius: "2px" }}
+              className="border-2 border-cinnabar bg-cinnabar px-3 py-1 font-serif text-xs tracking-[0.3em] text-[#faf5e8] shadow-[0_2px_4px_rgba(196,58,48,0.3)]"
+              style={{ borderRadius: "1px" }}
             >
-              <div className="text-center">
-                <div>溯光</div>
-                <div>热问</div>
-              </div>
+              热 问
             </div>
           </div>
 
-          <ol className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
-            {HOT_LIST.map((item) => {
-              const isTop = item.rank <= 3;
-              return (
-                <li
-                  key={item.rank}
-                  className="border-b border-border/40 last:border-b-0"
+          {/* 列表 - 一题一行, 中间用极细朱砂线分隔 */}
+          <ol className="divide-y divide-cinnabar/15">
+            {HOT_LIST.map((item) => (
+              <li key={item.rank}>
+                <button
+                  onClick={() => navigate({ to: "/chat", search: { q: item.q } })}
+                  className="group relative flex w-full items-baseline gap-6 py-5 text-left transition md:gap-8 md:py-6"
                 >
-                  <button
-                    onClick={() => navigate({ to: "/chat", search: { q: item.q } })}
-                    className="group relative flex w-full items-center gap-4 overflow-hidden px-5 py-4 text-left transition hover:bg-secondary/50 md:gap-5 md:px-6 md:py-[18px]"
+                  {/* 序号 - 中文数字, 极淡, 像落款序号 */}
+                  <span
+                    className="w-8 shrink-0 select-none text-right font-serif text-2xl font-light text-cinnabar/40 transition group-hover:text-cinnabar md:w-10 md:text-3xl"
+                    style={{ fontFamily: "'KaiTi', 'STKaiti', serif" }}
                   >
-                    {/* 名次印章 - 全行统一形状, 只换颜色 */}
-                    <Seal rank={item.rank} isTop={isTop} />
+                    {CN_NUM[item.rank]}
+                  </span>
 
-                    {/* 中部内容 */}
-                    <div className="min-w-0 flex-1">
-                      <div className="font-serif text-base leading-snug text-foreground transition group-hover:text-primary md:text-lg">
-                        {item.question}
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground md:mt-2">
-                        <span className="rounded-sm border border-border/60 px-1.5 py-px font-serif text-[10px] tracking-wider text-muted-foreground">
-                          {item.category}
-                        </span>
-                        <span className="font-serif tracking-wide text-amber-700/80">
-                          {isTop ? "本周热问 · " : ""}{(item.heat / 1000).toFixed(1)}k 热度
-                        </span>
-                      </div>
+                  {/* 中部内容 */}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-serif text-base leading-relaxed text-foreground/85 transition group-hover:text-cinnabar md:text-lg">
+                      {item.question}
                     </div>
+                    <div className="mt-2 flex items-center gap-3 text-xs">
+                      <span className="font-serif tracking-[0.2em] text-foreground/50">
+                        {item.category}
+                      </span>
+                      <span className="text-foreground/20">·</span>
+                      <span className="font-serif tracking-wider text-foreground/40">
+                        {(item.heat / 1000).toFixed(1)}k
+                      </span>
+                    </div>
+                  </div>
 
-                    {/* 右侧箭头 */}
-                    <ArrowUpRight
-                      className={`h-4 w-5 shrink-0 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
-                        isTop ? "text-cinnabar/70 group-hover:text-cinnabar" : "text-muted-foreground/40 group-hover:text-primary"
-                      }`}
-                    />
-                  </button>
-                </li>
-              );
-            })}
+                  {/* 右侧 - 极细箭头, hover 出现 */}
+                  <ArrowUpRight
+                    className="h-4 w-4 shrink-0 self-center text-foreground/20 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-cinnabar/70"
+                  />
+                </button>
+              </li>
+            ))}
           </ol>
-        </div>
 
-        <div className="mt-6 text-center md:hidden">
-          <button
-            onClick={() => navigate({ to: "/tongyou/community" })}
-            className="inline-flex items-center gap-1 font-serif text-sm tracking-[0.2em] text-foreground/70"
-          >
-            去讨论
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </button>
+          {/* 底部落款 - 朱砂小印 "溯光" */}
+          <div className="mt-8 flex items-center justify-between border-t border-cinnabar/15 pt-6">
+            <div className="font-serif text-xs tracking-[0.3em] text-foreground/40">
+              ——　溯光　辑录
+            </div>
+            <button
+              onClick={() => navigate({ to: "/tongyou/community" })}
+              className="font-serif text-xs tracking-[0.3em] text-cinnabar/70 transition hover:text-cinnabar"
+            >
+              观 其 全 貌 →
+            </button>
+          </div>
         </div>
       </div>
     </section>
