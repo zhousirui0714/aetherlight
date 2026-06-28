@@ -1,0 +1,11 @@
+{
+  "poems": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/poems.svg",
+  "classics": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/classics.svg",
+  "figures": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/figures.svg",
+  "philosophy": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/philosophy.svg",
+  "mythology": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/mythology.svg",
+  "festivals": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/festivals.svg",
+  "lifestyle": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/lifestyle.svg",
+  "artifacts": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/artifacts.svg",
+  "intangible": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/intangible.svg"
+}
