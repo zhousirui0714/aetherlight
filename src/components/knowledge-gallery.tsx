@@ -10,9 +10,14 @@ import {
   type CategoryKey,
 } from "@/lib/knowledge-types";
 import { supabase } from "@/integrations/supabase/client";
-import { ArticleIllustration } from "./article-illustration";
-import { AlmanacCard } from "./almanac-card";
 import { useTranslation } from "@/lib/use-translation";
+
+// 朱砂方印: 每个分类一个单字印文
+const SEAL: Record<CategoryKey, string> = {
+  figures: "人", poems: "诗", classics: "典", festivals: "节",
+  mythology: "神", intangible: "遗", artifacts: "器",
+  lifestyle: "物", philosophy: "哲", technology: "技",
+};
 
 type DbArticle = {
   id: string;
@@ -58,71 +63,79 @@ function GalleryCard({
     toggle();
   };
 
-  const emoji = isDb ? (item as DbArticle).cover || "📜" : (item as Article).cover;
   const subCategory = isDb
     ? (item as DbArticle).sub_category
     : (item as Article).subCategory;
   const catKey = normalizeCategory(item.category);
   const catLabel = catKey ? CATEGORY_CN[catKey] : item.category;
-  const coverUrl = isDb
-    ? (item as DbArticle).cover_url
-    : (item as Article).coverUrl;
+  const seal = catKey ? SEAL[catKey] : "文";
 
   return (
     <Link
       to="/article/$id"
       params={{ id: item.id }}
       style={{ animationDelay: `${index * 40}ms` }}
-      className="scroll-in group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.25)]"
+      className="scroll-in group flex flex-col overflow-hidden rounded-sm border border-cinnabar/20 bg-[#faf6ec] transition hover:-translate-y-1 hover:border-cinnabar/45 hover:shadow-[0_12px_30px_-15px_rgba(196,58,48,0.18)] min-h-[340px]"
     >
-      {/* cover */}
-      <div className="relative h-[180px] w-full overflow-hidden">
-        <ArticleIllustration
-          category={catKey || item.category}
-          title={item.title}
-          emoji={emoji}
-          coverUrl={coverUrl}
-        />
+      {/* 顶部卷轴轴头 — 两端朱砂小圆 + 极细横线 */}
+      <div className="px-5 pt-3 flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-cinnabar/70 shrink-0" />
+        <div className="h-px flex-1 bg-cinnabar/25" />
+        <div className="h-2 w-2 rounded-full bg-cinnabar/70 shrink-0" />
       </div>
 
-      {/* content */}
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="inline-block w-fit rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-accent">
-            {catLabel}
-          </span>
-          {subCategory && (
-            <span className="inline-block w-fit rounded-full bg-muted px-2 py-0.5 font-serif text-[10px] tracking-widest text-muted-foreground">
+      {/* 朱砂方印 + 分类 + 子类 */}
+      <div className="px-6 pt-4 flex items-center gap-2.5">
+        <div className="inline-flex h-7 w-7 items-center justify-center border-2 border-cinnabar bg-cinnabar/5 font-serif text-sm font-bold text-cinnabar">
+          {seal}
+        </div>
+        <span className="font-serif text-xs tracking-[0.3em] text-foreground/65">
+          {catLabel}
+        </span>
+        {subCategory && (
+          <>
+            <span className="text-foreground/25">·</span>
+            <span className="font-serif text-[11px] tracking-wider text-foreground/45">
               {subCategory}
             </span>
-          )}
-        </div>
-        <h3 className="font-serif text-lg font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+          </>
+        )}
+      </div>
+
+      {/* 标题 + 摘要 (题字风, 大量留白) */}
+      <div className="flex-1 px-6 py-5">
+        <h3 className="font-serif text-xl font-light leading-loose text-foreground/90 tracking-[0.2em] line-clamp-2 group-hover:text-cinnabar transition">
           {item.title}
         </h3>
-        <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+        <p className="mt-3 font-serif text-sm leading-relaxed text-foreground/60 line-clamp-2">
           {item.excerpt}
         </p>
+      </div>
 
-        {/* 译文展开区 */}
-        {open && translation && (
-          <div className="rounded-lg border-l-2 border-accent/40 bg-accent/5 px-3 py-2 font-serif text-xs italic leading-relaxed text-foreground/80">
-            <span className="mb-1 flex items-center gap-1 text-[10px] not-italic tracking-widest text-accent">
-              <Languages className="h-2.5 w-2.5" /> 学者译文
-            </span>
-            {translation}
-          </div>
-        )}
+      {/* 译文展开区 */}
+      {open && translation && (
+        <div className="mx-6 mb-3 border-l-2 border-cinnabar/40 bg-cinnabar/5 px-3 py-2 font-serif text-xs italic leading-relaxed text-foreground/80">
+          <span className="mb-1 flex items-center gap-1 text-[10px] not-italic tracking-widest text-cinnabar">
+            <Languages className="h-2.5 w-2.5" /> 学者译文
+          </span>
+          {translation}
+        </div>
+      )}
 
-        <div className="mt-auto flex items-center gap-3 pt-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5" /> {item.favorites?.toLocaleString() || 0} 收藏
+      {/* 底部: 极细朱砂线 + 落款 + 收藏 + 译按钮 */}
+      <div className="mt-auto border-t border-cinnabar/15 px-6 py-3 flex items-center justify-between gap-2">
+        <span className="font-serif text-[10px] tracking-[0.3em] text-foreground/40">
+          —— 溯光 辑录
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-serif text-[10px] tracking-wider text-foreground/50 flex items-center gap-1">
+            <Heart className="h-3 w-3" /> {(item.favorites || 0).toLocaleString()}
           </span>
           <button
             type="button"
             onClick={handleTranslateClick}
             disabled={loading || !canTranslate}
-            className="ml-auto inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/5 px-2.5 py-0.5 font-serif text-[10px] tracking-widest text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-sm border border-cinnabar/30 bg-cinnabar/5 px-2 py-0.5 font-serif text-[10px] tracking-widest text-cinnabar transition hover:bg-cinnabar/10 disabled:opacity-50"
             title={canTranslate ? "以学者口吻将摘要译为白话" : "摘要为空, 无可译内容"}
           >
             {loading ? (
@@ -133,6 +146,13 @@ function GalleryCard({
             {open ? "收起" : "译"}
           </button>
         </div>
+      </div>
+
+      {/* 底部卷轴轴头 */}
+      <div className="px-5 pb-3 flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-cinnabar/70 shrink-0" />
+        <div className="h-px flex-1 bg-cinnabar/25" />
+        <div className="h-2 w-2 rounded-full bg-cinnabar/70 shrink-0" />
       </div>
     </Link>
   );
