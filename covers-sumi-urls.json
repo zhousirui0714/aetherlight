@@ -1,5 +1,8 @@
 {
-  "poems": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/poems.svg",
+  "poems-a": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/poems-a.svg",
+  "poems-b": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/poems-b.svg",
+  "poems-c": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/poems-c.svg",
+  "poems-d": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/poems-d.svg",
   "classics": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/classics.svg",
   "figures": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/figures.svg",
   "philosophy": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/philosophy.svg",
@@ -7,5 +10,6 @@
   "festivals": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/festivals.svg",
   "lifestyle": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/lifestyle.svg",
   "artifacts": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/artifacts.svg",
-  "intangible": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/intangible.svg"
+  "intangible": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/intangible.svg",
+  "technology": "https://ozshflujnxonhfwdtunp.supabase.co/storage/v1/object/public/covers/sumi/technology.svg"
 }

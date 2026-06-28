@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <filter id="paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="90"/>
+      <feColorMatrix values="0 0 0 0 0.85  0 0 0 0 0.78  0 0 0 0 0.65  0 0 0 0.08 0"/>
+    </filter>
+    <filter id="ink">
+      <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="3"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" fill="#f4ecdc"/>
+  <rect width="1200" height="800" fill="#f4ecdc" filter="url(#paper)"/>
+
+  <!-- 远山 -->
+  <path d="M 0 381 Q 28.57142857142857 321 85.71428571428571 301 T 171.42857142857142 321 Q 199.99999999999997 318 257.1428571428571 298 T 342.85714285714283 318 Q 371.42857142857144 315 428.57142857142856 295 T 514.2857142857142 315 Q 542.8571428571429 312 600 292 T 685.7142857142857 312 Q 714.2857142857142 369 771.4285714285713 349 T 857.142857142857 369 Q 885.7142857142857 366 942.8571428571428 346 T 1028.5714285714284 366 Q 1057.142857142857 363 1114.2857142857142 343 T 1200 363 L 1200 800 L 0 800 Z" fill="#3a3a3a" opacity="0.18" filter="url(#ink)"/>
+  <!-- 中山 -->
+  <path d="M 0 454 Q 28.57142857142857 394 85.71428571428571 374 T 171.42857142857142 394 Q 199.99999999999997 391 257.1428571428571 371 T 342.85714285714283 391 Q 371.42857142857144 388 428.57142857142856 368 T 514.2857142857142 388 Q 542.8571428571429 385 600 365 T 685.7142857142857 385 Q 714.2857142857142 442 771.4285714285713 422 T 857.142857142857 442 Q 885.7142857142857 439 942.8571428571428 419 T 1028.5714285714284 439 Q 1057.142857142857 436 1114.2857142857142 416 T 1200 436 L 1200 800 L 0 800 Z" fill="#2a2a2a" opacity="0.30" filter="url(#ink)"/>
+  <!-- 近山 -->
+  <path d="M 0 558 Q 28.57142857142857 498 85.71428571428571 478 T 171.42857142857142 498 Q 199.99999999999997 495 257.1428571428571 475 T 342.85714285714283 495 Q 371.42857142857144 492 428.57142857142856 472 T 514.2857142857142 492 Q 542.8571428571429 489 600 469 T 685.7142857142857 489 Q 714.2857142857142 546 771.4285714285713 526 T 857.142857142857 546 Q 885.7142857142857 543 942.8571428571428 523 T 1028.5714285714284 543 Q 1057.142857142857 540 1114.2857142857142 520 T 1200 540 L 1200 800 L 0 800 Z" fill="#1a1a1a" opacity="0.45" filter="url(#ink)"/>
+
+  <!-- 主题元素 (在山前, 水墨淡) -->
+  
+
+  <!-- 飞鸟 -->
+  <path d="M 796 192 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+  <path d="M 836 199 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+  <path d="M 876 66 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+  <path d="M 916 73 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+
+  <!-- 小舟 -->
+  <path d="M 138 612 q 50 -10 100 0 z" fill="#1a1a1a" opacity="0.65"/>
+<line x1="188" y1="612" x2="188" y2="580" stroke="#1a1a1a" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- 右侧朱砂方印 -->
+  <g transform="translate(1070, 90)">
+    <rect x="0" y="0" width="70" height="70" fill="none" stroke="#c43a30" stroke-width="3" rx="2"/>
+    <text x="35" y="48" font-family="'KaiTi','STKaiti',serif" font-size="36" fill="#c43a30" text-anchor="middle" font-weight="bold">诗</text>
+  </g>
+
+  <!-- 左侧题款 -->
+  <g transform="translate(80, 90)">
+    <text x="0" y="0" font-family="'KaiTi','STKaiti',serif" font-size="14" fill="#3a3a3a" letter-spacing="6" opacity="0.7">溯　光</text>
+    <line x1="0" y1="14" x2="60" y2="14" stroke="#3a3a3a" stroke-width="0.5" opacity="0.4"/>
+    <text x="0" y="36" font-family="'KaiTi','STKaiti',serif" font-size="22" fill="#1a1a1a" letter-spacing="8" opacity="0.85">诗 词</text>
+  </g>
+
+  <!-- 底部溯光印 -->
+  <g transform="translate(80, 730)">
+    <rect x="0" y="0" width="44" height="44" fill="#c43a30" rx="1"/>
+    <text x="22" y="30" font-family="'KaiTi','STKaiti',serif" font-size="18" fill="#faf5e8" text-anchor="middle" font-weight="bold">溯光</text>
+  </g>
+</svg>

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <filter id="paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="93"/>
+      <feColorMatrix values="0 0 0 0 0.85  0 0 0 0 0.78  0 0 0 0 0.65  0 0 0 0.08 0"/>
+    </filter>
+    <filter id="ink">
+      <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" seed="10"/>
+      <feDisplacementMap in="SourceGraphic" scale="3"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" fill="#f4ecdc"/>
+  <rect width="1200" height="800" fill="#f4ecdc" filter="url(#paper)"/>
+
+  <!-- 远山 -->
+  <path d="M 0 366 Q 33.33333333333333 345 100 325 T 200 345 Q 233.33333333333331 298 300 278 T 400 298 Q 433.3333333333333 311 500 291 T 600 311 Q 633.3333333333334 323 700 303 T 800 323 Q 833.3333333333334 336 900 316 T 1000 336 Q 1033.3333333333333 349 1100 329 T 1200 349 L 1200 800 L 0 800 Z" fill="#3a3a3a" opacity="0.18" filter="url(#ink)"/>
+  <!-- 中山 -->
+  <path d="M 0 477 Q 33.33333333333333 456 100 436 T 200 456 Q 233.33333333333331 409 300 389 T 400 409 Q 433.3333333333333 422 500 402 T 600 422 Q 633.3333333333334 434 700 414 T 800 434 Q 833.3333333333334 447 900 427 T 1000 447 Q 1033.3333333333333 460 1100 440 T 1200 460 L 1200 800 L 0 800 Z" fill="#2a2a2a" opacity="0.30" filter="url(#ink)"/>
+  <!-- 近山 -->
+  <path d="M 0 562 Q 33.33333333333333 541 100 521 T 200 541 Q 233.33333333333331 494 300 474 T 400 494 Q 433.3333333333333 507 500 487 T 600 507 Q 633.3333333333334 519 700 499 T 800 519 Q 833.3333333333334 532 900 512 T 1000 532 Q 1033.3333333333333 545 1100 525 T 1200 545 L 1200 800 L 0 800 Z" fill="#1a1a1a" opacity="0.45" filter="url(#ink)"/>
+
+  <!-- 主题元素 (在山前, 水墨淡) -->
+  
+
+  <!-- 飞鸟 -->
+  <path d="M 460 125 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+  <path d="M 288 95 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+  <path d="M 916 64 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+  <path d="M 744 174 q 8 -6 16 0 m -16 0 q 8 6 16 0" stroke="#1a1a1a" stroke-width="1.8" fill="none" opacity="0.55"/>
+
+  <!-- 小舟 -->
+  <path d="M 216 608 q 50 -10 100 0 z" fill="#1a1a1a" opacity="0.65"/>
+<line x1="266" y1="608" x2="266" y2="576" stroke="#1a1a1a" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- 右侧朱砂方印 -->
+  <g transform="translate(1070, 90)">
+    <rect x="0" y="0" width="70" height="70" fill="none" stroke="#c43a30" stroke-width="3" rx="2"/>
+    <text x="35" y="48" font-family="'KaiTi','STKaiti',serif" font-size="36" fill="#c43a30" text-anchor="middle" font-weight="bold">诗</text>
+  </g>
+
+  <!-- 左侧题款 -->
+  <g transform="translate(80, 90)">
+    <text x="0" y="0" font-family="'KaiTi','STKaiti',serif" font-size="14" fill="#3a3a3a" letter-spacing="6" opacity="0.7">溯　光</text>
+    <line x1="0" y1="14" x2="60" y2="14" stroke="#3a3a3a" stroke-width="0.5" opacity="0.4"/>
+    <text x="0" y="36" font-family="'KaiTi','STKaiti',serif" font-size="22" fill="#1a1a1a" letter-spacing="8" opacity="0.85">诗 词</text>
+  </g>
+
+  <!-- 底部溯光印 -->
+  <g transform="translate(80, 730)">
+    <rect x="0" y="0" width="44" height="44" fill="#c43a30" rx="1"/>
+    <text x="22" y="30" font-family="'KaiTi','STKaiti',serif" font-size="18" fill="#faf5e8" text-anchor="middle" font-weight="bold">溯光</text>
+  </g>
+</svg>
