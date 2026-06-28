@@ -1,13 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { createAiProvider, getDefaultModel } from "@/lib/ai-gateway.server";
-import { searchKnowledge, type KnowledgeEntry } from "@/lib/cultural-knowledge";
+import type { UIMessage } from "ai";
+import { searchKnowledge, culturalKnowledge, type KnowledgeEntry } from "@/lib/cultural-knowledge";
 import { getCache, setCache, getKnowledgeCacheKey } from "@/lib/api-cache";
 
 function formatKnowledgeResponse(entry: KnowledgeEntry): string {
   let response = `## ${entry.question}\n\n`;
   response += `${entry.answer}\n\n`;
-  
   if (entry.quotes.length > 0) {
     response += "---\n\n";
     for (const quote of entry.quotes) {
@@ -16,24 +14,108 @@ function formatKnowledgeResponse(entry: KnowledgeEntry): string {
       response += `—— ${quote.dynasty} · ${quote.author}\n\n`;
     }
   }
-  
-  response += "---\n\n";
-  response += "**出处：**\n";
+  response += "---\n\n**出处：**\n";
   for (const source of entry.sources) {
     const urlPart = source.url ? ` ([查看](${source.url}))` : "";
     response += `- ${source.title}${urlPart}\n`;
   }
-  
   if (entry.interpretations) {
-    response += "\n---\n\n";
-    response += `**现代释义：** ${entry.interpretations}\n`;
+    response += "\n---\n\n**现代释义：** " + entry.interpretations + "\n";
   }
-  
   if (entry.scholarAnalysis) {
-    response += "\n**学者解读：** " + entry.scholarAnalysis.substring(0, 150) + "…\n";
+    response += "\n**学者解读：** " + entry.scholarAnalysis.substring(0, 200) + "…\n";
   }
-  
   return response;
+}
+
+// 找 N 个最相关的 entry (按 token 命中长度排序)
+function findRelatedEntries(query: string, n = 5): KnowledgeEntry[] {
+  const stripped = query.toLowerCase().replace(/[\s\p{P}]/gu, "");
+  const tokens = query.toLowerCase().split(/[\s,，。、？?！!；;：:《》'"]+/).filter((t) => t.length >= 2);
+  const scored: { entry: KnowledgeEntry; score: number }[] = [];
+  for (const entry of Object.values(culturalKnowledge)) {
+    let score = 0;
+    const haystack = (entry.id + " " + entry.question + " " + (entry.answer || "")).toLowerCase();
+    for (const t of tokens) if (haystack.includes(t)) score += t.length;
+    if (stripped.length >= 4 && haystack.includes(stripped)) score += 3;
+    if (score > 0) scored.push({ entry, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, n).map((s) => s.entry);
+}
+
+function buildFallbackResponse(related: KnowledgeEntry[], userQuestion: string): string {
+  let response = `## 知识阁中暂未收录此题\n\n`;
+  const safeQ = userQuestion.length > 30 ? userQuestion.slice(0, 30) + "…" : userQuestion;
+  response += `「${safeQ}」暂未入我书阁,或可换个问法试我。\n\n`;
+  if (related.length > 0) {
+    response += `---\n\n**你或可问：**\n\n`;
+    for (const e of related) response += `- ${e.question}\n`;
+    response += `\n亦可前往「知识长廊」浏览全部分类。`;
+  } else {
+    response += `可前往「知识长廊」浏览已收录之问,或向我提一更具体之题。`;
+  }
+  return response;
+}
+
+function buildFollowupResponse(entry: KnowledgeEntry, followup: string, allUserQuestions: string[]): string {
+  let response = `## ${entry.question}(续)\n\n`;
+  if (allUserQuestions.length > 1) {
+    response += `**前问:** ${allUserQuestions.slice(0, -1).join(" / ")}\n\n`;
+  }
+  response += `**你问:** ${followup}\n\n`;
+  response += `${entry.answer}\n\n`;
+  if (entry.interpretations) {
+    response += `---\n\n**释义:** ${entry.interpretations}\n\n`;
+  }
+  if (entry.quotes.length > 0) {
+    response += `**相关诗句:** 《${entry.quotes[0].title}》—— ${entry.quotes[0].text.slice(0, 60)}…\n\n`;
+  }
+  response += `---\n\n如欲知更细,请阅读下方出处,或继续追问。`;
+  return response;
+}
+
+function extractText(msg: UIMessage | undefined): string {
+  if (!msg) return "";
+  const part = msg.parts?.find((p: any) => p.type === "text");
+  return (part as any)?.text ?? "";
+}
+
+// 把文本切成 SSE data 块流式输出 (useChat 期望 SSE 格式)
+function sseStreamFromText(text: string): Response {
+  const encoder = new TextEncoder();
+  const id = `msg-${Date.now()}`;
+  const chunkSize = 12; // 每块 12 字符, 接近打字机效果
+
+  const stream = new ReadableStream({
+    start(controller) {
+      // type: start (含 messageId, AI SDK 需要)
+      controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${id}"}\n\n`));
+      // type: text-start
+      controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${id}"}\n\n`));
+      // 分块发送文本
+      for (let i = 0; i < text.length; i += chunkSize) {
+        const chunk = text.slice(i, i + chunkSize);
+        const escaped = JSON.stringify(chunk).slice(1, -1);
+        controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${id}","delta":"${escaped}"}\n\n`));
+      }
+      // type: text-end
+      controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${id}"}\n\n`));
+      // type: finish (含 finishReason, AI SDK 用)
+      controller.enqueue(encoder.encode(`data: {"type":"finish","finishReason":"stop"}\n\n`));
+      // 末尾空行 (SSE 结束)
+      controller.enqueue(encoder.encode(`\n`));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+    },
+  });
 }
 
 export const Route = createFileRoute("/api/chat")({
@@ -45,73 +127,72 @@ export const Route = createFileRoute("/api/chat")({
         if (!Array.isArray(messages)) return new Response("messages required", { status: 400 });
 
         const lastMessage = messages[messages.length - 1];
-        const userQuestion = lastMessage?.parts?.find(p => p.type === "text")?.text || "";
+        const userQuestion = extractText(lastMessage as UIMessage);
 
-        // ========== 知识图谱查询：始终走知识库快速路径 ==========
+        // ========== 知识图谱查询 (JSON 响应, 客户端直接用) ==========
         if (graphQuery && userQuestion) {
           const cacheKey = getKnowledgeCacheKey(userQuestion);
-          const cached = getCache<{ type: string; data: KnowledgeEntry }>(cacheKey);
+          const cached = getCache<{ type: string; data: KnowledgeEntry | null }>(cacheKey);
           if (cached) {
             return new Response(JSON.stringify(cached), {
               headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
             });
           }
-
           const knowledgeEntry = searchKnowledge(userQuestion);
-          if (knowledgeEntry) {
-            const response = { type: "knowledge", data: knowledgeEntry };
-            setCache(cacheKey, response);
-            return new Response(JSON.stringify(response), {
-              headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
-            });
-          }
-          // 未命中知识库，返回空图谱
-          return new Response(JSON.stringify({ type: "knowledge", data: null }), {
-            headers: { "Content-Type": "application/json" }
+          const response = knowledgeEntry
+            ? { type: "knowledge", data: knowledgeEntry }
+            : { type: "knowledge", data: null };
+          setCache(cacheKey, response);
+          return new Response(JSON.stringify(response), {
+            headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
           });
         }
 
-        // ========== 普通对话：仅首问走知识库 ==========
-        const isFirstTurn = !messages.some(m => m.role === "assistant");
+        // ========== 首问: 100% 走知识库 (SSE 流式输出) ==========
+        const isFirstTurn = !messages.some((m) => m.role === "assistant");
         if (isFirstTurn && userQuestion) {
           const cacheKey = getKnowledgeCacheKey(userQuestion);
-          const cached = getCache<{ type: string; data: KnowledgeEntry }>(cacheKey);
+          const cached = getCache<{ text: string }>(cacheKey);
           if (cached) {
-            return new Response(JSON.stringify(cached), {
-              headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
-            });
+            return sseStreamFromText(cached.text);
           }
 
           const knowledgeEntry = searchKnowledge(userQuestion);
+          let text: string;
           if (knowledgeEntry) {
-            const response = { type: "knowledge", data: knowledgeEntry };
-            setCache(cacheKey, response);
-            return new Response(JSON.stringify(response), {
-              headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
-            });
+            text = formatKnowledgeResponse(knowledgeEntry);
+          } else {
+            const related = findRelatedEntries(userQuestion, 5);
+            text = buildFallbackResponse(related, userQuestion);
+          }
+          setCache(cacheKey, { text });
+          return sseStreamFromText(text);
+        }
+
+        // ========== 多轮对话: 优先复用上轮已命中 entry ==========
+        const allUserQuestions: string[] = [];
+        for (const m of messages) {
+          if (m.role === "user") {
+            const t = extractText(m as UIMessage);
+            if (t) allUserQuestions.push(t);
           }
         }
 
-        // ========== 多轮 / 无知识命中 → 走 LLM ==========
-        const provider = createAiProvider();
-        // 计算对话轮数，用于系统提示
-        const turnCount = messages.filter(m => m.role === "user").length;
-        const systemText = `你是"溯光"——一位精通中国传统文化的雅士。${turnCount > 1 ? `当前是与用户的第 ${turnCount} 轮对话。` : ""}
+        let lastHitEntry: KnowledgeEntry | null = null;
+        for (let i = allUserQuestions.length - 2; i >= 0; i--) {
+          const hit = searchKnowledge(allUserQuestions[i]);
+          if (hit) { lastHitEntry = hit; break; }
+        }
 
-要求:
-- 回答精炼,250字以内,避免冗长。
-- 引用古籍原文时使用书名号《》并准确。
-- ${turnCount > 1 ? "请基于上文历史消息回答，避免重复前面已说过的内容；如用户问'那他…呢/与…相比呢/还有吗'等追问，请紧扣上文主题深入展开。" : "在回答末尾另起一行,以斜体标注主要参考来源,格式:\"出处:《XX》/ XX朝 XX\"。"}
-- 如果问题与中国传统文化无关,礼貌地引导回主题。
-- 回答口吻: 清雅、温润、富有书卷气。`;
+        if (lastHitEntry) {
+          const text = buildFollowupResponse(lastHitEntry, userQuestion, allUserQuestions);
+          return sseStreamFromText(text);
+        }
 
-        const result = streamText({
-          model: provider(getDefaultModel()),
-          system: systemText,
-          messages: await convertToModelMessages(messages),
-        });
-
-        return result.toUIMessageStreamResponse({ originalMessages: messages });
+        // 全部未命中: 降级响应
+        const related = findRelatedEntries(userQuestion, 5);
+        const text = buildFallbackResponse(related, userQuestion);
+        return sseStreamFromText(text);
       },
     },
   },
