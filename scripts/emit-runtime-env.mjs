@@ -6,7 +6,7 @@
 // this step runtime dotenv loading crashes. We populate the .env from the env
 // vars Vercel injects at build time (which is the same set the runtime sees
 // in process.env, so there's no real security delta from committing one).
-import { writeFileSync, existsSync } from "node:fs";
+import { writeFileSync, existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const KEYS = [
@@ -20,6 +20,34 @@ const KEYS = [
 // Anchor relative paths to the package root (/) so pnpm/npm
 // run the script from the right directory regardless of where they were invoked.
 const ROOT = resolve(process.cwd());
+
+// Node 不会自动加载 .env（Vite 会，但 post-build 脚本不会）。本地构建时如果 shell
+// 没把 .env 里的键 export 出来，process.env 就是空的，写出的 .env 就会缺键。
+// 用一个轻量解析把 .env 注进 process.env，但只对尚未设置的键生效，让 Vercel 在
+// build 阶段注入的真值优先。
+function loadEnvFile(path) {
+  if (!existsSync(path)) return;
+  const text = readFileSync(path, "utf8");
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq < 0) continue;
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+loadEnvFile(join(ROOT, ".env"));
+loadEnvFile(join(ROOT, ".env.local"));
 
 // Nitro's vercel preset puts the serverless function here. The function's
 // runtime cwd is /var/task/, so anything we write next to index.mjs ends up

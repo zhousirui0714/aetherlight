@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WugeRouteImport } from './routes/wuge'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as QaSquareRouteImport } from './routes/qa-square'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -24,7 +25,12 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnnotationsRouteImport } from './routes/annotations'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WugeIndexRouteImport } from './routes/wuge.index'
 import { Route as DialogueIndexRouteImport } from './routes/dialogue.index'
+import { Route as WugeScrollRouteImport } from './routes/wuge.scroll'
+import { Route as WugeNotesRouteImport } from './routes/wuge.notes'
+import { Route as WugeLibraryRouteImport } from './routes/wuge.library'
+import { Route as WugeGrowthRouteImport } from './routes/wuge.growth'
 import { Route as TongyouCommunityRouteImport } from './routes/tongyou/community'
 import { Route as TongyouChallengeRouteImport } from './routes/tongyou/challenge'
 import { Route as DialogueHistoryRouteImport } from './routes/dialogue.history'
@@ -52,6 +58,11 @@ import { Route as ApiArticlesIdRouteImport } from './routes/api/articles/$id'
 import { Route as ApiAlmanacTodayRouteImport } from './routes/api/almanac/today'
 import { Route as ApiArticlesIdRelationsRouteImport } from './routes/api/articles/$id/relations'
 
+const WugeRoute = WugeRouteImport.update({
+  id: '/wuge',
+  path: '/wuge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -127,10 +138,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WugeIndexRoute = WugeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WugeRoute,
+} as any)
 const DialogueIndexRoute = DialogueIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DialogueRoute,
+} as any)
+const WugeScrollRoute = WugeScrollRouteImport.update({
+  id: '/scroll',
+  path: '/scroll',
+  getParentRoute: () => WugeRoute,
+} as any)
+const WugeNotesRoute = WugeNotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => WugeRoute,
+} as any)
+const WugeLibraryRoute = WugeLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => WugeRoute,
+} as any)
+const WugeGrowthRoute = WugeGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => WugeRoute,
 } as any)
 const TongyouCommunityRoute = TongyouCommunityRouteImport.update({
   id: '/tongyou/community',
@@ -280,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
   '/search': typeof SearchRoute
+  '/wuge': typeof WugeRouteWithChildren
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
@@ -296,7 +333,12 @@ export interface FileRoutesByFullPath {
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
   '/tongyou/community': typeof TongyouCommunityRouteWithChildren
+  '/wuge/growth': typeof WugeGrowthRoute
+  '/wuge/library': typeof WugeLibraryRoute
+  '/wuge/notes': typeof WugeNotesRoute
+  '/wuge/scroll': typeof WugeScrollRoute
   '/dialogue/': typeof DialogueIndexRoute
+  '/wuge/': typeof WugeIndexRoute
   '/api/almanac/today': typeof ApiAlmanacTodayRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
@@ -339,7 +381,12 @@ export interface FileRoutesByTo {
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
   '/tongyou/community': typeof TongyouCommunityRouteWithChildren
+  '/wuge/growth': typeof WugeGrowthRoute
+  '/wuge/library': typeof WugeLibraryRoute
+  '/wuge/notes': typeof WugeNotesRoute
+  '/wuge/scroll': typeof WugeScrollRoute
   '/dialogue': typeof DialogueIndexRoute
+  '/wuge': typeof WugeIndexRoute
   '/api/almanac/today': typeof ApiAlmanacTodayRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
@@ -368,6 +415,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/qa-square': typeof QaSquareRoute
   '/search': typeof SearchRoute
+  '/wuge': typeof WugeRouteWithChildren
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
@@ -384,7 +432,12 @@ export interface FileRoutesById {
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
   '/tongyou/community': typeof TongyouCommunityRouteWithChildren
+  '/wuge/growth': typeof WugeGrowthRoute
+  '/wuge/library': typeof WugeLibraryRoute
+  '/wuge/notes': typeof WugeNotesRoute
+  '/wuge/scroll': typeof WugeScrollRoute
   '/dialogue/': typeof DialogueIndexRoute
+  '/wuge/': typeof WugeIndexRoute
   '/api/almanac/today': typeof ApiAlmanacTodayRoute
   '/api/articles/$id': typeof ApiArticlesIdRouteWithChildren
   '/api/articles/categories': typeof ApiArticlesCategoriesRoute
@@ -414,6 +467,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/qa-square'
     | '/search'
+    | '/wuge'
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
@@ -430,7 +484,12 @@ export interface FileRouteTypes {
     | '/dialogue/history'
     | '/tongyou/challenge'
     | '/tongyou/community'
+    | '/wuge/growth'
+    | '/wuge/library'
+    | '/wuge/notes'
+    | '/wuge/scroll'
     | '/dialogue/'
+    | '/wuge/'
     | '/api/almanac/today'
     | '/api/articles/$id'
     | '/api/articles/categories'
@@ -473,7 +532,12 @@ export interface FileRouteTypes {
     | '/dialogue/history'
     | '/tongyou/challenge'
     | '/tongyou/community'
+    | '/wuge/growth'
+    | '/wuge/library'
+    | '/wuge/notes'
+    | '/wuge/scroll'
     | '/dialogue'
+    | '/wuge'
     | '/api/almanac/today'
     | '/api/articles/$id'
     | '/api/articles/categories'
@@ -501,6 +565,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/qa-square'
     | '/search'
+    | '/wuge'
     | '/api/ancient-books'
     | '/api/articles'
     | '/api/chat'
@@ -517,7 +582,12 @@ export interface FileRouteTypes {
     | '/dialogue/history'
     | '/tongyou/challenge'
     | '/tongyou/community'
+    | '/wuge/growth'
+    | '/wuge/library'
+    | '/wuge/notes'
+    | '/wuge/scroll'
     | '/dialogue/'
+    | '/wuge/'
     | '/api/almanac/today'
     | '/api/articles/$id'
     | '/api/articles/categories'
@@ -546,6 +616,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   QaSquareRoute: typeof QaSquareRoute
   SearchRoute: typeof SearchRoute
+  WugeRoute: typeof WugeRouteWithChildren
   ApiAncientBooksRoute: typeof ApiAncientBooksRoute
   ApiArticlesRoute: typeof ApiArticlesRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
@@ -566,6 +637,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wuge': {
+      id: '/wuge'
+      path: '/wuge'
+      fullPath: '/wuge'
+      preLoaderRoute: typeof WugeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -671,12 +749,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wuge/': {
+      id: '/wuge/'
+      path: '/'
+      fullPath: '/wuge/'
+      preLoaderRoute: typeof WugeIndexRouteImport
+      parentRoute: typeof WugeRoute
+    }
     '/dialogue/': {
       id: '/dialogue/'
       path: '/'
       fullPath: '/dialogue/'
       preLoaderRoute: typeof DialogueIndexRouteImport
       parentRoute: typeof DialogueRoute
+    }
+    '/wuge/scroll': {
+      id: '/wuge/scroll'
+      path: '/scroll'
+      fullPath: '/wuge/scroll'
+      preLoaderRoute: typeof WugeScrollRouteImport
+      parentRoute: typeof WugeRoute
+    }
+    '/wuge/notes': {
+      id: '/wuge/notes'
+      path: '/notes'
+      fullPath: '/wuge/notes'
+      preLoaderRoute: typeof WugeNotesRouteImport
+      parentRoute: typeof WugeRoute
+    }
+    '/wuge/library': {
+      id: '/wuge/library'
+      path: '/library'
+      fullPath: '/wuge/library'
+      preLoaderRoute: typeof WugeLibraryRouteImport
+      parentRoute: typeof WugeRoute
+    }
+    '/wuge/growth': {
+      id: '/wuge/growth'
+      path: '/growth'
+      fullPath: '/wuge/growth'
+      preLoaderRoute: typeof WugeGrowthRouteImport
+      parentRoute: typeof WugeRoute
     }
     '/tongyou/community': {
       id: '/tongyou/community'
@@ -879,6 +992,24 @@ const DialogueRouteWithChildren = DialogueRoute._addFileChildren(
   DialogueRouteChildren,
 )
 
+interface WugeRouteChildren {
+  WugeGrowthRoute: typeof WugeGrowthRoute
+  WugeLibraryRoute: typeof WugeLibraryRoute
+  WugeNotesRoute: typeof WugeNotesRoute
+  WugeScrollRoute: typeof WugeScrollRoute
+  WugeIndexRoute: typeof WugeIndexRoute
+}
+
+const WugeRouteChildren: WugeRouteChildren = {
+  WugeGrowthRoute: WugeGrowthRoute,
+  WugeLibraryRoute: WugeLibraryRoute,
+  WugeNotesRoute: WugeNotesRoute,
+  WugeScrollRoute: WugeScrollRoute,
+  WugeIndexRoute: WugeIndexRoute,
+}
+
+const WugeRouteWithChildren = WugeRoute._addFileChildren(WugeRouteChildren)
+
 interface ApiArticlesIdRouteChildren {
   ApiArticlesIdRelationsRoute: typeof ApiArticlesIdRelationsRoute
 }
@@ -940,6 +1071,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   QaSquareRoute: QaSquareRoute,
   SearchRoute: SearchRoute,
+  WugeRoute: WugeRouteWithChildren,
   ApiAncientBooksRoute: ApiAncientBooksRoute,
   ApiArticlesRoute: ApiArticlesRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
