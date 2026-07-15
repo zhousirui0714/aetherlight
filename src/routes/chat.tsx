@@ -3,16 +3,34 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Send, Sparkles, ThumbsUp, Heart, Clock, BookOpen, MessageSquare, GraduationCap, ExternalLink, Lightbulb, User, Expand, Loader2, PanelRightClose, PanelRight, AlertCircle, Eraser, MessageCircle, History as HistoryIcon } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Send,
+  Sparkles,
+  ThumbsUp,
+  Heart,
+  Clock,
+  BookOpen,
+  MessageSquare,
+  GraduationCap,
+  ExternalLink,
+  Expand,
+  Loader2,
+  AlertCircle,
+  Eraser,
+  MessageCircle,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { KnowledgeEntry, Person, Book, KnowledgeGraphNode } from "@/lib/cultural-knowledge";
+import type { KnowledgeEntry, Person, Book } from "@/lib/cultural-knowledge";
 import { getPerson, getBook } from "@/lib/cultural-knowledge";
-import { KnowledgeGraph } from "@/components/knowledge-graph";
 import { Modal } from "@/components/modal";
 import { DeepPersonDetail } from "@/components/deep-person-detail";
-import { liBaiDeepKnowledge, duFuDeepKnowledge, suShiDeepKnowledge, kongZiDeepKnowledge } from "@/lib/deep-knowledge";
-import { addFavorite, removeFavorite, checkIsFavorited, type FavoriteItem } from "@/lib/favorites-storage";
+import {
+  liBaiDeepKnowledge,
+  duFuDeepKnowledge,
+  suShiDeepKnowledge,
+  kongZiDeepKnowledge,
+} from "@/lib/deep-knowledge";
+import { addFavorite, removeFavorite, checkIsFavorited } from "@/lib/favorites-storage";
 import { toast } from "sonner";
 
 type ChatSearch = { q?: string; sage?: string };
@@ -32,10 +50,10 @@ export const Route = createFileRoute("/chat")({
 });
 
 const HOT_QUESTIONS = [
-  "李白",
-  "杜甫",
-  "苏轼",
-  "孔子",
+  "介绍一下李白",
+  "介绍一下杜甫",
+  "介绍一下苏轼",
+  "介绍一下孔子",
   "《诗经》的'风雅颂'指什么？",
   "端午节的由来？",
 ];
@@ -69,17 +87,22 @@ function ChatPage() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [knowledgeResponses, setKnowledgeResponses] = useState<Record<string, KnowledgeEntry>>({});
-  const [currentGraphNodes, setCurrentGraphNodes] = useState<KnowledgeGraphNode[]>([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [modalType, setModalType] = useState<'person' | 'book'>('book');
+  const [modalType, setModalType] = useState<"person" | "book">("book");
   const [modalData, setModalData] = useState<Person | Book | null>(null);
   const [deepDetailOpen, setDeepDetailOpen] = useState(false);
   const [deepPersonName, setDeepPersonName] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
-  const { messages, sendMessage, setMessages, status, error: chatError, stop } = useChat({
+  const {
+    messages,
+    sendMessage,
+    setMessages,
+    status,
+    error: chatError,
+    stop,
+  } = useChat({
     transport: transport.current,
     onFinish: async ({ message }) => {
       setError(null);
@@ -102,7 +125,7 @@ function ChatPage() {
             id: `local-${Date.now()}`,
             question: q,
             answer: a,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
           };
           saveQAHistoryLocal([newItem, ...localHistory]);
         }
@@ -152,17 +175,26 @@ function ChatPage() {
     toast("已清空当前对话");
   }, [setMessages, stop]);
 
-  const turnCount = messages.filter(m => m.role === "user").length;
+  const turnCount = messages.filter((m) => m.role === "user").length;
 
-  // 检查登录状态
-  useEffect(() => {
-    const checkLogin = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsLoggedIn(!!data.session?.user);
-    };
-    checkLogin();
-    const { data: listener } = supabase.auth.onAuthStateChange(() => checkLogin());
-    return () => listener.subscription.unsubscribe();
+  // 为首问加载富文本知识条目（用于回答中的引用、出处、深入了解按钮等）
+  const fetchKnowledgeEntry = useCallback(async (question: string) => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          graphQuery: true,
+          messages: [{ role: "user", parts: [{ type: "text", text: question }] }],
+        }),
+      });
+      const data = await response.json();
+      if (data.type === "knowledge" && data.data) {
+        setKnowledgeResponses((prev) => ({ ...prev, [question]: data.data }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch knowledge response:", error);
+    }
   }, []);
 
   // 处理 URL ?q= 和 ?sage= 自动发送
@@ -177,37 +209,30 @@ function ChatPage() {
     if (search.q && search.q.trim()) {
       autoSentRef.current = true;
       const text = search.q.trim();
-      setInput(text);
-      // 延迟到 input 渲染完成
-      setTimeout(() => {
-        try {
-          sendMessage({ text });
-        } catch (e) {
-          console.error("auto send failed", e);
-        }
-      }, 100);
+      sendMessage({ text });
+      fetchKnowledgeEntry(text);
     } else if (search.sage) {
       autoSentRef.current = true;
       // 圣贤人物：用 SAGES 数据查名字，自动提问"请介绍一下自己"
-      import("@/lib/sages").then(({ SAGES }) => {
-        const sage = SAGES.find((s) => s.id === search.sage);
-        const name = sage?.name || search.sage;
-        const text = `请介绍一下${name}以及他的主要作品、思想与历史影响`;
-        setInput(text);
-        setTimeout(() => {
-          try {
-            sendMessage({ text });
-          } catch (e) {
-            console.error("auto send failed", e);
-          }
-        }, 100);
-      });
+      import("@/lib/sages")
+        .then(({ SAGES }) => {
+          const sage = SAGES.find((s) => s.id === search.sage);
+          const name = sage?.name || search.sage;
+          const text = `请介绍一下${name}以及他的主要作品、思想与历史影响`;
+          sendMessage({ text });
+          fetchKnowledgeEntry(text);
+        })
+        .catch((e) => {
+          console.error("auto send failed", e);
+        });
     }
-  }, [search.q, search.sage, status, messages.length, sendMessage]);
+  }, [search.q, search.sage, status, messages.length, sendMessage, fetchKnowledgeEntry]);
 
   const loadHistory = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user) {
         // 登录用户：从 Supabase 加载
         const { data } = await supabase
@@ -223,79 +248,9 @@ function ChatPage() {
     } catch {}
   };
 
-  const handleKnowledgeResponse = async (question: string) => {
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          graphQuery: true,
-          messages: [{ role: "user", parts: [{ type: "text", text: question }] }],
-        }),
-      });
-
-      const data = await response.json();
-      if (data.type === "knowledge" && data.data) {
-        const knowledge = data.data as KnowledgeEntry;
-        setKnowledgeResponses(prev => ({
-          ...prev,
-          [question]: knowledge
-        }));
-        // 更新知识图谱
-        if (knowledge.graphNodes) {
-          setCurrentGraphNodes(knowledge.graphNodes);
-        }
-      } else {
-        setCurrentGraphNodes([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch knowledge response:", error);
-      setCurrentGraphNodes([]);
-    }
-  };
-
-  const handleGraphNodeClick = (node: KnowledgeGraphNode) => {
-    // 根据节点类型和名称打开对应的深度面板
-    if (node.type === "person") {
-      if (node.label === "李白") {
-        setDeepPersonName("李白");
-        setDeepDetailOpen(true);
-        return;
-      }
-      if (node.label === "杜甫") {
-        setDeepPersonName("杜甫");
-        setDeepDetailOpen(true);
-        return;
-      }
-      if (node.label === "苏轼" || node.label === "苏东坡") {
-        setDeepPersonName("苏轼");
-        setDeepDetailOpen(true);
-        return;
-      }
-      if (node.label === "孔子" || node.label === "孔丘") {
-        setDeepPersonName("孔子");
-        setDeepDetailOpen(true);
-        return;
-      }
-      
-      // 其他人物尝试获取普通详情
-      const person = getPerson(node.label);
-      if (person) {
-        setModalType('person');
-        setModalData(person);
-        setModalIsOpen(true);
-      }
-    } else if (node.type === "book") {
-      const book = getBook(node.label);
-      if (book) {
-        setModalType('book');
-        setModalData(book);
-        setModalIsOpen(true);
-      }
-    }
-  };
-
-  useEffect(() => { loadHistory(); }, []);
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -307,7 +262,7 @@ function ChatPage() {
   const submit = (text: string) => {
     if (!text.trim() || loading) return;
     sendMessage({ text });
-    handleKnowledgeResponse(text);
+    fetchKnowledgeEntry(text);
     setInput("");
   };
 
@@ -357,7 +312,9 @@ function ChatPage() {
                       onClick={() => submit(q)}
                       className="group rounded-2xl border border-border bg-background/40 px-5 py-4 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-secondary"
                     >
-                      <span className="font-serif text-base text-foreground group-hover:text-primary">{q}</span>
+                      <span className="font-serif text-base text-foreground group-hover:text-primary">
+                        {q}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -367,9 +324,23 @@ function ChatPage() {
                 {messages.map((m, index) => {
                   if (m.role === "assistant") {
                     const prevMessage = messages[index - 1];
-                    const userQuestion = prevMessage?.role === "user" ? extractText(prevMessage) : "";
+                    const userQuestion =
+                      prevMessage?.role === "user" ? extractText(prevMessage) : "";
                     const knowledge = knowledgeResponses[userQuestion];
-                    return <Message key={m.id} m={m} knowledge={knowledge} onOpenModal={setModalIsOpen} setModalType={setModalType} setModalData={setModalData} onOpenDeepDetail={(name) => { setDeepPersonName(name); setDeepDetailOpen(true); }} />;
+                    return (
+                      <Message
+                        key={m.id}
+                        m={m}
+                        knowledge={knowledge}
+                        onOpenModal={setModalIsOpen}
+                        setModalType={setModalType}
+                        setModalData={setModalData}
+                        onOpenDeepDetail={(name) => {
+                          setDeepPersonName(name);
+                          setDeepDetailOpen(true);
+                        }}
+                      />
+                    );
                   }
                   return <Message key={m.id} m={m} />;
                 })}
@@ -386,7 +357,9 @@ function ChatPage() {
                   <div className="flex items-start gap-3 rounded-2xl rounded-tl-md border border-destructive/30 bg-destructive/5 p-5">
                     <AlertCircle className="h-5 w-5 shrink-0 text-destructive mt-0.5" />
                     <div>
-                      <p className="font-serif text-sm text-destructive">{error || "发生了一些问题"}</p>
+                      <p className="font-serif text-sm text-destructive">
+                        {error || "发生了一些问题"}
+                      </p>
                       <button
                         onClick={() => setError(null)}
                         className="mt-2 text-xs text-muted-foreground hover:text-foreground"
@@ -401,14 +374,20 @@ function ChatPage() {
           </div>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); submit(input); }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit(input);
+            }}
             className="flex items-end gap-2 border-t border-border bg-background/30 p-4"
           >
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(input); }
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  submit(input);
+                }
               }}
               placeholder="向雅士请教…"
               rows={1}
@@ -417,7 +396,7 @@ function ChatPage() {
             />
             <button
               type="submit"
-              disabled={loading || !input.trim()}
+              disabled={!loading && !input.trim()}
               className="flex h-10 items-center gap-2 rounded-full bg-primary px-5 font-serif text-sm tracking-widest text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
             >
               {loading ? (
@@ -431,106 +410,21 @@ function ChatPage() {
                 </>
               )}
             </button>
+            {loading && (
+              <button
+                type="button"
+                onClick={() => stop()}
+                className="flex h-10 items-center gap-2 rounded-full border border-border bg-background/60 px-4 font-serif text-sm tracking-widest text-foreground/80 transition hover:border-destructive/40 hover:text-destructive"
+                title="停止生成"
+              >
+                <Eraser className="h-4 w-4" /> 停止
+              </button>
+            )}
           </form>
         </section>
 
-        {/* sidebar: 移动端使用 Sheet 抽屉，桌面端直接显示 */}
-        {/* 移动端触发按钮 */}
-        <div className="fixed bottom-24 right-4 z-40 lg:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg text-primary-foreground">
-                <PanelRight className="h-5 w-5" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
-              <div className="flex flex-col gap-4 p-4 h-full">
-                {/* knowledge graph */}
-                <div className="flex-1 rounded-3xl border border-border bg-card p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4 text-accent" />
-                    <h3 className="font-serif text-sm tracking-[0.2em] text-foreground/80">知 识 图 谱</h3>
-                  </div>
-                  <KnowledgeGraph nodes={currentGraphNodes} onNodeClick={handleGraphNodeClick} />
-                </div>
-
-                {/* history */}
-                <div className="h-64 rounded-3xl border border-border bg-card p-4 overflow-hidden flex flex-col">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-accent" />
-                    <h3 className="font-serif text-sm tracking-[0.2em] text-foreground/80">历 史 问 答</h3>
-                  </div>
-                  <div className="flex-1 overflow-y-auto">
-                    {history.length === 0 ? (
-                      <p className="py-8 text-center text-xs text-muted-foreground">
-                        登录后可查看历史记录
-                      </p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {history.map((h) => (
-                          <li key={h.id}>
-                            <button
-                              onClick={() => submit(h.question)}
-                              className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
-                            >
-                              <p className="line-clamp-2 font-serif text-xs">{h.question}</p>
-                              <p className="mt-1 text-[10px] text-muted-foreground">
-                                {new Date(h.created_at).toLocaleDateString("zh-CN")}
-                              </p>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* 桌面端侧边栏 */}
-        <aside className="hidden lg:flex flex-col gap-4">
-          {/* knowledge graph */}
-          <div className="flex-1 rounded-3xl border border-border bg-card p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-accent" />
-              <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">知 识 图 谱</h3>
-            </div>
-            <KnowledgeGraph nodes={currentGraphNodes} onNodeClick={handleGraphNodeClick} />
-          </div>
-
-          {/* history */}
-          <div className="h-64 rounded-3xl border border-border bg-card p-5 overflow-hidden flex flex-col">
-            <div className="mb-4 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-accent" />
-              <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">历 史 问 答</h3>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {history.length === 0 ? (
-                <p className="py-10 text-center text-sm text-muted-foreground">
-                  登录后可查看您与雅士的过往对谈
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {history.map((h) => (
-                    <li key={h.id}>
-                      <button
-                        onClick={() => submit(h.question)}
-                        className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
-                      >
-                        <p className="line-clamp-2 font-serif">{h.question}</p>
-                        <p className="mt-1 text-[11px] text-muted-foreground">
-                          {new Date(h.created_at).toLocaleDateString("zh-CN")}
-                        </p>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </aside>
+        {/* history sidebar */}
+        <HistoryPanel history={history} onPick={submit} />
       </div>
 
       {/* Modal for person/book detail */}
@@ -644,16 +538,64 @@ function extractText(m: UIMessage) {
   return m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
 }
 
+function HistoryPanel({
+  history,
+  onPick,
+}: {
+  history: HistoryItem[];
+  onPick: (question: string) => void;
+}) {
+  return (
+    <aside className="hidden lg:block">
+      <div className="sticky top-6 rounded-3xl border border-border bg-card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-accent" />
+          <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">历 史 问 答</h3>
+        </div>
+        <div className="max-h-[calc(100vh-260px)] min-h-[260px] overflow-y-auto">
+          {history.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              登录后可查看您与雅士的过往对谈
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {history.map((h) => (
+                <li key={h.id}>
+                  <button
+                    onClick={() => onPick(h.question)}
+                    className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
+                  >
+                    <p className="line-clamp-2 font-serif">{h.question}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {new Date(h.created_at).toLocaleDateString("zh-CN")}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 interface KnowledgeMessageProps {
   knowledge: KnowledgeEntry;
   question: string;
   onOpenModal: (open: boolean) => void;
-  setModalType: (type: 'person' | 'book') => void;
+  setModalType: (type: "person" | "book") => void;
   setModalData: (data: Person | Book | null) => void;
   onOpenDeepDetail?: (name: string) => void;
 }
 
-function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, onOpenDeepDetail }: KnowledgeMessageProps) {
+function KnowledgeMessage({
+  knowledge,
+  onOpenModal,
+  setModalType,
+  setModalData,
+  onOpenDeepDetail,
+}: KnowledgeMessageProps) {
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -672,13 +614,13 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
     // 尝试匹配人物或典籍
     const person = getPerson(sourceTitle.replace(/《|》/g, ""));
     const book = getBook(sourceTitle.replace(/《|》/g, ""));
-    
+
     if (person) {
-      setModalType('person');
+      setModalType("person");
       setModalData(person);
       onOpenModal(true);
     } else if (book) {
-      setModalType('book');
+      setModalType("book");
       setModalData(book);
       onOpenModal(true);
     }
@@ -795,52 +737,57 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
         )}
 
         {/* 深度了解按钮 */}
-        {(knowledge.quotes.some(q => q.author === "李白") ||
-          knowledge.quotes.some(q => q.author === "杜甫") ||
-          knowledge.quotes.some(q => q.author === "苏轼") ||
-          knowledge.quotes.some(q => q.author === "孔子" || q.author === "孔丘")) && onOpenDeepDetail && (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {knowledge.quotes.some(q => q.author === "李白") && (
-              <button
-                onClick={() => onOpenDeepDetail("李白")}
-                className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition"
-              >
-                <Expand className="h-4 w-4" />
-                深入了解李白
-              </button>
-            )}
-            {knowledge.quotes.some(q => q.author === "杜甫") && (
-              <button
-                onClick={() => onOpenDeepDetail("杜甫")}
-                className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-4 py-2.5 text-sm text-accent hover:bg-accent/10 transition"
-              >
-                <Expand className="h-4 w-4" />
-                深入了解杜甫
-              </button>
-            )}
-            {knowledge.quotes.some(q => q.author === "苏轼") && (
-              <button
-                onClick={() => onOpenDeepDetail("苏轼")}
-                className="flex items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-2.5 text-sm text-secondary-foreground hover:bg-secondary/10 transition"
-              >
-                <Expand className="h-4 w-4" />
-                深入了解苏轼
-              </button>
-            )}
-            {(knowledge.quotes.some(q => q.author === "孔子") || knowledge.quotes.some(q => q.author === "孔丘")) && (
-              <button
-                onClick={() => onOpenDeepDetail("孔子")}
-                className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-500/10 transition"
-              >
-                <Expand className="h-4 w-4" />
-                深入了解孔子
-              </button>
-            )}
-          </div>
-        )}
+        {(knowledge.quotes.some((q) => q.author === "李白") ||
+          knowledge.quotes.some((q) => q.author === "杜甫") ||
+          knowledge.quotes.some((q) => q.author === "苏轼") ||
+          knowledge.quotes.some((q) => q.author === "孔子" || q.author === "孔丘")) &&
+          onOpenDeepDetail && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {knowledge.quotes.some((q) => q.author === "李白") && (
+                <button
+                  onClick={() => onOpenDeepDetail("李白")}
+                  className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition"
+                >
+                  <Expand className="h-4 w-4" />
+                  深入了解李白
+                </button>
+              )}
+              {knowledge.quotes.some((q) => q.author === "杜甫") && (
+                <button
+                  onClick={() => onOpenDeepDetail("杜甫")}
+                  className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-4 py-2.5 text-sm text-accent hover:bg-accent/10 transition"
+                >
+                  <Expand className="h-4 w-4" />
+                  深入了解杜甫
+                </button>
+              )}
+              {knowledge.quotes.some((q) => q.author === "苏轼") && (
+                <button
+                  onClick={() => onOpenDeepDetail("苏轼")}
+                  className="flex items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-2.5 text-sm text-secondary-foreground hover:bg-secondary/10 transition"
+                >
+                  <Expand className="h-4 w-4" />
+                  深入了解苏轼
+                </button>
+              )}
+              {(knowledge.quotes.some((q) => q.author === "孔子") ||
+                knowledge.quotes.some((q) => q.author === "孔丘")) && (
+                <button
+                  onClick={() => onOpenDeepDetail("孔子")}
+                  className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-500/10 transition"
+                >
+                  <Expand className="h-4 w-4" />
+                  深入了解孔子
+                </button>
+              )}
+            </div>
+          )}
 
         <div className="mt-6 flex items-center gap-1 border-t border-border/60 pt-3 text-muted-foreground">
-          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
+          <button
+            onClick={() => toast("感谢您的赞赏")}
+            className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground"
+          >
             <ThumbsUp className="h-3.5 w-3.5" /> 赞
           </button>
           <button
@@ -865,7 +812,21 @@ function KnowledgeMessage({ knowledge, onOpenModal, setModalType, setModalData, 
   );
 }
 
-function Message({ m, knowledge, onOpenModal, setModalType, setModalData, onOpenDeepDetail }: { m: UIMessage; knowledge?: KnowledgeEntry; onOpenModal?: (open: boolean) => void; setModalType?: (type: 'person' | 'book') => void; setModalData?: (data: Person | Book | null) => void; onOpenDeepDetail?: (name: string) => void; }) {
+function Message({
+  m,
+  knowledge,
+  onOpenModal,
+  setModalType,
+  setModalData,
+  onOpenDeepDetail,
+}: {
+  m: UIMessage;
+  knowledge?: KnowledgeEntry;
+  onOpenModal?: (open: boolean) => void;
+  setModalType?: (type: "person" | "book") => void;
+  setModalData?: (data: Person | Book | null) => void;
+  onOpenDeepDetail?: (name: string) => void;
+}) {
   const text = extractText(m);
   if (m.role === "user") {
     return (
@@ -878,7 +839,16 @@ function Message({ m, knowledge, onOpenModal, setModalType, setModalData, onOpen
   }
 
   if (knowledge && onOpenModal && setModalType && setModalData) {
-    return <KnowledgeMessage knowledge={knowledge} question={text} onOpenModal={onOpenModal} setModalType={setModalType} setModalData={setModalData} onOpenDeepDetail={onOpenDeepDetail} />;
+    return (
+      <KnowledgeMessage
+        knowledge={knowledge}
+        question={text}
+        onOpenModal={onOpenModal}
+        setModalType={setModalType}
+        setModalData={setModalData}
+        onOpenDeepDetail={onOpenDeepDetail}
+      />
+    );
   }
 
   const sourceMatch = text.match(/(——[\s\S]+)$/);
@@ -889,11 +859,12 @@ function Message({ m, knowledge, onOpenModal, setModalType, setModalData, onOpen
       <div className="seal mt-1 h-7 shrink-0 px-2.5">溯</div>
       <div className="flex-1 rounded-2xl rounded-tl-md border border-border bg-background/40 p-5">
         <p className="whitespace-pre-wrap font-serif leading-[2] text-foreground">{body}</p>
-        {source && (
-          <p className="mt-3 text-xs italic text-muted-foreground">{source}</p>
-        )}
+        {source && <p className="mt-3 text-xs italic text-muted-foreground">{source}</p>}
         <div className="mt-4 flex items-center gap-1 border-t border-border/60 pt-3 text-muted-foreground">
-          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
+          <button
+            onClick={() => toast("感谢您的赞赏")}
+            className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground"
+          >
             <ThumbsUp className="h-3.5 w-3.5" /> 赞
           </button>
           <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs hover:bg-secondary hover:text-foreground">
