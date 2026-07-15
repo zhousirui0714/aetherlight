@@ -93,6 +93,7 @@ function ChatPage() {
   const [deepDetailOpen, setDeepDetailOpen] = useState(false);
   const [deepPersonName, setDeepPersonName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorDismissed, setErrorDismissed] = useState(false);
 
   const transport = useRef(new DefaultChatTransport({ api: "/api/chat" }));
   const {
@@ -134,7 +135,8 @@ function ChatPage() {
     },
     onError: (err) => {
       console.error("Chat error:", err);
-      setError("网络连接似乎有些问题，请稍后再试。");
+      setErrorDismissed(false);
+      setError(err?.message || "网络连接似乎有些问题，请稍后再试。");
     },
   });
 
@@ -169,6 +171,8 @@ function ChatPage() {
     if (!confirm("确定要清空当前对话吗？对话历史不会被永久删除。")) return;
     stop();
     setMessages([]);
+    setError(null);
+    setErrorDismissed(false);
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(CHAT_SESSION_KEY);
     }
@@ -208,11 +212,15 @@ function ChatPage() {
     }
     if (search.q && search.q.trim()) {
       autoSentRef.current = true;
+      setError(null);
+      setErrorDismissed(false);
       const text = search.q.trim();
       sendMessage({ text });
       fetchKnowledgeEntry(text);
     } else if (search.sage) {
       autoSentRef.current = true;
+      setError(null);
+      setErrorDismissed(false);
       // 圣贤人物：用 SAGES 数据查名字，自动提问"请介绍一下自己"
       import("@/lib/sages")
         .then(({ SAGES }) => {
@@ -261,6 +269,8 @@ function ChatPage() {
 
   const submit = (text: string) => {
     if (!text.trim() || loading) return;
+    setError(null);
+    setErrorDismissed(false);
     sendMessage({ text });
     fetchKnowledgeEntry(text);
     setInput("");
@@ -353,15 +363,15 @@ function ChatPage() {
                     </div>
                   </div>
                 )}
-                {(error || chatError) && (
+                {(error || chatError) && !errorDismissed && (
                   <div className="flex items-start gap-3 rounded-2xl rounded-tl-md border border-destructive/30 bg-destructive/5 p-5">
                     <AlertCircle className="h-5 w-5 shrink-0 text-destructive mt-0.5" />
                     <div>
-                      <p className="font-serif text-sm text-destructive">
-                        {error || "发生了一些问题"}
+                      <p className="whitespace-pre-wrap break-words font-serif text-sm text-destructive">
+                        {error || chatError?.message || "发生了一些问题"}
                       </p>
                       <button
-                        onClick={() => setError(null)}
+                        onClick={() => setErrorDismissed(true)}
                         className="mt-2 text-xs text-muted-foreground hover:text-foreground"
                       >
                         忽略
