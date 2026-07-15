@@ -154,12 +154,6 @@ export function HeroBlock({
                 <b className="font-serif text-foreground/80">{region}</b>
               </span>
             )}
-            {favorites != null && (
-              <span className="flex items-center gap-1">
-                <span className="font-serif text-[10px] tracking-widest text-muted-foreground/60">藏</span>
-                <b className="font-serif text-foreground/80">{favorites.toLocaleString()}</b>
-              </span>
-            )}
             {viewCount != null && (
               <span className="flex items-center gap-1">
                 <span className="font-serif text-[10px] tracking-widest text-muted-foreground/60">阅</span>

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search, Loader2, Database } from "lucide-react";
+import { Search, Loader2, Database } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/knowledge-data";
 import {
   CATEGORY_KEYS,
@@ -96,13 +96,10 @@ function GalleryCard({
         </p>
       </div>
 
-      {/* 底部: 极细朱砂线 + 落款 + 收藏 */}
+      {/* 底部: 极细朱砂线 + 落款 */}
       <div className="mt-auto border-t border-cinnabar/15 px-6 py-3 flex items-center justify-between gap-2">
         <span className="font-serif text-[10px] tracking-[0.3em] text-foreground/40">
           —— 溯光 辑录
-        </span>
-        <span className="font-serif text-[10px] tracking-wider text-foreground/50 flex items-center gap-1">
-          <Heart className="h-3 w-3" /> {(item.favorites || 0).toLocaleString()}
         </span>
       </div>
 
