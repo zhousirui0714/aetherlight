@@ -1219,15 +1219,41 @@ export function searchKnowledge(query: string): KnowledgeEntry | null {
     }
   }
 
-  // 4) 关键词组合：拆分 query 词，任一关键词命中 key 即返回
-  const tokens = normalizedQuery.split(/[\s,，。、？?！!；;：:《》''"""]/).filter(t => t.length >= 2);
-  if (tokens.length > 0) {
+  // 4) 关键词组合: 中英 2-gram 滑窗, 解决"介绍一下孔子"无法匹配"孔子思想"的问题
+  //    包含原标点切分逻辑, 但更宽容, 因为中文无空格
+  const tokens = new Set<string>();
+  // 标点切分 (兼容英文/有标点的输入)
+  for (const t of normalizedQuery.split(/[\s,，。、？?！!；;：:《》''"""]/)) {
+    const clean = t.trim();
+    if (clean.length >= 2) tokens.add(clean);
+  }
+  // 中文字符 2-gram 滑窗 ("介绍一下孔子" → ["介绍","绍一","一下","下孔","孔子"])
+  // 跳过连续 ASCII, 因为英文 2-gram 没意义
+  for (let i = 0; i < stripped.length - 1; i++) {
+    const a = stripped[i];
+    const b = stripped[i + 1];
+    // 只对 CJK 字符生成 2-gram
+    if (/[一-鿿]/.test(a) && /[一-鿿]/.test(b)) {
+      tokens.add(a + b);
+    }
+  }
+  // 3-gram 滑窗, 用于三字关键词如"诗经风"
+  for (let i = 0; i < stripped.length - 2; i++) {
+    const a = stripped[i];
+    const b = stripped[i + 1];
+    const c = stripped[i + 2];
+    if (/[一-鿿]/.test(a) && /[一-鿿]/.test(b) && /[一-鿿]/.test(c)) {
+      tokens.add(a + b + c);
+    }
+  }
+  const tokenArr = Array.from(tokens);
+  if (tokenArr.length > 0) {
     let bestEntry: KnowledgeEntry | null = null;
     let bestScore = 0;
     for (const entry of Object.values(culturalKnowledge)) {
       let score = 0;
       const haystack = (entry.id + " " + entry.question + " " + (entry.answer || "")).toLowerCase();
-      for (const t of tokens) {
+      for (const t of tokenArr) {
         if (haystack.includes(t)) score += t.length;
       }
       if (score > bestScore) {

@@ -1,8 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { UIMessage } from "ai";
-import { searchKnowledge, culturalKnowledge, type KnowledgeEntry } from "@/lib/cultural-knowledge";
+import {
+  convertToModelMessages,
+  streamText,
+  type UIMessage,
+} from "ai";
+import {
+  searchKnowledge,
+  culturalKnowledge,
+  type KnowledgeEntry,
+} from "@/lib/cultural-knowledge";
 import { getCache, setCache, getKnowledgeCacheKey } from "@/lib/api-cache";
+import { createAiProvider, getDefaultModel } from "@/lib/ai-gateway.server";
 
+// ============================================================
+// 「溯光雅士」人设 - 喂给 LLM 的 system prompt
+// ============================================================
+const SAGE_PERSONA = `你是"溯光雅士",一位贯通中华典籍的解读者,温润、博学、典雅。
+
+【语言风格】
+- 文白相间,典雅但易懂,避免堆砌生僻字
+- 单次回答 150-400 字,宁可精炼不要冗长
+- 引用诗句、典故时另起一行用「」括起,末尾以小字注明出处,如「—— 出自《将进酒》· 唐 · 李白」
+- 书名一律用《》括起
+- 段落之间用空行分隔,读起来有呼吸感
+
+【知识态度】
+- 若提供 [知识库收录] 上下文,请基于该内容回答,可引用其中的引文并展开
+- 若 [知识库相关条目] 只列出相关问题,请选最贴近的参考作答
+- 若知识库无相关条目,凭你对中国传统文化的了解作答,保持准确;若不确定,坦诚说"此节我亦未深考,可作茶余闲谈"
+- 不得编造具体年份、典故名、作者,不确定的用"相传""或谓"等措辞
+- 不得自称"AI""语言模型"或承认是程序`;
+
+// ============================================================
+// 静态格式化 (兜底, 当 LLM 不可用时使用)
+// ============================================================
 function formatKnowledgeResponse(entry: KnowledgeEntry): string {
   let response = `## ${entry.question}\n\n`;
   response += `${entry.answer}\n\n`;
@@ -28,10 +59,19 @@ function formatKnowledgeResponse(entry: KnowledgeEntry): string {
   return response;
 }
 
-// 找 N 个最相关的 entry (按 token 命中长度排序)
+// 找 N 个最相关的 entry (按 token 命中长度排序, 供 fallback 提示用户)
 function findRelatedEntries(query: string, n = 5): KnowledgeEntry[] {
   const stripped = query.toLowerCase().replace(/[\s\p{P}]/gu, "");
-  const tokens = query.toLowerCase().split(/[\s,，。、？?！!；;：:《》'"]+/).filter((t) => t.length >= 2);
+  const tokens = new Set<string>();
+  for (const t of query.toLowerCase().split(/[\s,，。、？?！!；;：:《》'"]+/)) {
+    const clean = t.trim();
+    if (clean.length >= 2) tokens.add(clean);
+  }
+  for (let i = 0; i < stripped.length - 1; i++) {
+    const a = stripped[i];
+    const b = stripped[i + 1];
+    if (/[一-鿿]/.test(a) && /[一-鿿]/.test(b)) tokens.add(a + b);
+  }
   const scored: { entry: KnowledgeEntry; score: number }[] = [];
   for (const entry of Object.values(culturalKnowledge)) {
     let score = 0;
@@ -75,7 +115,6 @@ function buildFollowupResponse(entry: KnowledgeEntry, followup: string, allUserQ
   return response;
 }
 
-// 闲聊/招呼: 不走 entry, 走固定招呼回复
 const SMALL_TALK_PATTERNS = /^(你好|您好|hi|hello|嗨|哈喽|早安|晚安|谢谢|多谢|感谢|再见|拜|bye|ok|好的|嗯|哦)\s*[！!。.~,，]?\s*$/i;
 const PURE_PUNCTUATION = /^[\s\p{P}]+$/u;
 
@@ -111,44 +150,44 @@ function buildSmallTalkResponse(question: string, entry: KnowledgeEntry | null):
   return response;
 }
 
-// 检测追问是否跟前 entry 真正相关 (避免"你好"硬塞"杜甫")
 function isRelatedToEntry(followup: string, entry: KnowledgeEntry): boolean {
-  const tokens = followup.toLowerCase().split(/[\s,，。、？?！!；;：:《》'"]+/).filter((t) => t.length >= 2);
-  if (tokens.length === 0) return true;
+  const tokens = new Set<string>();
+  for (const t of followup.toLowerCase().split(/[\s,，。、？?！!；;：:《》'"]+/)) {
+    const clean = t.trim();
+    if (clean.length >= 2) tokens.add(clean);
+  }
+  if (tokens.size === 0) return true;
   const haystack = (entry.id + " " + entry.question + " " + (entry.answer || "")).toLowerCase();
   for (const t of tokens) if (haystack.includes(t)) return true;
   return false;
 }
 
+// ============================================================
+// 工具函数
+// ============================================================
 function extractText(msg: UIMessage | undefined): string {
   if (!msg) return "";
   const part = msg.parts?.find((p: any) => p.type === "text");
   return (part as any)?.text ?? "";
 }
 
-// 把文本切成 SSE data 块流式输出 (useChat 期望 SSE 格式)
+// 把文本切成 SSE data 块流式输出 (useChat 期望 SSE 格式) - 仅作 LLM 失败时的兜底
 function sseStreamFromText(text: string): Response {
   const encoder = new TextEncoder();
   const id = `msg-${Date.now()}`;
-  const chunkSize = 12; // 每块 12 字符, 接近打字机效果
+  const chunkSize = 12;
 
   const stream = new ReadableStream({
     start(controller) {
-      // type: start (含 messageId, AI SDK 需要)
       controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${id}"}\n\n`));
-      // type: text-start
       controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${id}"}\n\n`));
-      // 分块发送文本
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.slice(i, i + chunkSize);
         const escaped = JSON.stringify(chunk).slice(1, -1);
         controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${id}","delta":"${escaped}"}\n\n`));
       }
-      // type: text-end
       controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${id}"}\n\n`));
-      // type: finish (含 finishReason, AI SDK 用)
       controller.enqueue(encoder.encode(`data: {"type":"finish","finishReason":"stop"}\n\n`));
-      // 末尾空行 (SSE 结束)
       controller.enqueue(encoder.encode(`\n`));
       controller.close();
     },
@@ -163,13 +202,46 @@ function sseStreamFromText(text: string): Response {
   });
 }
 
+// ============================================================
+// RAG: 把 KB 拼成 LLM 的 system 上下文
+// ============================================================
+function buildRagContext(hit: KnowledgeEntry | null, related: KnowledgeEntry[]): string {
+  if (hit) {
+    let ctx = `\n\n[知识库收录]\n问：${hit.question}\n答：${hit.answer}`;
+    if (hit.quotes.length > 0) {
+      ctx += `\n\n相关引文：\n${hit.quotes
+        .slice(0, 3)
+        .map((q) => `《${q.title}》（${q.dynasty}·${q.author}）：${q.text}`)
+        .join("\n")}`;
+    }
+    if (hit.interpretations) {
+      ctx += `\n\n释义：${hit.interpretations}`;
+    }
+    return ctx;
+  }
+  if (related.length > 0) {
+    return `\n\n[知识库相关条目 - 参考, 不必照搬]\n${related
+      .slice(0, 3)
+      .map((e) => `· ${e.question} — ${e.answer.slice(0, 150)}…`)
+      .join("\n")}`;
+  }
+  return `\n\n[知识库暂未收录此题, 凭君对中国传统文化的了解自由作答, 保持准确]`;
+}
+
+// ============================================================
+// Route
+// ============================================================
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const body = (await request.json()) as { messages?: UIMessage[]; graphQuery?: boolean };
+        const body = (await request.json()) as {
+          messages?: UIMessage[];
+          graphQuery?: boolean;
+        };
         const { messages, graphQuery } = body;
-        if (!Array.isArray(messages)) return new Response("messages required", { status: 400 });
+        if (!Array.isArray(messages))
+          return new Response("messages required", { status: 400 });
 
         const lastMessage = messages[messages.length - 1];
         const userQuestion = extractText(lastMessage as UIMessage);
@@ -180,7 +252,7 @@ export const Route = createFileRoute("/api/chat")({
           const cached = getCache<{ type: string; data: KnowledgeEntry | null }>(cacheKey);
           if (cached) {
             return new Response(JSON.stringify(cached), {
-              headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
+              headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
             });
           }
           const knowledgeEntry = searchKnowledge(userQuestion);
@@ -189,67 +261,76 @@ export const Route = createFileRoute("/api/chat")({
             : { type: "knowledge", data: null };
           setCache(cacheKey, response);
           return new Response(JSON.stringify(response), {
-            headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+            headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
           });
         }
 
-        // ========== 首问: 100% 走知识库 (SSE 流式输出) ==========
-        const isFirstTurn = !messages.some((m) => m.role === "assistant");
-        if (isFirstTurn && userQuestion) {
-          const cacheKey = getKnowledgeCacheKey(userQuestion);
-          const cached = getCache<{ text: string }>(cacheKey);
-          if (cached) {
-            return sseStreamFromText(cached.text);
+        // ========== RAG: KB 检索 → LLM 流式生成 ==========
+        const knowledgeEntry = userQuestion ? searchKnowledge(userQuestion) : null;
+        const related = !knowledgeEntry && userQuestion ? findRelatedEntries(userQuestion, 5) : [];
+        const ragContext = buildRagContext(knowledgeEntry, related);
+
+        try {
+          const provider = createAiProvider();
+          const result = streamText({
+            model: provider(getDefaultModel()),
+            system: SAGE_PERSONA + ragContext,
+            messages: await convertToModelMessages(messages),
+            temperature: 0.6,
+          });
+          return result.toUIMessageStreamResponse({ originalMessages: messages });
+        } catch (llmErr) {
+          // LLM 不可用时, 走纯静态兜底 (保持原行为)
+          console.warn("[chat] LLM unavailable, fallback to static:", llmErr);
+
+          const isFirstTurn = !messages.some((m) => m.role === "assistant");
+          if (isFirstTurn && userQuestion) {
+            const cacheKey = getKnowledgeCacheKey(userQuestion);
+            const cached = getCache<{ text: string }>(cacheKey);
+            if (cached) return sseStreamFromText(cached.text);
+
+            let text: string;
+            if (knowledgeEntry) {
+              text = formatKnowledgeResponse(knowledgeEntry);
+            } else {
+              text = buildFallbackResponse(related, userQuestion);
+            }
+            setCache(cacheKey, { text });
+            return sseStreamFromText(text);
           }
 
-          const knowledgeEntry = searchKnowledge(userQuestion);
-          let text: string;
-          if (knowledgeEntry) {
-            text = formatKnowledgeResponse(knowledgeEntry);
-          } else {
-            const related = findRelatedEntries(userQuestion, 5);
-            text = buildFallbackResponse(related, userQuestion);
+          // 多轮对话降级
+          const allUserQuestions: string[] = [];
+          for (const m of messages) {
+            if (m.role === "user") {
+              const t = extractText(m as UIMessage);
+              if (t) allUserQuestions.push(t);
+            }
           }
-          setCache(cacheKey, { text });
-          return sseStreamFromText(text);
-        }
 
-        // ========== 多轮对话: 智能路由 (闲聊/相关/降级) ==========
-        const allUserQuestions: string[] = [];
-        for (const m of messages) {
-          if (m.role === "user") {
-            const t = extractText(m as UIMessage);
-            if (t) allUserQuestions.push(t);
+          if (isSmallTalk(userQuestion)) {
+            let lastEntry: KnowledgeEntry | null = null;
+            for (let i = allUserQuestions.length - 2; i >= 0; i--) {
+              const hit = searchKnowledge(allUserQuestions[i]);
+              if (hit) { lastEntry = hit; break; }
+            }
+            return sseStreamFromText(buildSmallTalkResponse(userQuestion, lastEntry));
           }
-        }
 
-        // 闲聊/招呼: 不硬塞 entry, 返回固定招呼
-        if (isSmallTalk(userQuestion)) {
-          let lastEntry: KnowledgeEntry | null = null;
+          let lastHitEntry: KnowledgeEntry | null = null;
           for (let i = allUserQuestions.length - 2; i >= 0; i--) {
             const hit = searchKnowledge(allUserQuestions[i]);
-            if (hit) { lastEntry = hit; break; }
+            if (hit) { lastHitEntry = hit; break; }
           }
-          return sseStreamFromText(buildSmallTalkResponse(userQuestion, lastEntry));
-        }
 
-        // 在历史中找是否有 entry 命中过
-        let lastHitEntry: KnowledgeEntry | null = null;
-        for (let i = allUserQuestions.length - 2; i >= 0; i--) {
-          const hit = searchKnowledge(allUserQuestions[i]);
-          if (hit) { lastHitEntry = hit; break; }
-        }
+          if (lastHitEntry && isRelatedToEntry(userQuestion, lastHitEntry)) {
+            return sseStreamFromText(
+              buildFollowupResponse(lastHitEntry, userQuestion, allUserQuestions)
+            );
+          }
 
-        // 追问必须跟 entry 真正相关 (避免"你好"硬塞"杜甫")
-        if (lastHitEntry && isRelatedToEntry(userQuestion, lastHitEntry)) {
-          const text = buildFollowupResponse(lastHitEntry, userQuestion, allUserQuestions);
-          return sseStreamFromText(text);
+          return sseStreamFromText(buildFallbackResponse(related, userQuestion));
         }
-
-        // 追问跟历史 entry 无关: 走降级
-        const related = findRelatedEntries(userQuestion, 5);
-        const text = buildFallbackResponse(related, userQuestion);
-        return sseStreamFromText(text);
       },
     },
   },
