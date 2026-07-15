@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { CATEGORIES, type Article } from "@/lib/knowledge-data";
 import { fetchArticles } from "@/api/knowledge";
 
@@ -136,9 +136,6 @@ export function KnowledgeGallery() {
                   {a.title}
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">{a.excerpt}</p>
-                <div className="mt-auto flex items-center gap-1.5 pt-2 text-xs text-muted-foreground">
-                  <Heart className="h-3.5 w-3.5" /> {a.favorites.toLocaleString()} 收藏
-                </div>
               </div>
             </Link>
           ))}

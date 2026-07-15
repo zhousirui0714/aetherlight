@@ -53,10 +53,6 @@ function ArticlePage() {
         <article className="min-w-0 rounded-3xl border border-border bg-card p-8 md:p-12 scroll-in">
           <div className="mb-3 flex items-center gap-3 text-xs">
             <span className="font-serif tracking-[0.3em] text-accent">{article.category}</span>
-            <span className="text-border">·</span>
-            <span className="text-muted-foreground inline-flex items-center gap-1">
-              <Heart className="h-3 w-3" /> {article.favorites.toLocaleString()}
-            </span>
           </div>
           <h1 className="font-serif text-4xl font-semibold leading-snug text-foreground brush-in">
             {article.title}
