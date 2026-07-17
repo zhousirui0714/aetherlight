@@ -270,6 +270,72 @@ export const Route = createFileRoute("/api/chat")({
         const related = !knowledgeEntry && userQuestion ? findRelatedEntries(userQuestion, 5) : [];
         const ragContext = buildRagContext(knowledgeEntry, related);
 
+        // 预计算降级文本（LLM 不可用时兜底）
+        const isFirstTurn = !messages.some((m) => m.role === "assistant");
+        const allUserQuestions: string[] = [];
+        for (const m of messages) {
+          if (m.role === "user") {
+            const t = extractText(m as UIMessage);
+            if (t) allUserQuestions.push(t);
+          }
+        }
+
+        function buildFallbackText(): string {
+          if (isFirstTurn && userQuestion) {
+            const ck = getKnowledgeCacheKey(userQuestion);
+            const cached = getCache<{ text: string }>(ck);
+            if (cached) return cached.text;
+            let text: string;
+            if (knowledgeEntry) {
+              text = formatKnowledgeResponse(knowledgeEntry);
+            } else if (isSmallTalk(userQuestion)) {
+              text = buildSmallTalkResponse(userQuestion, null);
+            } else {
+              text = buildFallbackResponse(related, userQuestion);
+            }
+            setCache(ck, { text });
+            return text;
+          }
+          if (isSmallTalk(userQuestion)) {
+            let lastEntry: KnowledgeEntry | null = null;
+            for (let i = allUserQuestions.length - 2; i >= 0; i--) {
+              const hit = searchKnowledge(allUserQuestions[i]);
+              if (hit) { lastEntry = hit; break; }
+            }
+            return buildSmallTalkResponse(userQuestion, lastEntry);
+          }
+          let lastHitEntry: KnowledgeEntry | null = null;
+          for (let i = allUserQuestions.length - 2; i >= 0; i--) {
+            const hit = searchKnowledge(allUserQuestions[i]);
+            if (hit) { lastHitEntry = hit; break; }
+          }
+          if (lastHitEntry && isRelatedToEntry(userQuestion, lastHitEntry)) {
+            return buildFollowupResponse(lastHitEntry, userQuestion, allUserQuestions);
+          }
+          return buildFallbackResponse(related, userQuestion);
+        }
+
+        function writeFallbackSSE(
+          controller: ReadableStreamDefaultController,
+          encoder: TextEncoder,
+          text: string,
+        ) {
+          const id = `msg-${Date.now()}`;
+          controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${id}"}\n\n`));
+          controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${id}"}\n\n`));
+          const chunkSize = 12;
+          for (let i = 0; i < text.length; i += chunkSize) {
+            const c = text.slice(i, i + chunkSize);
+            const escaped = JSON.stringify(c).slice(1, -1);
+            controller.enqueue(
+              encoder.encode(`data: {"type":"text-delta","id":"${id}","delta":"${escaped}"}\n\n`)
+            );
+          }
+          controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${id}"}\n\n`));
+          controller.enqueue(encoder.encode(`data: {"type":"finish","finishReason":"stop"}\n\n`));
+          controller.enqueue(encoder.encode(`\n`));
+        }
+
         try {
           const provider = createAiProvider();
           const result = streamText({
@@ -278,58 +344,52 @@ export const Route = createFileRoute("/api/chat")({
             messages: await convertToModelMessages(messages),
             temperature: 0.6,
           });
-          return result.toUIMessageStreamResponse({ originalMessages: messages });
+          const response = result.toUIMessageStreamResponse({ originalMessages: messages });
+          const body = response.body;
+          if (!body) throw new Error("No response body");
+
+          // 包装 response body，拦截 LLM 流式错误，降级为静态回答
+          const encoder = new TextEncoder();
+          const reader = body.getReader();
+          const decoder = new TextDecoder();
+          let fallbackDeployed = false;
+          const fallbackText = buildFallbackText();
+
+          const wrappedStream = new ReadableStream({
+            async pull(controller) {
+              if (fallbackDeployed) { controller.close(); return; }
+              try {
+                const { done, value } = await reader.read();
+                if (done) { controller.close(); return; }
+                const chunk = decoder.decode(value, { stream: true });
+                if (chunk.includes('"type":"error"')) {
+                  fallbackDeployed = true;
+                  writeFallbackSSE(controller, encoder, fallbackText);
+                  controller.close();
+                  return;
+                }
+                controller.enqueue(value);
+              } catch {
+                if (!fallbackDeployed) {
+                  fallbackDeployed = true;
+                  writeFallbackSSE(controller, encoder, fallbackText);
+                }
+                controller.close();
+              }
+            },
+            cancel() {
+              reader.cancel();
+              fallbackDeployed = true;
+            },
+          });
+
+          return new Response(wrappedStream, {
+            status: response.status,
+            headers: response.headers,
+          });
         } catch (llmErr) {
-          // LLM 不可用时, 走纯静态兜底 (保持原行为)
           console.warn("[chat] LLM unavailable, fallback to static:", llmErr);
-
-          const isFirstTurn = !messages.some((m) => m.role === "assistant");
-          if (isFirstTurn && userQuestion) {
-            const cacheKey = getKnowledgeCacheKey(userQuestion);
-            const cached = getCache<{ text: string }>(cacheKey);
-            if (cached) return sseStreamFromText(cached.text);
-
-            let text: string;
-            if (knowledgeEntry) {
-              text = formatKnowledgeResponse(knowledgeEntry);
-            } else {
-              text = buildFallbackResponse(related, userQuestion);
-            }
-            setCache(cacheKey, { text });
-            return sseStreamFromText(text);
-          }
-
-          // 多轮对话降级
-          const allUserQuestions: string[] = [];
-          for (const m of messages) {
-            if (m.role === "user") {
-              const t = extractText(m as UIMessage);
-              if (t) allUserQuestions.push(t);
-            }
-          }
-
-          if (isSmallTalk(userQuestion)) {
-            let lastEntry: KnowledgeEntry | null = null;
-            for (let i = allUserQuestions.length - 2; i >= 0; i--) {
-              const hit = searchKnowledge(allUserQuestions[i]);
-              if (hit) { lastEntry = hit; break; }
-            }
-            return sseStreamFromText(buildSmallTalkResponse(userQuestion, lastEntry));
-          }
-
-          let lastHitEntry: KnowledgeEntry | null = null;
-          for (let i = allUserQuestions.length - 2; i >= 0; i--) {
-            const hit = searchKnowledge(allUserQuestions[i]);
-            if (hit) { lastHitEntry = hit; break; }
-          }
-
-          if (lastHitEntry && isRelatedToEntry(userQuestion, lastHitEntry)) {
-            return sseStreamFromText(
-              buildFollowupResponse(lastHitEntry, userQuestion, allUserQuestions)
-            );
-          }
-
-          return sseStreamFromText(buildFallbackResponse(related, userQuestion));
+          return sseStreamFromText(buildFallbackText());
         }
       },
     },

@@ -105,18 +105,20 @@ export async function saveDialogueToCloud(
           .slice(0, 50)
       : "新对话";
 
-    // 查找或创建会话
-    const { data: existingSession } = await supabase
+    // 查找已有会话（用 limit 替代 single，避免多 session 报错）
+    const { data: existingSessions } = await supabase
       .from("chat_sessions")
-      .select("id")
+      .select("id, message_count")
       .eq("user_id", session.user.id)
       .eq("character_id", sageId)
-      .single();
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
     let sessionId: string;
+    const existingCount = existingSessions?.[0]?.message_count ?? 0;
 
-    if (existingSession) {
-      sessionId = existingSession.id;
+    if (existingSessions && existingSessions.length > 0) {
+      sessionId = existingSessions[0].id;
       // 更新会话信息
       await supabase
         .from("chat_sessions")
@@ -146,10 +148,9 @@ export async function saveDialogueToCloud(
       sessionId = newSession.id;
     }
 
-    // 删除旧消息，保存新消息
-    await supabase.from("chat_messages").delete().eq("session_id", sessionId);
-
+    // 增量保存：只插入比已有记录多的新消息
     const messagesToInsert = messages
+      .slice(existingCount) // 跳过已存的消息
       .filter((m) => m.role !== "system")
       .map((m) => ({
         session_id: sessionId,
@@ -210,17 +211,29 @@ export async function loadDialogue(sageId: string): Promise<UIMessage[]> {
   return loadDialogueLocal(sageId);
 }
 
+// 保存节流：避免流式输出时每个 token 都触发全量保存
+const saveThrottleMs = 2000;
+const saveTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+const pendingSaves: Record<string, UIMessage[]> = {};
+
 export async function saveDialogue(
   sageId: string,
   messages: UIMessage[]
 ): Promise<void> {
-  // 先保存到本地
+  // 保存到本地（立即）
   saveDialogueLocal(sageId, messages);
 
-  // 如果已登录，同步到云端
-  if (await isLoggedIn()) {
-    await saveDialogueToCloud(sageId, messages);
-  }
+  // 云端保存节流：2 秒内只触发一次
+  pendingSaves[sageId] = messages;
+  if (saveTimers[sageId]) return;
+  saveTimers[sageId] = setTimeout(async () => {
+    delete saveTimers[sageId];
+    const msgs = pendingSaves[sageId];
+    delete pendingSaves[sageId];
+    if (msgs && (await isLoggedIn())) {
+      await saveDialogueToCloud(sageId, msgs);
+    }
+  }, saveThrottleMs);
 }
 
 export async function clearDialogue(sageId: string): Promise<void> {

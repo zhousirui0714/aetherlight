@@ -107,7 +107,7 @@ function CreatePage() {
           img.src = imageUrl;
           
           // 超时保护
-          setTimeout(() => reject(new Error("生成超时")), 20000);
+          setTimeout(() => reject(new Error("生成超时")), 35000);
         });
         
         setResult({ type: "image", url: imageUrl, prompt });

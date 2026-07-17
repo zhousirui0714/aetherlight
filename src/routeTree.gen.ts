@@ -47,6 +47,7 @@ import { Route as ApiContentAuditRouteImport } from './routes/api/content-audit'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiArticlesRouteImport } from './routes/api/articles'
 import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
+import { Route as TongyouCommunityIndexRouteImport } from './routes/tongyou/community.index'
 import { Route as TongyouCommunityIdRouteImport } from './routes/tongyou/community.$id'
 import { Route as ApiSitemapXmlRouteImport } from './routes/api/sitemap.xml'
 import { Route as ApiArticlesTagsRouteImport } from './routes/api/articles/tags'
@@ -248,6 +249,11 @@ const ApiAncientBooksRoute = ApiAncientBooksRouteImport.update({
   path: '/api/ancient-books',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TongyouCommunityIndexRoute = TongyouCommunityIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TongyouCommunityRoute,
+} as any)
 const TongyouCommunityIdRoute = TongyouCommunityIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/api/articles/tags': typeof ApiArticlesTagsRoute
   '/api/sitemap/xml': typeof ApiSitemapXmlRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
+  '/tongyou/community/': typeof TongyouCommunityIndexRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRoutesByTo {
@@ -380,7 +387,6 @@ export interface FileRoutesByTo {
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
-  '/tongyou/community': typeof TongyouCommunityRouteWithChildren
   '/wuge/growth': typeof WugeGrowthRoute
   '/wuge/library': typeof WugeLibraryRoute
   '/wuge/notes': typeof WugeNotesRoute
@@ -396,6 +402,7 @@ export interface FileRoutesByTo {
   '/api/articles/tags': typeof ApiArticlesTagsRoute
   '/api/sitemap/xml': typeof ApiSitemapXmlRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
+  '/tongyou/community': typeof TongyouCommunityIndexRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRoutesById {
@@ -447,6 +454,7 @@ export interface FileRoutesById {
   '/api/articles/tags': typeof ApiArticlesTagsRoute
   '/api/sitemap/xml': typeof ApiSitemapXmlRoute
   '/tongyou/community/$id': typeof TongyouCommunityIdRoute
+  '/tongyou/community/': typeof TongyouCommunityIndexRoute
   '/api/articles/$id/relations': typeof ApiArticlesIdRelationsRoute
 }
 export interface FileRouteTypes {
@@ -499,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/articles/tags'
     | '/api/sitemap/xml'
     | '/tongyou/community/$id'
+    | '/tongyou/community/'
     | '/api/articles/$id/relations'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -531,7 +540,6 @@ export interface FileRouteTypes {
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/tongyou/challenge'
-    | '/tongyou/community'
     | '/wuge/growth'
     | '/wuge/library'
     | '/wuge/notes'
@@ -547,6 +555,7 @@ export interface FileRouteTypes {
     | '/api/articles/tags'
     | '/api/sitemap/xml'
     | '/tongyou/community/$id'
+    | '/tongyou/community'
     | '/api/articles/$id/relations'
   id:
     | '__root__'
@@ -597,6 +606,7 @@ export interface FileRouteTypes {
     | '/api/articles/tags'
     | '/api/sitemap/xml'
     | '/tongyou/community/$id'
+    | '/tongyou/community/'
     | '/api/articles/$id/relations'
   fileRoutesById: FileRoutesById
 }
@@ -903,6 +913,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAncientBooksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tongyou/community/': {
+      id: '/tongyou/community/'
+      path: '/'
+      fullPath: '/tongyou/community/'
+      preLoaderRoute: typeof TongyouCommunityIndexRouteImport
+      parentRoute: typeof TongyouCommunityRoute
+    }
     '/tongyou/community/$id': {
       id: '/tongyou/community/$id'
       path: '/$id'
@@ -1046,10 +1063,12 @@ const ApiArticlesRouteWithChildren = ApiArticlesRoute._addFileChildren(
 
 interface TongyouCommunityRouteChildren {
   TongyouCommunityIdRoute: typeof TongyouCommunityIdRoute
+  TongyouCommunityIndexRoute: typeof TongyouCommunityIndexRoute
 }
 
 const TongyouCommunityRouteChildren: TongyouCommunityRouteChildren = {
   TongyouCommunityIdRoute: TongyouCommunityIdRoute,
+  TongyouCommunityIndexRoute: TongyouCommunityIndexRoute,
 }
 
 const TongyouCommunityRouteWithChildren =

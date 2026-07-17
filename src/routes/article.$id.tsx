@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, Component, type ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ARTICLES } from "@/lib/knowledge-data";
 import { normalizeArticle as normalizeV3Article, type Article, type RelatedItem } from "@/lib/knowledge-types";
@@ -32,7 +32,11 @@ import type { TimelineEvent, ProcessStep } from "@/components/article";
 const fetchArticleServer = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ data }) => {
-    // 尝试 Supabase (服务端使用 service role key)
+    // 直接使用静态 ARTICLES 数据（SSR 首屏秒开，不依赖 Supabase 网络）
+    const staticArticle = ARTICLES.find((a) => a.id === data.id);
+    if (staticArticle) return normalizeV3Article(staticArticle);
+
+    // 兜底：尝试 Supabase（仅当静态找不到时）
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: row, error } = await supabaseAdmin
@@ -42,11 +46,8 @@ const fetchArticleServer = createServerFn({ method: "GET" })
         .maybeSingle();
       if (row && !error) return normalizeV3Article(row);
     } catch (err) {
-      console.warn("[article-loader] supabase fetch failed, falling back to static:", err);
+      console.warn("[article-loader] supabase fetch failed:", err);
     }
-    // 回退到静态 ARTICLES
-    const staticArticle = ARTICLES.find((a) => a.id === data.id);
-    if (staticArticle) return normalizeV3Article(staticArticle);
     return null;
   });
 
@@ -116,6 +117,33 @@ export const Route = createFileRoute("/article/$id")({
  */
 const normalizeArticle = normalizeV3Article;
 
+/** 客户端错误边界，捕获 hydration 后的渲染错误 */
+class ArticleErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    console.error("[article] client error:", error);
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <AppShell>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <h2 className="font-serif text-xl text-foreground">加载异常</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {this.state.error.message}
+            </p>
+          </div>
+        </AppShell>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function ArticlePage() {
   const navigate = useNavigate();
   const { article: loaderArticle } = Route.useLoaderData();
@@ -123,12 +151,16 @@ function ArticlePage() {
   // 追踪文章阅读
   useEffect(() => {
     if (loaderArticle) {
-      trackEvent({
-        type: "article_view",
-        title: loaderArticle.title || "未知文章",
-        description: loaderArticle.excerpt || loaderArticle.content?.slice(0, 50),
-        category: getCategoryMeta(loaderArticle.category).label,
-      });
+      try {
+        trackEvent({
+          type: "article_view",
+          title: loaderArticle.title || "未知文章",
+          description: loaderArticle.excerpt || loaderArticle.content?.slice(0, 50),
+          category: getCategoryMeta(loaderArticle.category).label,
+        });
+      } catch (e) {
+        console.warn("[article] trackEvent failed:", e);
+      }
     }
   }, [loaderArticle]);
 
@@ -159,14 +191,16 @@ function ArticlePage() {
   const references = buildReferences(article);
 
   return (
-    <ArticlePageShell
-      article={article}
+    <ArticleErrorBoundary>
+      <ArticlePageShell
+        article={article}
       categorySections={section}
       enableAiAnalysis
       enableAiQA
       enableContinueTracing
       extra={references.length > 0 ? <ReferencesBlock sources={references} accent={getCategoryMeta(article.category).accent} /> : undefined}
     />
+    </ArticleErrorBoundary>
   );
 }
 

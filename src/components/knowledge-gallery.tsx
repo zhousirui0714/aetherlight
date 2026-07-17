@@ -131,10 +131,10 @@ export function KnowledgeGallery() {
   const [subCat, setSubCat] = useState<string>("");  // 当前选中的子类
   const [q, setQ] = useState("");
   const [articles, setArticles] = useState<DbArticle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);  // 初始 false，不阻塞首次渲染
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
-  // Fetch articles from Supabase — 分页拉全表 (突破 PostgREST 单次 1000 限制)
+  // 后台拉取 Supabase 数据（不阻塞首次渲染，静态 ARTICLES 直接展示）
   useEffect(() => {
     const fetchArticles = async () => {
       setLoading(true);
@@ -142,7 +142,6 @@ export function KnowledgeGallery() {
         const PAGE = 1000;
         const all: DbArticle[] = [];
         let from = 0;
-        // 循环 range 直到拉空 (上限 5 页 = 5000 条, 防失控)
         for (let page = 0; page < 5; page++) {
           const { data, error } = await supabase
             .from("knowledge_articles")
@@ -156,10 +155,9 @@ export function KnowledgeGallery() {
           if (data.length < PAGE) break;
           from += PAGE;
         }
-        setArticles(all);
+        if (all.length > 0) setArticles(all);
       } catch (err) {
         console.error("Failed to fetch articles from Supabase:", err);
-        setArticles([]);
       } finally {
         setLoading(false);
       }
@@ -321,15 +319,7 @@ export function KnowledgeGallery() {
         )}
       </div>
 
-      {/* loading state */}
-      {loading && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 font-serif text-sm text-muted-foreground">撷取中...</p>
-        </div>
-      )}
-
-      {/* empty state */}
+      {/* empty state (无数据时显示) */}
       {!loading && items.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border py-20 text-center">
           <p className="font-serif text-lg text-foreground">未撷得相关篇章</p>
@@ -337,12 +327,22 @@ export function KnowledgeGallery() {
         </div>
       )}
 
-      {/* articles grid */}
-      {!loading && items.length > 0 && (
+      {/* articles grid (无论 loading 都显示，不阻塞渲染) */}
+      {items.length > 0 && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item, i) => (
             <GalleryCard key={item.id} item={item as DbArticle | Article} index={i} />
           ))}
+        </div>
+      )}
+
+      {/* 后台更新提示（仅 Supabase 正在加载时显示小标记，不遮挡内容） */}
+      {loading && items.length > 0 && (
+        <div className="mt-4 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[10px] text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            同步中...
+          </span>
         </div>
       )}
 

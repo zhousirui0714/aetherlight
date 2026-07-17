@@ -167,7 +167,11 @@ function parseContent(field: Field, text: string): any {
   }
   if (field === "influence") {
     const m = text.match(/\{[\s\S]*\}/);
-    return m ? safeJson(m[0], { summary: text, applications: [], perspectives: [] }) : { summary: text, applications: [], perspectives: [] };
+    if (m) {
+      const parsed = safeJson<{ summary?: string }>(m[0], null);
+      if (parsed?.summary) return parsed.summary;
+    }
+    return text; // 无法解析时直接返回原始文本
   }
   if (field === "translation") {
     // 尝试从 LLM 文本中提取 JSON 对象（可能包裹在 ```json ... ``` 中）
@@ -218,11 +222,7 @@ function fallbackFor(field: Field, s: ArticleSnapshot): any {
     ];
   }
   if (field === "influence") {
-    return {
-      summary: `${s.title}作为中华文化的重要组成部分，对后世产生了深远影响。`,
-      applications: ["应用于教育普及", "在文创产业中广泛使用", "成为国际文化交流的载体"],
-      perspectives: ["需结合现代价值观重新阐释", "可作为文化自信的支点之一"],
-    };
+    return `${s.title}作为中华文化的重要组成部分，对后世产生了深远影响，在当代社会仍具有重要的文化价值。`;
   }
   if (field === "translation") {
     return {
