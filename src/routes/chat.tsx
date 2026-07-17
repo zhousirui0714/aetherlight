@@ -17,6 +17,7 @@ import {
   Loader2,
   AlertCircle,
   Eraser,
+  X,
   MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,7 +243,6 @@ function ChatPage() {
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user) {
-        // 登录用户：从 Supabase 加载
         const { data } = await supabase
           .from("qa_history")
           .select("id, question, created_at")
@@ -250,9 +250,32 @@ function ChatPage() {
           .limit(20);
         if (data) setHistory(data as HistoryItem[]);
       } else {
-        // 未登录用户：从本地加载
         setHistory(loadQAHistoryLocal());
       }
+    } catch {}
+  };
+
+  const deleteHistoryItem = async (id: string) => {
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      if (s.session?.user) {
+        await supabase.from("qa_history").delete().eq("id", id);
+      } else {
+        saveQAHistoryLocal(loadQAHistoryLocal().filter((h) => h.id !== id));
+      }
+      setHistory((prev) => prev.filter((h) => h.id !== id));
+    } catch {}
+  };
+
+  const clearAllHistory = async () => {
+    if (!confirm("确定清空全部问答历史吗？")) return;
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      if (s.session?.user) {
+        await supabase.from("qa_history").delete().neq("id", "");
+      }
+      saveQAHistoryLocal([]);
+      setHistory([]);
     } catch {}
   };
 
@@ -434,7 +457,7 @@ function ChatPage() {
         </section>
 
         {/* history sidebar */}
-        <HistoryPanel history={history} onPick={submit} />
+        <HistoryPanel history={history} onPick={submit} onDelete={deleteHistoryItem} onClearAll={clearAllHistory} />
       </div>
 
       {/* Modal for person/book detail */}
@@ -551,16 +574,31 @@ function extractText(m: UIMessage) {
 function HistoryPanel({
   history,
   onPick,
+  onDelete,
+  onClearAll,
 }: {
   history: HistoryItem[];
   onPick: (question: string) => void;
+  onDelete?: (id: string) => void;
+  onClearAll?: () => void;
 }) {
   return (
     <aside className="hidden lg:block">
       <div className="sticky top-6 rounded-3xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <Clock className="h-4 w-4 text-accent" />
-          <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">历 史 问 答</h3>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-accent" />
+            <h3 className="font-serif text-base tracking-[0.25em] text-foreground/80">历 史 问 答</h3>
+          </div>
+          {history.length > 0 && onClearAll && (
+            <button
+              onClick={onClearAll}
+              className="text-[10px] text-muted-foreground hover:text-destructive transition"
+              title="清空全部"
+            >
+              清空
+            </button>
+          )}
         </div>
         <div className="max-h-[calc(100vh-260px)] min-h-[260px] overflow-y-auto">
           {history.length === 0 ? (
@@ -570,16 +608,25 @@ function HistoryPanel({
           ) : (
             <ul className="space-y-2">
               {history.map((h) => (
-                <li key={h.id}>
+                <li key={h.id} className="group relative">
                   <button
                     onClick={() => onPick(h.question)}
-                    className="block w-full rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
+                    className="block w-full rounded-xl border border-transparent px-3 py-2.5 pr-8 text-left text-sm text-foreground/80 transition hover:border-border hover:bg-secondary"
                   >
                     <p className="line-clamp-2 font-serif">{h.question}</p>
                     <p className="mt-1 text-[11px] text-muted-foreground">
                       {new Date(h.created_at).toLocaleDateString("zh-CN")}
                     </p>
                   </button>
+                  {onDelete && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(h.id); }}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground/40 opacity-0 transition hover:text-destructive group-hover:opacity-100"
+                      title="删除此条"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

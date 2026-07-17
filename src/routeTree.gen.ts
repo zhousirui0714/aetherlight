@@ -22,11 +22,13 @@ import { Route as DialogueRouteImport } from './routes/dialogue'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnnotationsRouteImport } from './routes/annotations'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WugeIndexRouteImport } from './routes/wuge.index'
 import { Route as DialogueIndexRouteImport } from './routes/dialogue.index'
+import { Route as BookIndexRouteImport } from './routes/book.index'
 import { Route as WugeScrollRouteImport } from './routes/wuge.scroll'
 import { Route as WugeNotesRouteImport } from './routes/wuge.notes'
 import { Route as WugeLibraryRouteImport } from './routes/wuge.library'
@@ -35,6 +37,7 @@ import { Route as TongyouCommunityRouteImport } from './routes/tongyou/community
 import { Route as TongyouChallengeRouteImport } from './routes/tongyou/challenge'
 import { Route as DialogueHistoryRouteImport } from './routes/dialogue.history'
 import { Route as DialogueIdRouteImport } from './routes/dialogue.$id'
+import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as ArticleIdRouteImport } from './routes/article.$id'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiTextToImageRouteImport } from './routes/api/text-to-image'
@@ -45,6 +48,7 @@ import { Route as ApiDialogueRouteImport } from './routes/api/dialogue'
 import { Route as ApiDbCheckRouteImport } from './routes/api/db-check'
 import { Route as ApiContentAuditRouteImport } from './routes/api/content-audit'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiBookChatRouteImport } from './routes/api/book-chat'
 import { Route as ApiArticlesRouteImport } from './routes/api/articles'
 import { Route as ApiAncientBooksRouteImport } from './routes/api/ancient-books'
 import { Route as TongyouCommunityIndexRouteImport } from './routes/tongyou/community.index'
@@ -124,6 +128,11 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -148,6 +157,11 @@ const DialogueIndexRoute = DialogueIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DialogueRoute,
+} as any)
+const BookIndexRoute = BookIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BookRoute,
 } as any)
 const WugeScrollRoute = WugeScrollRouteImport.update({
   id: '/scroll',
@@ -188,6 +202,11 @@ const DialogueIdRoute = DialogueIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => DialogueRoute,
+} as any)
+const BookIdRoute = BookIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BookRoute,
 } as any)
 const ArticleIdRoute = ArticleIdRouteImport.update({
   id: '/article/$id',
@@ -237,6 +256,11 @@ const ApiContentAuditRoute = ApiContentAuditRouteImport.update({
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBookChatRoute = ApiBookChatRouteImport.update({
+  id: '/api/book-chat',
+  path: '/api/book-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiArticlesRoute = ApiArticlesRouteImport.update({
@@ -310,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
+  '/book': typeof BookRouteWithChildren
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/dashboard': typeof DashboardRoute
@@ -325,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/wuge': typeof WugeRouteWithChildren
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
+  '/api/book-chat': typeof ApiBookChatRoute
   '/api/chat': typeof ApiChatRoute
   '/api/content-audit': typeof ApiContentAuditRoute
   '/api/db-check': typeof ApiDbCheckRoute
@@ -335,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/api/text-to-image': typeof ApiTextToImageRoute
   '/api/translate': typeof ApiTranslateRoute
   '/article/$id': typeof ArticleIdRoute
+  '/book/$id': typeof BookIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
@@ -343,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/wuge/library': typeof WugeLibraryRoute
   '/wuge/notes': typeof WugeNotesRoute
   '/wuge/scroll': typeof WugeScrollRoute
+  '/book/': typeof BookIndexRoute
   '/dialogue/': typeof DialogueIndexRoute
   '/wuge/': typeof WugeIndexRoute
   '/api/almanac/today': typeof ApiAlmanacTodayRoute
@@ -374,6 +402,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
+  '/api/book-chat': typeof ApiBookChatRoute
   '/api/chat': typeof ApiChatRoute
   '/api/content-audit': typeof ApiContentAuditRoute
   '/api/db-check': typeof ApiDbCheckRoute
@@ -384,6 +413,7 @@ export interface FileRoutesByTo {
   '/api/text-to-image': typeof ApiTextToImageRoute
   '/api/translate': typeof ApiTranslateRoute
   '/article/$id': typeof ArticleIdRoute
+  '/book/$id': typeof BookIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
@@ -391,6 +421,7 @@ export interface FileRoutesByTo {
   '/wuge/library': typeof WugeLibraryRoute
   '/wuge/notes': typeof WugeNotesRoute
   '/wuge/scroll': typeof WugeScrollRoute
+  '/book': typeof BookIndexRoute
   '/dialogue': typeof DialogueIndexRoute
   '/wuge': typeof WugeIndexRoute
   '/api/almanac/today': typeof ApiAlmanacTodayRoute
@@ -410,6 +441,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/annotations': typeof AnnotationsRoute
   '/auth': typeof AuthRoute
+  '/book': typeof BookRouteWithChildren
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/dashboard': typeof DashboardRoute
@@ -425,6 +457,7 @@ export interface FileRoutesById {
   '/wuge': typeof WugeRouteWithChildren
   '/api/ancient-books': typeof ApiAncientBooksRoute
   '/api/articles': typeof ApiArticlesRouteWithChildren
+  '/api/book-chat': typeof ApiBookChatRoute
   '/api/chat': typeof ApiChatRoute
   '/api/content-audit': typeof ApiContentAuditRoute
   '/api/db-check': typeof ApiDbCheckRoute
@@ -435,6 +468,7 @@ export interface FileRoutesById {
   '/api/text-to-image': typeof ApiTextToImageRoute
   '/api/translate': typeof ApiTranslateRoute
   '/article/$id': typeof ArticleIdRoute
+  '/book/$id': typeof BookIdRoute
   '/dialogue/$id': typeof DialogueIdRoute
   '/dialogue/history': typeof DialogueHistoryRoute
   '/tongyou/challenge': typeof TongyouChallengeRoute
@@ -443,6 +477,7 @@ export interface FileRoutesById {
   '/wuge/library': typeof WugeLibraryRoute
   '/wuge/notes': typeof WugeNotesRoute
   '/wuge/scroll': typeof WugeScrollRoute
+  '/book/': typeof BookIndexRoute
   '/dialogue/': typeof DialogueIndexRoute
   '/wuge/': typeof WugeIndexRoute
   '/api/almanac/today': typeof ApiAlmanacTodayRoute
@@ -463,6 +498,7 @@ export interface FileRouteTypes {
     | '/'
     | '/annotations'
     | '/auth'
+    | '/book'
     | '/chat'
     | '/create'
     | '/dashboard'
@@ -478,6 +514,7 @@ export interface FileRouteTypes {
     | '/wuge'
     | '/api/ancient-books'
     | '/api/articles'
+    | '/api/book-chat'
     | '/api/chat'
     | '/api/content-audit'
     | '/api/db-check'
@@ -488,6 +525,7 @@ export interface FileRouteTypes {
     | '/api/text-to-image'
     | '/api/translate'
     | '/article/$id'
+    | '/book/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/tongyou/challenge'
@@ -496,6 +534,7 @@ export interface FileRouteTypes {
     | '/wuge/library'
     | '/wuge/notes'
     | '/wuge/scroll'
+    | '/book/'
     | '/dialogue/'
     | '/wuge/'
     | '/api/almanac/today'
@@ -527,6 +566,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/api/ancient-books'
     | '/api/articles'
+    | '/api/book-chat'
     | '/api/chat'
     | '/api/content-audit'
     | '/api/db-check'
@@ -537,6 +577,7 @@ export interface FileRouteTypes {
     | '/api/text-to-image'
     | '/api/translate'
     | '/article/$id'
+    | '/book/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/tongyou/challenge'
@@ -544,6 +585,7 @@ export interface FileRouteTypes {
     | '/wuge/library'
     | '/wuge/notes'
     | '/wuge/scroll'
+    | '/book'
     | '/dialogue'
     | '/wuge'
     | '/api/almanac/today'
@@ -562,6 +604,7 @@ export interface FileRouteTypes {
     | '/'
     | '/annotations'
     | '/auth'
+    | '/book'
     | '/chat'
     | '/create'
     | '/dashboard'
@@ -577,6 +620,7 @@ export interface FileRouteTypes {
     | '/wuge'
     | '/api/ancient-books'
     | '/api/articles'
+    | '/api/book-chat'
     | '/api/chat'
     | '/api/content-audit'
     | '/api/db-check'
@@ -587,6 +631,7 @@ export interface FileRouteTypes {
     | '/api/text-to-image'
     | '/api/translate'
     | '/article/$id'
+    | '/book/$id'
     | '/dialogue/$id'
     | '/dialogue/history'
     | '/tongyou/challenge'
@@ -595,6 +640,7 @@ export interface FileRouteTypes {
     | '/wuge/library'
     | '/wuge/notes'
     | '/wuge/scroll'
+    | '/book/'
     | '/dialogue/'
     | '/wuge/'
     | '/api/almanac/today'
@@ -614,6 +660,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnnotationsRoute: typeof AnnotationsRoute
   AuthRoute: typeof AuthRoute
+  BookRoute: typeof BookRouteWithChildren
   ChatRoute: typeof ChatRoute
   CreateRoute: typeof CreateRoute
   DashboardRoute: typeof DashboardRoute
@@ -629,6 +676,7 @@ export interface RootRouteChildren {
   WugeRoute: typeof WugeRouteWithChildren
   ApiAncientBooksRoute: typeof ApiAncientBooksRoute
   ApiArticlesRoute: typeof ApiArticlesRouteWithChildren
+  ApiBookChatRoute: typeof ApiBookChatRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiContentAuditRoute: typeof ApiContentAuditRoute
   ApiDbCheckRoute: typeof ApiDbCheckRoute
@@ -738,6 +786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -772,6 +827,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dialogue/'
       preLoaderRoute: typeof DialogueIndexRouteImport
       parentRoute: typeof DialogueRoute
+    }
+    '/book/': {
+      id: '/book/'
+      path: '/'
+      fullPath: '/book/'
+      preLoaderRoute: typeof BookIndexRouteImport
+      parentRoute: typeof BookRoute
     }
     '/wuge/scroll': {
       id: '/wuge/scroll'
@@ -828,6 +890,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dialogue/$id'
       preLoaderRoute: typeof DialogueIdRouteImport
       parentRoute: typeof DialogueRoute
+    }
+    '/book/$id': {
+      id: '/book/$id'
+      path: '/$id'
+      fullPath: '/book/$id'
+      preLoaderRoute: typeof BookIdRouteImport
+      parentRoute: typeof BookRoute
     }
     '/article/$id': {
       id: '/article/$id'
@@ -897,6 +966,13 @@ declare module '@tanstack/react-router' {
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/book-chat': {
+      id: '/api/book-chat'
+      path: '/api/book-chat'
+      fullPath: '/api/book-chat'
+      preLoaderRoute: typeof ApiBookChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/articles': {
@@ -993,6 +1069,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface BookRouteChildren {
+  BookIdRoute: typeof BookIdRoute
+  BookIndexRoute: typeof BookIndexRoute
+}
+
+const BookRouteChildren: BookRouteChildren = {
+  BookIdRoute: BookIdRoute,
+  BookIndexRoute: BookIndexRoute,
+}
+
+const BookRouteWithChildren = BookRoute._addFileChildren(BookRouteChildren)
+
 interface DialogueRouteChildren {
   DialogueIdRoute: typeof DialogueIdRoute
   DialogueHistoryRoute: typeof DialogueHistoryRoute
@@ -1078,6 +1166,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnnotationsRoute: AnnotationsRoute,
   AuthRoute: AuthRoute,
+  BookRoute: BookRouteWithChildren,
   ChatRoute: ChatRoute,
   CreateRoute: CreateRoute,
   DashboardRoute: DashboardRoute,
@@ -1093,6 +1182,7 @@ const rootRouteChildren: RootRouteChildren = {
   WugeRoute: WugeRouteWithChildren,
   ApiAncientBooksRoute: ApiAncientBooksRoute,
   ApiArticlesRoute: ApiArticlesRouteWithChildren,
+  ApiBookChatRoute: ApiBookChatRoute,
   ApiChatRoute: ApiChatRoute,
   ApiContentAuditRoute: ApiContentAuditRoute,
   ApiDbCheckRoute: ApiDbCheckRoute,

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { findSage, SAGES, type Sage } from "@/lib/sages";
 import { SageAvatar } from "./dialogue.index";
-import { Send, Share2, Users, X, Copy, Download, RotateCw, ChevronDown, Languages } from "lucide-react";
+import { Send, Share2, Users, X, Copy, Download, RotateCw, ChevronDown, Languages, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   loadDialogue, saveDialogue,
@@ -302,12 +302,28 @@ function SageRoom({ sage }: { sage: Sage }) {
                 <p className="text-[11px] text-muted-foreground">{sage.dynasty}</p>
               </div>
             </div>
-            <button
-              onClick={() => setShowShare(true)}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-            >
-              <Share2 className="h-3.5 w-3.5" /> 分享对话
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowShare(true)}
+                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+              >
+                <Share2 className="h-3.5 w-3.5" /> 分享对话
+              </button>
+              {messages.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (!confirm(`确定删除与 ${sage.name} 的全部对话历史吗？`)) return;
+                    const { clearDialogue } = await import("@/lib/dialogue-storage");
+                    await clearDialogue(sage.id);
+                    setMessages([]);
+                    toast("对话历史已删除");
+                  }}
+                  className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> 删除历史
+                </button>
+              )}
+            </div>
           </div>
 
           {/* messages */}

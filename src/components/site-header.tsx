@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users, Menu, X, Heart, Sparkles, BookMarked } from "lucide-react";
+import { Search, Moon, Sun, ChevronDown, MessageSquare, Calendar, Users, Menu, X, Heart, Sparkles, BookMarked, BookOpen } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { GlobalSearch } from "./global-search";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,11 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/create"; label: string; exact?: boolean }[] = [
+const NAV: { to: "/" | "/gallery" | "/chat" | "/dialogue" | "/book" | "/create"; label: string; exact?: boolean }[] = [
   { to: "/", label: "首页", exact: true },
   { to: "/gallery", label: "知识长廊" },
   { to: "/chat", label: "问答助手" },
   { to: "/dialogue", label: "对话名家" },
+  { to: "/book", label: "典籍" },
   { to: "/create", label: "艺创工坊" },
 ];
 
